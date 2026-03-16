@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2782511908",
+  "name": "Liquify",
+  "author": "stringie",
+  "description": "Turn any solid shape into a liquid voxel mess! Press \"left mouse button\" to liquify! Press \"R\" to remove all liquid voxels! Press \"C\" for zero-gravity fun! Now with an options menu on the bottom when you press \"Escape\" to pause game!",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "581c4e51fae7547a4796aa9a6c2c1f04486df9971fd2c27b9035500d81ff34af",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:11.314575"
+}

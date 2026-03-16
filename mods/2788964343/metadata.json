@@ -1,0 +1,25 @@
+{
+  "workshop_id": "2788964343",
+  "name": "Procedural Labyrinth",
+  "author": "Geneosis",
+  "description": "[noupload]Live your life as a Minotaur!",
+  "tags": "Map",
+  "lua_files": [
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\labyrinth.lua",
+    "scripts\\objectives.lua",
+    "scripts\\registry.lua",
+    "scripts\\sound.lua",
+    "scripts\\spawnchunks.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "5754db903df653080b873e6e25f7cd926e53c353157fbb2419b7783fdff5c6c4",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:45.955378",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

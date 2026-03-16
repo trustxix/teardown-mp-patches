@@ -1,0 +1,25 @@
+{
+  "workshop_id": "2739855429",
+  "name": "Gasoline Flamethrower",
+  "author": "HypnoTox",
+  "description": "A gasoline powered flamethrower that tries to be fairly realistic.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\fireStarter.lua",
+    "scripts\\flamethrower.lua",
+    "scripts\\knob.lua",
+    "scripts\\nozzle.lua",
+    "scripts\\entities\\flame.lua",
+    "scripts\\lib\\debug.lua",
+    "scripts\\lib\\engine.lua",
+    "scripts\\lib\\input.lua",
+    "scripts\\managers\\soundManager.lua"
+  ],
+  "sha256": "e10425b88dbb6e6ab31aa00d43df5a1e33eb5658946b756538145beb7bd00b1d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:37.250105"
+}

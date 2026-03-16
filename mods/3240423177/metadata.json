@@ -1,0 +1,24 @@
+{
+  "workshop_id": "3240423177",
+  "name": "Always Up!",
+  "author": "Geneosis",
+  "description": "[noupload]Turn any map into a procedural parkour challenge",
+  "tags": "Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\alwaysup.lua",
+    "scripts\\debug.lua",
+    "scripts\\registry.lua",
+    "scripts\\shape_utils.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "4234926bb4eec6db79d35dec25fe4d641ebd220782d8cbc00365f103a502421a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:42:58.577519",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

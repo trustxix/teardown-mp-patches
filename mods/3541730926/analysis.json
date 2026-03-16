@@ -1,0 +1,1153 @@
+{
+  "mod_name": "TABS Effect",
+  "mod_type": "gameplay",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "fire.lua",
+      "lines": 16,
+      "callbacks_found": [
+        "init",
+        "tick"
+      ],
+      "api_calls": [
+        {
+          "function": "FindBody",
+          "line": 5,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SpawnFire",
+          "line": 6,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 6,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SpawnFire",
+          "line": 14,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 14,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 2,
+      "ambiguous_calls": 3,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": []
+    },
+    {
+      "file": "main.lua",
+      "lines": 297,
+      "callbacks_found": [
+        "rnd",
+        "init",
+        "tick",
+        "working",
+        "eachvehicle",
+        "firesetting",
+        "firesetting_V"
+      ],
+      "api_calls": [
+        {
+          "function": "GetShapeBounds",
+          "line": 79,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLerp",
+          "line": 80,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 82,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QueryRaycast",
+          "line": 83,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 85,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 85,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 96,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetShapeBounds",
+          "line": 155,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 157,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 159,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLerp",
+          "line": 160,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLerp",
+          "line": 186,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 194,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleReset",
+          "line": 227,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleType",
+          "line": 228,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleCollide",
+          "line": 229,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleRadius",
+          "line": 230,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleDrag",
+          "line": 231,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleEmissive",
+          "line": 232,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleColor",
+          "line": 233,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleGravity",
+          "line": 234,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleAlpha",
+          "line": 235,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SpawnParticle",
+          "line": 237,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 237,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 237,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 237,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleReset",
+          "line": 247,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleType",
+          "line": 248,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleCollide",
+          "line": 249,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleRadius",
+          "line": 250,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleDrag",
+          "line": 251,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleEmissive",
+          "line": 252,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleColor",
+          "line": 253,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleGravity",
+          "line": 254,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleAlpha",
+          "line": 255,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SpawnParticle",
+          "line": 256,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 256,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 256,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 256,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleReset",
+          "line": 258,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleTile",
+          "line": 259,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleType",
+          "line": 260,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleCollide",
+          "line": 261,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleRadius",
+          "line": 262,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleDrag",
+          "line": 263,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleEmissive",
+          "line": 264,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleColor",
+          "line": 265,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleGravity",
+          "line": 266,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ParticleAlpha",
+          "line": 267,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SpawnParticle",
+          "line": 268,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 268,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 268,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 268,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 31,
+      "ambiguous_calls": 22,
+      "deprecated_calls": [],
+      "entity_handle_checks": [
+        {
+          "line": 71,
+          "content": "if #fueltank_list > 0 then"
+        }
+      ],
+      "registry_usage": []
+    },
+    {
+      "file": "options.lua",
+      "lines": 98,
+      "callbacks_found": [
+        "init",
+        "draw",
+        "optionsSlider",
+        "round"
+      ],
+      "api_calls": [
+        {
+          "function": "UiTranslate",
+          "line": 8,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiCenter",
+          "line": 8,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 9,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 10,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiFont",
+          "line": 11,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 12,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiFont",
+          "line": 13,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 14,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiPush",
+          "line": 16,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 17,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 18,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 25,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 27,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 28,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 29,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 37,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 39,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 40,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 41,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 48,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 51,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 52,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 53,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 61,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 64,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 65,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 66,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiPop",
+          "line": 67,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 75,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiPush",
+          "line": 78,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 79,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiRect",
+          "line": 81,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 82,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 83,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiSlider",
+          "line": 84,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 86,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 87,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 88,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiFont",
+          "line": 89,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 90,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiPop",
+          "line": 91,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 41,
+      "ambiguous_calls": 0,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": []
+    },
+    {
+      "file": "registry.lua",
+      "lines": 143,
+      "callbacks_found": [
+        "modReset",
+        "modSoftReset",
+        "getMajorVersion",
+        "checkRegInitialized",
+        "regGetFloat",
+        "regSetFloat",
+        "regGetInt",
+        "regSetInt",
+        "regGetBool",
+        "regSetBool",
+        "regGetString",
+        "regSetString",
+        "regInitKey",
+        "regListKeys",
+        "regClearKey",
+        "regHasKey",
+        "regGet",
+        "regSet"
+      ],
+      "api_calls": [
+        {
+          "function": "GetFloat",
+          "line": 36,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 41,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 42,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 45,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetInt",
+          "line": 51,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 56,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetInt",
+          "line": 57,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetInt",
+          "line": 60,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBool",
+          "line": 66,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 71,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetBool",
+          "line": 72,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetBool",
+          "line": 75,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetString",
+          "line": 81,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 86,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetString",
+          "line": 87,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetString",
+          "line": 90,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 96,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ListKeys",
+          "line": 108,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "ClearKey",
+          "line": 113,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 118,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 0,
+      "ambiguous_calls": 20,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": [
+        {
+          "function": "GetFloat",
+          "line": 36,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 42,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 45,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetInt",
+          "line": 51,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetInt",
+          "line": 57,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetInt",
+          "line": 60,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBool",
+          "line": 66,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetBool",
+          "line": 72,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetBool",
+          "line": 75,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetString",
+          "line": 81,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetString",
+          "line": 87,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetString",
+          "line": 90,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ]
+    }
+  ],
+  "complexity": "complex",
+  "estimated_approach": "ai",
+  "issues": [
+    "Handle check at main.lua:71: if #fueltank_list > 0 then"
+  ]
+}

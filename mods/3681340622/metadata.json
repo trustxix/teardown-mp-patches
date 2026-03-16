@@ -1,0 +1,19 @@
+{
+  "workshop_id": "3681340622",
+  "name": "Winch",
+  "author": "Slot",
+  "description": "Addes a winch tool thatcan increase or decrease its length! [noupload]",
+  "tags": "Tool",
+  "lua_files": [
+    "main \u2014 \u043a\u043e\u043f\u0438\u044f.lua",
+    "main.lua",
+    "options \u2014 \u043a\u043e\u043f\u0438\u044f.lua",
+    "options.lua"
+  ],
+  "sha256": "193375b3f31faee8838a2d9727eb64a96f7df9b9f991305846c7ee9da4e76c66",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:39.165955",
+  "validation_notes": "Checks failed: NO-V1-CBACKS"
+}

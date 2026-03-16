@@ -1,0 +1,570 @@
+{
+  "mod_name": "Lightkatana",
+  "mod_type": "vehicle",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "main.lua",
+      "lines": 130,
+      "callbacks_found": [
+        "init",
+        "Smash",
+        "Boost",
+        "Spin",
+        "tick"
+      ],
+      "api_calls": [
+        {
+          "function": "RegisterTool",
+          "line": 2,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetBool",
+          "line": 3,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 4,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "LoadSound",
+          "line": 10,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "LoadSound",
+          "line": 12,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetPlayerTransform",
+          "line": 20,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentVec",
+          "line": 21,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 21,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetPlayerVelocity",
+          "line": 22,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 24,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetPlayerVelocity",
+          "line": 25,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 29,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetPlayerTransform",
+          "line": 30,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatRotateQuat",
+          "line": 34,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatEuler",
+          "line": 34,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetCameraTransform",
+          "line": 35,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetString",
+          "line": 42,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetPlayerVehicle",
+          "line": 42,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetPlayerHealth",
+          "line": 43,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 45,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 47,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 51,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 58,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 58,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatEuler",
+          "line": 58,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetToolTransform",
+          "line": 59,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 61,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 61,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 61,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "MakeHole",
+          "line": 63,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 67,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 68,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatEuler",
+          "line": 69,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetToolTransform",
+          "line": 70,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 72,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 73,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatEuler",
+          "line": 74,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetToolTransform",
+          "line": 75,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputDown",
+          "line": 79,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 80,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 81,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatEuler",
+          "line": 82,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetToolTransform",
+          "line": 83,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "PlaySound",
+          "line": 90,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetPlayerTransform",
+          "line": 90,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 102,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 102,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 104,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 105,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 105,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 106,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLength",
+          "line": 107,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecNormalize",
+          "line": 108,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QueryRaycast",
+          "line": 109,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 113,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 113,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 115,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 116,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 117,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 118,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 119,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 119,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "MakeHole",
+          "line": 123,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 12,
+      "client_calls": 7,
+      "ambiguous_calls": 44,
+      "deprecated_calls": [],
+      "entity_handle_checks": [
+        {
+          "line": 65,
+          "content": "if smashTimer > 0 then"
+        },
+        {
+          "line": 87,
+          "content": "if smashTimer > 0 then"
+        }
+      ],
+      "registry_usage": [
+        {
+          "function": "SetBool",
+          "line": 3,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 4,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetString",
+          "line": 42,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ]
+    }
+  ],
+  "complexity": "simple",
+  "estimated_approach": "template",
+  "issues": [
+    "Handle check at main.lua:65: if smashTimer > 0 then",
+    "Handle check at main.lua:87: if smashTimer > 0 then"
+  ]
+}

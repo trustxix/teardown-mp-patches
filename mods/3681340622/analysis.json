@@ -1,0 +1,796 @@
+{
+  "mod_name": "Winch",
+  "mod_type": "tool",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "main \u2014 \u043a\u043e\u043f\u0438\u044f.lua",
+      "lines": 168,
+      "callbacks_found": [
+        "_Module",
+        "Load",
+        "ConstantsLoader",
+        "ActionsLoader",
+        "WinchLoader",
+        "WinchToolLoader",
+        "(dt)",
+        "",
+        "",
+        ""
+      ],
+      "api_calls": [
+        {
+          "function": "TransformToParentPoint",
+          "line": 44,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 44,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 45,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 45,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLength",
+          "line": 46,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 46,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 54,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 54,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 55,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 55,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLength",
+          "line": 56,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 56,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecNormalize",
+          "line": 60,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 60,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 61,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 63,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 68,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 68,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 70,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 70,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 73,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentVec",
+          "line": 74,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 74,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QueryRaycast",
+          "line": 75,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "RegisterTool",
+          "line": 88,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetBool",
+          "line": 89,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 1,
+      "client_calls": 0,
+      "ambiguous_calls": 29,
+      "deprecated_calls": [],
+      "entity_handle_checks": [
+        {
+          "line": 58,
+          "content": "if delta > 0 then"
+        },
+        {
+          "line": 153,
+          "content": "if moving and #self.winches > 0 then"
+        }
+      ],
+      "registry_usage": [
+        {
+          "function": "SetBool",
+          "line": 89,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ]
+    },
+    {
+      "file": "main.lua",
+      "lines": 170,
+      "callbacks_found": [
+        "_Module",
+        "Load",
+        "ConstantsLoader",
+        "ActionsLoader",
+        "WinchLoader",
+        "WinchToolLoader",
+        "l\") ",
+        "ck()",
+        "Update",
+        "() e"
+      ],
+      "api_calls": [
+        {
+          "function": "TransformToParentPoint",
+          "line": 44,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 44,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 45,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 45,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLength",
+          "line": 46,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 46,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 54,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 54,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 55,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 55,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLength",
+          "line": 56,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 56,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecNormalize",
+          "line": 60,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 60,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 61,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 63,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 68,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 68,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 70,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetBodyTransform",
+          "line": 70,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 73,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentVec",
+          "line": 74,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 74,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QueryRaycast",
+          "line": 75,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 76,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 0,
+      "ambiguous_calls": 28,
+      "deprecated_calls": [],
+      "entity_handle_checks": [
+        {
+          "line": 58,
+          "content": "if delta > 0 then"
+        },
+        {
+          "line": 155,
+          "content": "if moving and #self.winches > 0 then"
+        }
+      ],
+      "registry_usage": []
+    },
+    {
+      "file": "options \u2014 \u043a\u043e\u043f\u0438\u044f.lua",
+      "lines": 154,
+      "callbacks_found": [
+        "init",
+        "draw"
+      ],
+      "api_calls": [
+        {
+          "function": "HasKey",
+          "line": 10,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 10,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 11,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 11,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "UiPush",
+          "line": 18,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 19,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiRect",
+          "line": 20,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiWidth",
+          "line": 20,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiHeight",
+          "line": 20,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiPop",
+          "line": 21,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 23,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 24,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiCenter",
+          "line": 24,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiMiddle",
+          "line": 24,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 10,
+      "ambiguous_calls": 4,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": [
+        {
+          "function": "SetFloat",
+          "line": 10,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 11,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ]
+    },
+    {
+      "file": "options.lua",
+      "lines": 149,
+      "callbacks_found": [
+        "init",
+        "draw"
+      ],
+      "api_calls": [
+        {
+          "function": "HasKey",
+          "line": 8,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 8,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 9,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 9,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "HasKey",
+          "line": 10,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetInt",
+          "line": 10,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "UiHeight",
+          "line": 14,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 1,
+      "ambiguous_calls": 6,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": [
+        {
+          "function": "SetFloat",
+          "line": 8,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 9,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetInt",
+          "line": 10,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ]
+    }
+  ],
+  "complexity": "complex",
+  "estimated_approach": "ai",
+  "issues": [
+    "Handle check at main \u2014 \u043a\u043e\u043f\u0438\u044f.lua:58: if delta > 0 then",
+    "Handle check at main \u2014 \u043a\u043e\u043f\u0438\u044f.lua:153: if moving and #self.winches > 0 then",
+    "Handle check at main.lua:58: if delta > 0 then",
+    "Handle check at main.lua:155: if moving and #self.winches > 0 then"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "workshop_id": "2778661781",
+  "name": "Infinite World Generator",
+  "author": "Geneosis",
+  "description": "[noupload]A template for procedurally generated worlds. Check the options before playing!",
+  "tags": "Map",
+  "lua_files": [
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\registry.lua",
+    "scripts\\spawnchunks.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "27d6d5c6b10ccd335c06c47d0ed85ad08466d23f2a18aae9cb71c605ffd575d1",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:38.892448",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

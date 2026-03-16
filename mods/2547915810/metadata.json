@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2547915810",
+  "name": "Lightsaber",
+  "author": "Tislerics M\u00e1t\u00e9",
+  "description": "Hello there!",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "5cd3833d2329b35b9b109eba63f442887893b3849a4bf45b78c0d39497873ecc",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:39.970386",
+  "validation_notes": "SetPlayerHealth in client.tick - works on host, ideal fix needs server.tick split"
+}

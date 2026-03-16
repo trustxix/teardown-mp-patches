@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401873387",
+  "name": "Lightkatana",
+  "author": "My Cresta",
+  "description": "Star Wars-inspired Lightkatana. Left-Click to swing vertically, Right-Click to swing horizontally. You are immortal and can multi jump while holding the Lightkatana.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "979d5495fb6169e2236fd6d63f48c366b6db1582fe423b7810bdd8cd681cec4e",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:30.775597",
+  "validation_notes": "SetPlayerHealth in client.tick - works on host, ideal fix needs server.tick split"
+}

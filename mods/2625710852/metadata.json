@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2625710852",
+  "name": "Vacuum Cleaner",
+  "author": "My Cresta",
+  "description": "This overpowered vacuum cleaner can suck up infite amounts of debris and then shoot it out again.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "2ec937579dab2e42808c9f3aae816c14f0d3f2496a7ca3168f5652826775b064",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:10.105764"
+}

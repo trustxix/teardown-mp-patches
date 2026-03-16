@@ -1,0 +1,18 @@
+{
+  "workshop_id": "3528009592",
+  "name": "RMW - SIG Spear",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Also known as the XM7, its the brand new service rifle of the US Military. Uses a relatively obscure intermediate cratridge, the .277 SIG FURY (6.8x51mm). Its a close relative of the MCX Series. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua",
+    "script\\FPArms.lua"
+  ],
+  "sha256": "948cb60b0b7bca65d679b39fffe1d470d10dbe797fc138c6e4800c7f934c8aa1",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:21.627463"
+}

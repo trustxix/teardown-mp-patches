@@ -1,0 +1,471 @@
+{
+  "mod_name": "Holy Grenade",
+  "mod_type": "vehicle",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "main.lua",
+      "lines": 147,
+      "callbacks_found": [
+        "init",
+        "deepcopy",
+        "Shoot",
+        "HolyGrenadeOperations",
+        "tick"
+      ],
+      "api_calls": [
+        {
+          "function": "RegisterTool",
+          "line": 13,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetBool",
+          "line": 14,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 15,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 17,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "LoadSound",
+          "line": 26,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "LoadSound",
+          "line": 27,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "LoadSound",
+          "line": 28,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "LoadSound",
+          "line": 29,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 50,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 51,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 51,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "TransformToParentPoint",
+          "line": 52,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 52,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 53,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "PlaySound",
+          "line": 56,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 62,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 70,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 70,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecAdd",
+          "line": 71,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 71,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecNormalize",
+          "line": 72,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 72,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecLength",
+          "line": 73,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 73,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QueryRaycast",
+          "line": 74,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 77,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 78,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "PlaySound",
+          "line": 81,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecDot",
+          "line": 83,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecSub",
+          "line": 84,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "VecScale",
+          "line": 84,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetString",
+          "line": 93,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetPlayerVehicle",
+          "line": 93,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 94,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Shoot",
+          "line": 95,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 100,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 100,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatEuler",
+          "line": 100,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetToolTransform",
+          "line": 101,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 104,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Vec",
+          "line": 105,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatEuler",
+          "line": 106,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetToolTransform",
+          "line": 107,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 113,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 115,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "PlaySound",
+          "line": 125,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "PlaySound",
+          "line": 136,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "QuatLookAt",
+          "line": 142,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetCameraTransform",
+          "line": 142,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "Transform",
+          "line": 143,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 4,
+      "client_calls": 11,
+      "ambiguous_calls": 35,
+      "deprecated_calls": [],
+      "entity_handle_checks": [
+        {
+          "line": 103,
+          "content": "if swingTimer > 0 then"
+        },
+        {
+          "line": 121,
+          "content": "if shell.grenadeTimer > 0 then"
+        },
+        {
+          "line": 130,
+          "content": "if shell.boomTimer > 0 then"
+        }
+      ],
+      "registry_usage": [
+        {
+          "function": "SetBool",
+          "line": 14,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetFloat",
+          "line": 15,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "GetString",
+          "line": 93,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ]
+    }
+  ],
+  "complexity": "simple",
+  "estimated_approach": "template",
+  "issues": [
+    "Handle check at main.lua:103: if swingTimer > 0 then",
+    "Handle check at main.lua:121: if shell.grenadeTimer > 0 then",
+    "Handle check at main.lua:130: if shell.boomTimer > 0 then"
+  ]
+}

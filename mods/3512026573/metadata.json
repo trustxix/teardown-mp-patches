@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3512026573",
+  "name": "RMW - M16A2",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The A2 one\u2026 used the Gulf War\u2026 in one of the Gulf Wars. But its pretty iconic of the era, so i cant be mad at it too much. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "da258fc25f3756a4fb89beda2452942945c3383908129a53d9c13890f4d0d513",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:21.443090"
+}

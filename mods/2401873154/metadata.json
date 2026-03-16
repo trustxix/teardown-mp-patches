@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2401873154",
+  "name": "Holy Grenade",
+  "author": "My Cresta",
+  "description": "Holy Hand Grenade from Worms. Explodes after 5sec, change timer with 'Z' and 'X'.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "dd808cf47af86bf3007d68b7e5df459624470da48243cb6fb0925677cfdb22a5",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:30.283979"
+}

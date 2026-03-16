@@ -1,0 +1,274 @@
+{
+  "mod_name": "Rubyyy's Bleeding System",
+  "mod_type": "gameplay",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "main.lua",
+      "lines": 94,
+      "callbacks_found": [
+        "draw",
+        "tick"
+      ],
+      "api_calls": [
+        {
+          "function": "GetPlayerHealth",
+          "line": 11,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "UiPush",
+          "line": 15,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 16,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiCenter",
+          "line": 16,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiHeight",
+          "line": 16,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 17,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 18,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiFont",
+          "line": 19,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 21,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiPush",
+          "line": 25,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 26,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiCenter",
+          "line": 26,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiHeight",
+          "line": 26,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 27,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 28,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiFont",
+          "line": 29,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 31,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiPush",
+          "line": 35,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 36,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiCenter",
+          "line": 36,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiHeight",
+          "line": 36,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 37,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 38,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiFont",
+          "line": 39,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 41,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "GetPlayerHealth",
+          "line": 47,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 50,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "InputPressed",
+          "line": 56,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetPlayerHealth",
+          "line": 66,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetPlayerHealth",
+          "line": 76,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "SetPlayerHealth",
+          "line": 84,
+          "domain": "server",
+          "needs_player_id": true,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 5,
+      "client_calls": 26,
+      "ambiguous_calls": 0,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": []
+    }
+  ],
+  "complexity": "simple",
+  "estimated_approach": "template",
+  "issues": []
+}

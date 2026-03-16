@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401574819",
+  "name": "Black Hole",
+  "author": "My Cresta",
+  "description": "Throwable Black Hole that grows in power over time and pulls in objects. You can change alot of things in the options.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "5545df90b52dddc1281323120c303feadecc823374bed159486bed5aa88fea86",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:53.345818"
+}

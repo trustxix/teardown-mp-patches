@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2686729186",
+  "name": "SCAR",
+  "author": "Tesseractahedron",
+  "description": "[noupload]The SCAR (Special Operation Forces Combat Assault Rifle) is an assault rifle designed for military use by Belgian firearms manufacturer FN Herstal. The SCAR comes in two variants: the SCAR-L (light) and SCAR-H (heavy) which fire the intermediate 5.56 NATO and larger 7.62 NATO calibers respectively. The SCAR has seen use by militaries across the world, including but not limited to the USA, Germany, France, Norway, India and Japan.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "options2.lua"
+  ],
+  "sha256": "95b256bcc0409d9a2db399a4b34a86d6be979519ed4240091abdb031ad50cd45",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:35.062970",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

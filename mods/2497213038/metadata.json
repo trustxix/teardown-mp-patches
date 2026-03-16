@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2497213038",
+  "name": "MEGAGUN",
+  "author": "Atenfyr",
+  "description": "If miniguns are so powerful, what would a MEGAGUN look like? The answer: unparalleled destructive power. Credit to Northcoast for the model and sfx",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "0de0a91b986e5f912cde63f1ff5de44dcabc3fd3ee00f7f8179b8cdad6a812a0",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:09.480435"
+}

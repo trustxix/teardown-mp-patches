@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2631642003",
+  "name": "New York (mini)",
+  "author": "steamcommunity.com/id/Land_Owl",
+  "description": "not New York, 1 voxel = 1 meter",
+  "tags": "map, asset",
+  "lua_files": [
+    "script\\ground.lua",
+    "script\\menu.lua",
+    "script\\small_player.lua"
+  ],
+  "sha256": "9ed9db909568846089730ad8609291c45f0f1d9cb2533bb63123d569efe23f5a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:13.212696",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401576949",
+  "name": "Dual Berettas",
+  "author": "My Cresta",
+  "description": "Standard Dual Berettas. Fire with Left and Right Click, Press R to reload.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "566ce5a6919aa8453e11887aa7cac9a5fd250ed070fb1d7806087120e547b1a2",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:53.924326"
+}

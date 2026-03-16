@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3405979963",
+  "name": "RMW - Desert Eagle",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Someone at Magnum Research tought \"wouldnt it be focken funny to make a semi auto mag fed magnum pistol?\" And they did it. Since then it has became the most iconic hand cannon to ever exist. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "6a394984660bd9722b3291c6d24d36995e182f8adf452029ec1d5c65e93b339a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:08.742575"
+}

@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401871948",
+  "name": "M249",
+  "author": "My Cresta",
+  "description": "Standard M249 Machine Gun. Press R to reload. Vox model made by Alagabry.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "7af8ca14cff3e488b92f271f56d107a07d80a0ca4ec28caa0e974b794f4cebb2",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:00.697883"
+}

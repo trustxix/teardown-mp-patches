@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2651403234",
+  "name": "Saiga-12",
+  "author": "Tesseractahedron",
+  "description": "[noupload]A modern Russian shotgun based on the infamous AK platform. The Saiga-12 is a 12-gauge hunting shotgun that is shares recognisable traits with the AK platform.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "007838fc860c50226167321bb9683c52d54b09f85c623bec137385b2f4627a86",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:24.858005",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

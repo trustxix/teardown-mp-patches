@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2728464103",
+  "name": "The Swap Button",
+  "author": "Geneosis",
+  "description": "[noupload]Bored of what's in front of you? Just swap it!",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "46dd84d8e717e1c8a1c3e687369fd7606621e5522a0f284ae03c435f2d81fab3",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:10.733129"
+}

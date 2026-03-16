@@ -1,0 +1,20 @@
+{
+  "workshop_id": "2843848555",
+  "name": "Bombard",
+  "author": "Zaap",
+  "description": "[noupload]A spawnable medieval bombard. To use, spawn it, then spawn a canon ball. Grab the canon ball and put it inside the barrel. Take the \"Lightning Stick\" tool in hand and left-click on the bombard.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "snippets.lua",
+    "scripts\\ball.lua",
+    "scripts\\bombard.lua",
+    "scripts\\explosiveball.lua",
+    "scripts\\fireball.lua"
+  ],
+  "sha256": "f7fd1ea909fa0b43dbde4d2cf40210cadc9a22f574029d3155a082c681357e71",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:51.987866"
+}

@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3408682775",
+  "name": "RMW - MP7",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Designed to defeat Kevlar, it sports its own unique ammo type, the 4.6\u00d730mm Nato. Altought its compatible with 9mm, and 45 acp with modifications. The Combine Empire approves of this submachine gun. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "3743f577c06daa42626f23f7840c130297fce32e2396fba4e8690c2e069f01f0",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:09.236722"
+}

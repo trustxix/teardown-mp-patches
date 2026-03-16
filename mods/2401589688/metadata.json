@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401589688",
+  "name": "Laser Cutter",
+  "author": "My Cresta",
+  "description": "Basic Laser Cutter. Change hole size and short range in options. Press 'C' to change between short and long range. Vox model made by cCheerSs.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "f04d4a9fe8ff394f851823f073ca675bd6dae0ca60a8f94bebbabf718c4d8039",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:55.659974"
+}

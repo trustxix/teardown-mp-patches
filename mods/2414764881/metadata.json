@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2414764881",
+  "name": "Mega Prop Pack",
+  "author": "Tuxedo Labs. Recreated By Tony Stark",
+  "description": "[noupload] A Small demonstration range for my prop recreations. tutorial on how to use them on workshop page.",
+  "tags": "Asset, Vehicle, Content",
+  "lua_files": [
+    "script\\monsterfreya.lua"
+  ],
+  "sha256": "381afe9e228d57e68ee8f8d4b7d1ca8e3473ca83d64ace0a2ee4cd47e90a30e9",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:34.415082"
+}

@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2419814408",
+  "name": "Attack Drone",
+  "author": "My Cresta",
+  "description": "Half-Autonomous Attack Drone that will follow the player and hover nearby, you can shoot from the drone with LMB and go into drone camera view with RMB. [noupload]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "f3115ea2f253fa5a7c868bf16ab7d4d9aeda5eef881abbfdf1c0fc994b808f26",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:04.653226"
+}

@@ -1,0 +1,197 @@
+{
+  "mod_name": "Mj\u00f6lner",
+  "mod_type": "tool",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "main.lua",
+      "lines": 250,
+      "callbacks_found": [
+        "init",
+        "etAimPos(",
+        "mackDown(",
+        "oost(",
+        "igSmack(",
+        "raw(",
+        "ick(",
+        "date(d",
+        "eateLinePos(s"
+      ],
+      "api_calls": [
+        {
+          "function": "RegisterTool",
+          "line": 6,
+          "domain": "server",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ],
+      "server_calls": 1,
+      "client_calls": 0,
+      "ambiguous_calls": 0,
+      "deprecated_calls": [],
+      "entity_handle_checks": [
+        {
+          "line": 127,
+          "content": "if lightningTimer > 0 then"
+        },
+        {
+          "line": 131,
+          "content": "if swingTimer > 0 then"
+        },
+        {
+          "line": 142,
+          "content": "if lightningTimer > 0 then"
+        },
+        {
+          "line": 166,
+          "content": "if lightningTimer > 0 then"
+        },
+        {
+          "line": 169,
+          "content": "if swingTimer > 0 then"
+        },
+        {
+          "line": 172,
+          "content": "if swingCooldown > 0 then"
+        }
+      ],
+      "registry_usage": []
+    },
+    {
+      "file": "options.lua",
+      "lines": 68,
+      "callbacks_found": [
+        "init",
+        "drawMjolnerOptions",
+        "raw(",
+        "ptionsSlider(",
+        "ound("
+      ],
+      "api_calls": [
+        {
+          "function": "GetFloat",
+          "line": 2,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        },
+        {
+          "function": "UiMakeInteractive",
+          "line": 7,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 8,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiCenter",
+          "line": 8,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiAlign",
+          "line": 9,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 10,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 11,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiImageBox",
+          "line": 12,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiTranslate",
+          "line": 13,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiColor",
+          "line": 14,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiFont",
+          "line": 15,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        },
+        {
+          "function": "UiText",
+          "line": 16,
+          "domain": "client",
+          "needs_player_id": false,
+          "restricted_to": "client.draw",
+          "deprecated": null
+        }
+      ],
+      "server_calls": 0,
+      "client_calls": 11,
+      "ambiguous_calls": 1,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": [
+        {
+          "function": "GetFloat",
+          "line": 2,
+          "domain": "both",
+          "needs_player_id": false,
+          "restricted_to": null,
+          "deprecated": null
+        }
+      ]
+    }
+  ],
+  "complexity": "medium",
+  "estimated_approach": "template",
+  "issues": [
+    "Handle check at main.lua:127: if lightningTimer > 0 then",
+    "Handle check at main.lua:131: if swingTimer > 0 then",
+    "Handle check at main.lua:142: if lightningTimer > 0 then",
+    "Handle check at main.lua:166: if lightningTimer > 0 then",
+    "Handle check at main.lua:169: if swingTimer > 0 then",
+    "Handle check at main.lua:172: if swingCooldown > 0 then"
+  ]
+}

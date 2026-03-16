@@ -1,0 +1,18 @@
+{
+  "workshop_id": "3453220485",
+  "name": "RMW - G3A1",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The Old Timer of the Bundeswehr. Deifned the West German Army in the Cold War. Replaced by the G36 Series after the Berlin Wall fell. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe (2).lua",
+    "safe.lua"
+  ],
+  "sha256": "c72966bcabb3c6cf582150da176d66a029e5811865263aeb07ff4b2135e3b443",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:20.061516"
+}

@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401591104",
+  "name": "SG553",
+  "author": "My Cresta",
+  "description": "SG553 with Scope. Press R to reload, Right-Click to Zoom. Change Zoom level with mouse scroll.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "45935c18132f92c7388dedf3791292af2dc38564916862c1be7100619aae2d12",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:57.362429"
+}

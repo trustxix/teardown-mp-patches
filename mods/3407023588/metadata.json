@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3407023588",
+  "name": "RMW - MK18",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - A (Most of the time) CQB configuration of the AR15. Often seen with two toned parts, so thats what i also did. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "70882b98111e695cfe0de3fdd096a4e2e0bcc54ee7678c1fc2b4133a2dbfc994",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:08.909867"
+}

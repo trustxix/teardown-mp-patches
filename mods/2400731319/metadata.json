@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2400731319",
+  "name": "Charge Shotgun",
+  "author": "My Cresta",
+  "description": "Charge Shotgun that can shoot up to 900 bullets at once. Hold Left-Click to charge, release to fire.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "e4550818d0e2ad830a6d5f7c42be21e2bd0d7cb692b5d8afa54361d63ed9fab5",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:28.352055"
+}

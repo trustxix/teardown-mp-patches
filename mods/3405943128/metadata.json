@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3405943128",
+  "name": "RMW - Stoeger Double Defense",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Its a modern spin on the age old double barelled shotgun concept. This one is the over and under barelled version. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "1ed67890eeb980dc19460674153e5b6da40bb30ed13a152241409f9ed3eb6343",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:08.584538"
+}

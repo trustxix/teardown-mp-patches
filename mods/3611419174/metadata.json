@@ -1,0 +1,24 @@
+{
+  "workshop_id": "3611419174",
+  "name": "[PB] Assault Pack 1",
+  "author": "SafetyCar",
+  "description": "Assault Pack 1 is an extension to ProBallistics utilising its brand new hand-held weapons support and bringing a couple of cool weapons.[noupload]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "internal\\script_defs.lua",
+    "src\\ar10.lua",
+    "src\\ar15p.lua",
+    "src\\ar15s.lua",
+    "src\\ar16sx.lua",
+    "src\\assault-pack1.lua",
+    "src\\sdk\\base.lua",
+    "src\\sdk\\symbols.lua",
+    "src\\sdk\\weapons.lua"
+  ],
+  "sha256": "20ba4e5f8d7b5f73f612f2d7064ff7a7dc3c927862af3ff70c56f5f9e1f4cdce",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:28.344784"
+}

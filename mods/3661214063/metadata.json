@@ -1,0 +1,19 @@
+{
+  "workshop_id": "3661214063",
+  "name": "ODM Gear Revorked",
+  "author": "O hello 2.0",
+  "description": "Revorked and modified version of odm maded by ChiefCloudEye",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "Reservs\\Reserve (2).lua",
+    "Reservs\\Reserve.lua",
+    "Reservs\\Reserve3.lua"
+  ],
+  "sha256": "9d788d4fa3e1eb2770888fa93405719b043ba91f59f1e1fc9e3c8e7c10458b10",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:33.597677",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

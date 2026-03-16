@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2628628690",
+  "name": "Colossus Attack",
+  "author": "tislericsm (Tislerics M\u00e1t\u00e9)",
+  "description": "On this map there is an iron colossus that walks through everything. Turn off performance and Structural Integrity mods for this map! The props were made by BattleBob72!",
+  "tags": "map",
+  "lua_files": [
+    "flail.lua",
+    "motor.lua",
+    "script\\turret.lua"
+  ],
+  "sha256": "09a73008d467be63476e36ba01868ff14661800945a3607d22bd182c89493ae5",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:12.027523"
+}

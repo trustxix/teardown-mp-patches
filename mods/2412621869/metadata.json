@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2412621869",
+  "name": "Hook Shotgun",
+  "author": "My Cresta",
+  "description": "Shoot with LMB. Hook/pull with RMB. Open/close menu with R.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "735d430086ced3352d18de02556e727c2579fdb48ea60d284b5ce1b00e5b6750",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:02.885709"
+}

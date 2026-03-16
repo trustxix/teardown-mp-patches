@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3414873272",
+  "name": "RMW - AA12",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - American made, big, black, boxy automatic shotgun that spits buckshot like theres no tomorrow. Daddy FPS Russia would love this. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "3034105563e8a943a54f2a594291a7987f40e785152a6e7c34b88f375abb1fdf",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:09.748830"
+}

@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3405573992",
+  "name": "RMW - MP5",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The finest submachinegun ever be put into production. Still used by British Police and special forces, since its so good for CQB. And comes with the best thing ever, the HK slap. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "cb88b80a5cf88986ed1082aca83c60a88c496050ee4a3b34b635d747ee97bccb",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:08.421852"
+}

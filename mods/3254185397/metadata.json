@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3254185397",
+  "name": "Lively Bunnies",
+  "author": "Geneosis",
+  "description": "Spawnable AI bunnies. Does what bunnies does (some might bite).",
+  "tags": "Gameplay, Asset",
+  "lua_files": [
+    "scripts\\bunny_ai.lua",
+    "scripts\\poop.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "f778f0c67cdfacc900284b2e57b055a097551dc7a24c48fe49eaafa176803904",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:42:59.136957"
+}

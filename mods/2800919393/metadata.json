@@ -1,0 +1,23 @@
+{
+  "workshop_id": "2800919393",
+  "name": "Bikes, Ramps & Ragdolls Collection",
+  "author": "JiffyUP",
+  "description": "[h1] Introduction[/h1]",
+  "tags": "Vehicle, Asset, Gameplay, Content",
+  "lua_files": [
+    "vox\\bike\\bike_jump.lua",
+    "vox\\bike_blue\\bike_jump_blue.lua",
+    "vox\\bike_blue no wheel\\bike_jump_blue.lua",
+    "vox\\bike_dude\\bike_jump_blue.lua",
+    "vox\\bike_trike\\bike_trike_jump.lua",
+    "vox\\double_bike\\double_bike_jump.lua",
+    "vox\\double_bike_dudes\\double_bike_jump.lua",
+    "vox\\gentleman_bike\\gentleman_bike_jump.lua"
+  ],
+  "sha256": "e22a7e7315c48da01c2d4016182e3df5cbeb28898723d0bad6dc7cad58a11f41",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:46.519315",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

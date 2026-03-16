@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401575709",
+  "name": "AC130 Airstrike",
+  "author": "My Cresta",
+  "description": "[noupload] AC130 Airstrike with 4 different shells. Press 'Right-Click' to toggle between plane view and ground view. Press 'C' to toggle between shells. Change Zoom level with mouse scroll. Radio model made by Alagabry. Plane model made by Cheejins.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "96e255c9c66f44a05960bd3b2dd954f679555f88e06409e0bf4cd3df61e0dd5b",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:39:52.573074"
+}

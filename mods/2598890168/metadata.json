@@ -1,0 +1,25 @@
+{
+  "workshop_id": "2598890168",
+  "name": "Player Scaler",
+  "author": "NLferdiNL",
+  "description": "[noupload]Scale the player down for your tiny needs!",
+  "tags": "Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "datascripts\\color4.lua",
+    "datascripts\\inputList.lua",
+    "datascripts\\keybinds.lua",
+    "scripts\\menu.lua",
+    "scripts\\savedata.lua",
+    "scripts\\textbox.lua",
+    "scripts\\ui.lua",
+    "scripts\\utils.lua",
+    "toolscripts\\tool_main.lua"
+  ],
+  "sha256": "ad277ea1b11568c9c54f6ccd5ab7fb00369efc0c2fe137a4df02795ba00396b1",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:09.990684"
+}

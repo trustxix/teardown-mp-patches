@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3414850251",
+  "name": "RMW - AUGA3",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Austrian made bullpup rifle, used by such countries as Australia and its origin country Austria.  >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "958591190ba8b0a92bac47b39d19624801f5be071b49db478ad68041a806ae99",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:09.570756"
+}

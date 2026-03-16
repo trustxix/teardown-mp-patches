@@ -1,0 +1,22 @@
+{
+  "workshop_id": "3586166386",
+  "name": "The Lockonauts Toolbox",
+  "author": "Prop Guy, Novena, One Thousand Volts (A.K.A DirtyDan), Slippy, Hotcocoa",
+  "description": "[noupload] All the neccesary tools to fill a Lockonaut's toolbox. NOT MEANT TO BE ENABLED ALONGSIDE LOCKONAUTS! This just brings the tools to sandbox.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "script\\bondanchor.lua",
+    "script\\grapplehook.lua",
+    "script\\gravityinterceptor.lua",
+    "script\\screwdriver.lua",
+    "script\\ui.lua",
+    "script\\utilities.lua",
+    "script\\vfx.lua"
+  ],
+  "sha256": "7b4ae7f04ade57d42d7f6f4cc80a914b6e27eb0f6a2f4a9441e80d53cc13c1c6",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:24.845892"
+}

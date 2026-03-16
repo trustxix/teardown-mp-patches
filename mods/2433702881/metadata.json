@@ -1,0 +1,22 @@
+{
+  "workshop_id": "2433702881",
+  "name": "Chaos Mod",
+  "author": "NLferdiNL, Superfroggman, MutatedOnion, Snazzah, The Mafia",
+  "description": "[noupload]Chaos mod based on the ones from the GTA series.",
+  "tags": "Gameplay",
+  "lua_files": [
+    "debug.lua",
+    "effects.lua",
+    "main.lua",
+    "options.lua",
+    "quickload.lua",
+    "textbox.lua",
+    "utils.lua"
+  ],
+  "sha256": "d5471669f85100acfc23c1c7195880d721fb8de7205da129e326de134de807e8",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:39:56.287529",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

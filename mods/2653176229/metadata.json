@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2653176229",
+  "name": "AK-12",
+  "author": "Tesseractahedron",
+  "description": "[noupload]A modern Russian assault rifle based on the infamous AK platform. The AK-12 is a recently developed rifle for use by Russian armed forces. It is officially designated the 6P70 and is chambered in 5.45x39. However, it can also come in other calibers such as 7.62x39 and 7.62x51, the latter receiving the AK-308 designation rather than AK-12.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "options2.lua"
+  ],
+  "sha256": "4f3a2935067142729f6e33a67322cd8049b561e894adf32051c1e351f7e307b7",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:25.160331",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

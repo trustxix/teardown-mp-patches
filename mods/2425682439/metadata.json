@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2425682439",
+  "name": "Bee Gun",
+  "author": "My Cresta",
+  "description": "You can shoot bees that will fly straight and bounce on any surface. You can toggle hungry bees or prime bees to explode on next contact. Bees die automatically 20 seconds after not hitting anything.",
+  "tags": "",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "f57fb2d56806c17ae4115359a236e8fcfd41029f1ad3ea5ef3f4cbba6b52ddaf",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:39.471568"
+}

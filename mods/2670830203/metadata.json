@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2670830203",
+  "name": "Dragunov SVU",
+  "author": "Tesseractahedron",
+  "description": "[noupload]Dragunov SVU is a DMR used by Russian military forces. It is a bullpup marksman rifle based on the SVDM receiver.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "870f4d6cb6299df7e4bf616c68b8804ad7da0488e071f08b0b269ae097af713c",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:31.497422",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

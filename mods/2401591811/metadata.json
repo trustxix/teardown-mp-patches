@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401591811",
+  "name": "Dragonslayer",
+  "author": "My Cresta",
+  "description": "Dragonslayer from Berserk. Left-Click to swing sword, Right-Click to do spinning attack. You are immortal and can multi jump while holding the Dragonslayer.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "459b3c175cd1e62032572c3f5869b2130ff08cc6faeb8b9d6605468617f77890",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:29.314371",
+  "validation_notes": "SetPlayerHealth in client.tick - works on host, ideal fix needs server.tick split"
+}

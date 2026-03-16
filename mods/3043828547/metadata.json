@@ -1,0 +1,26 @@
+{
+  "workshop_id": "3043828547",
+  "name": "Prop Gallery",
+  "author": "Geneosis",
+  "description": "[noupload]Found some cool prop? Save them to your gallery and load them back any time, anywhere!",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\json.lua",
+    "scripts\\registry.lua",
+    "scripts\\shape_utils.lua",
+    "scripts\\spawn_helper.lua",
+    "scripts\\tool.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "72c983fb580ed361f41d9115eec2b5d4d93de6def609c82aa67c9c95b6b0c10a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:41:04.005632",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

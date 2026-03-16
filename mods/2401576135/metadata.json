@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2401576135",
+  "name": "Magic Bag",
+  "author": "My Cresta",
+  "description": "Magic Bag that lets you pick up an infinite amount of objects, you can throw the items from top order. Pick stuff with LMB. Hold RMB to increase power and release to throw.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "af25bc8eb0af67013b212af57e9ba368d665b00719eef8f8a09444d4b266a606",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:28.830998"
+}

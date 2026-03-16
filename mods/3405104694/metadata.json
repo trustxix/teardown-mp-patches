@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3405104694",
+  "name": "RMW - M870",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Classic American Pump Action Shotgun. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "b9e8b4971303cd56f8883eb9f27ad2c539fdeb7a172acd6d152602658b7c34ce",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:08.253245"
+}

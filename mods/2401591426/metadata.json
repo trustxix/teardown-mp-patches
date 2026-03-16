@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401591426",
+  "name": ".500 Magnum",
+  "author": "My Cresta",
+  "description": ".500 Magnum, the strongest Handgun. Hold RMB to empty mag fast. Press R to reload.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "23376a4c2f1a12a55eda7176a2a569b3f8fd28f600ca1be1aceff44f84f2a3f0",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:57.924613"
+}

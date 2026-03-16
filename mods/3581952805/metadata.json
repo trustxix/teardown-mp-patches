@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3581952805",
+  "name": "RMW - MP7",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - A cool modern smg with an integrated recoil compensator inside the main body of the weapon that basically \"hammers down\" the recoil. Chambered in .45 ACP. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "0ce85f011eeb2d2c574e6d3ea824a9e1bfb7a196540cfc8ca5a15be68f857af9",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:24.496723"
+}

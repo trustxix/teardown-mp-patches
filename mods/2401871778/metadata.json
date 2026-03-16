@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401871778",
+  "name": "Multi Grenade Launcher",
+  "author": "My Cresta",
+  "description": "Multi Grenade Launcher, MGL-105. Press R to reload, Press 'Z' or 'X' to change fuse time and Press 'C' to switch between timed and sticky nades. Vox model made by Kolaach.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "c84b287f4c7012c63784e9dad3997020b7a0a46997e1c8ed5a66b119b7e45432",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:00.152926"
+}

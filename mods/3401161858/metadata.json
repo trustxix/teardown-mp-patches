@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3401161858",
+  "name": "RMW - MK 153 SMAW",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - For anyone wondering, it stands for Shoulder-Launched Multipurpose Assault Weapon. One of america's many many tools to turn enemy vehicles into iron coffins. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SPRINT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "980f88f29e9b58f3a98143da08d42f4ab4a9118505fdb2597253eb9048ac9519",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:06.609440"
+}

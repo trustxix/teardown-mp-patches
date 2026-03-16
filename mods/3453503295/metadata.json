@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3453503295",
+  "name": "RMW - FAMAS F1",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The Famas was the first modern assault rifle of the French army, and it became synonimus with French soldiers. It's shaped weird and is a bullpup, pretty much the first bullpup rifle to be adopted by any armed forces. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "71ed3666ff41bb6b74c0dff01de6986825d39a4dba2c5a9b29fa091b727c945a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:20.302393"
+}

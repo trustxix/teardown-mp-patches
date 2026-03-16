@@ -1,0 +1,23 @@
+{
+  "workshop_id": "3576567190",
+  "name": "Enchanter",
+  "author": "Geneosis",
+  "description": "[noupload]Apply and dispel enchantments on any object.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\registry.lua",
+    "scripts\\tool.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "60376a8888afe9945841800a11202d959a6f0df73c40f25c35cc125c28451ab8",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:23.732318",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

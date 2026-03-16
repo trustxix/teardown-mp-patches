@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2400975518",
+  "name": "Dual Miniguns",
+  "author": "My Cresta",
+  "description": "Very fast Miniguns that counts how many bullets you fire. Fire with Left and Right Click.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "2b9fcb78cc5a1db20281c0757ca7099fbefb994d430ba6132285623022bd79ef",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:52.789223"
+}

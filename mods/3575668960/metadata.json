@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3575668960",
+  "name": "RMW - FN P90",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - An avantgarde take on the bullpup design. Well known PDW made for close quarters. Looks like alien tech. Ejects at bottom. Mag is on top and overall its just a gun that screams \"look, im unique\" and it pretty much is. Over all a very lovely PDW. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "8b32bb9fb0530be4a5fa894a35adf1c7e662ac3c8c21424202bf05d8aabae513",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:23.373301"
+}

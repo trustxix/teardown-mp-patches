@@ -1,0 +1,5 @@
+name = MP Ready Mod
+author = UpdatedAuthor
+description = Already multiplayer compatible
+tags = Tool
+version = 2

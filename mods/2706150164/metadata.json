@@ -1,0 +1,25 @@
+{
+  "workshop_id": "2706150164",
+  "name": "Bouncepad",
+  "author": "Geneosis",
+  "description": "[noupload]Placeable Trampolines, Bouncepads, Jumppads and Antipads",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\gun.lua",
+    "scripts\\pad.lua",
+    "scripts\\registry.lua",
+    "scripts\\sound.lua",
+    "scripts\\tool.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "b68b17f0f6613992c69159e3d8432da3d4d99b0a753b309e5e2d0cc811e4d552",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:36.140175"
+}

@@ -1,0 +1,29 @@
+{
+  "workshop_id": "2606695330",
+  "name": "Micro Metropolis",
+  "author": "Parking Meter",
+  "description": "[noupload]A vast city with a ridiculously small scale! Features a to-scale, drivable monster truck and a few different ships. New Night mode update!!",
+  "tags": "map",
+  "lua_files": [
+    "menu\\menu.lua",
+    "menu\\menuCancel.lua",
+    "main\\plane\\plane.lua",
+    "main\\plane\\plane_travel.lua",
+    "main\\scripts\\blink.lua",
+    "main\\scripts\\Color_cycle-1ssnl.lua",
+    "main\\scripts\\Color_cycle.lua",
+    "main\\scripts\\smoke.lua",
+    "main\\scripts\\WindTurbine.lua",
+    "main\\TurbineLogos\\TL.lua",
+    "main\\BillBoards\\scripts\\HW_1.lua",
+    "main\\BillBoards\\scripts\\HW_2.lua",
+    "main\\BillBoards\\scripts\\HW_3.lua",
+    "main\\BillBoards\\scripts\\HW_4.lua",
+    "main\\BillBoards\\images\\nothing to see here\\easteregg.lua"
+  ],
+  "sha256": "eb9ca042ab4416382fa446ac361e1b85cd42a4fbda17002750ba4a51440b3c8d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:10.904034"
+}

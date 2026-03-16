@@ -1,0 +1,4 @@
+name = Laser Cutter
+author = TestAuthor
+description = A simple laser cutting tool
+tags = Tool

@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3454536933",
+  "name": "RMW - SA80",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Service rifle of the British armed forces since they replaced the L1A1 (FN FAL). Now quite recently has been replaced by the M416. Oh boy European Militaries are quite fond of their bullpup designs are they...  >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "d7fc0802eafd738307585167b2dcf16dc22bafbb933ac4b981bd591226b2f720",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:20.666006"
+}

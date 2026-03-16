@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2648760922",
+  "name": "Revengeance Katana",
+  "author": "stringie",
+  "description": "A katana that slashes anything in its path in half! Heavily inspired by Metal Gear Rising: Revengeance (hence the name) and by Ichigo's bankai katana from the Bleach anime. Check out the many videos I made with it on my channel to see what it can do! Have fun!",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "ca20edae83048da60d6a18edd30c1b25466b2e12299667bc27d82ccf4957ef9a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:24.746836"
+}

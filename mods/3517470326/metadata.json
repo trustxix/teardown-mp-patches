@@ -1,0 +1,15 @@
+{
+  "workshop_id": "3517470326",
+  "name": "Rubyyy's Bleeding System",
+  "author": "Mr. Rubyyy",
+  "description": "It's a simple bleeding System. It disables Health regeneration. When your Health goes under 65%, you start bleeding. Bleeding can be stopped via bandaging with the \"B\" key. It stops the bleeding and resets your Health to 65%. To get to full Health again, you need to use a medkit. that can be done with the \"N\" key. Note that you cant use medkit to stop bleeding and vice versa. Can be a challanging addition to campaign. And can increase realism in the upcoming multiplayer, or againts enemy NPC's.",
+  "tags": "Gameplay, Asset",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "b1b938d568638ce902726ed8fb7d0918c0902f5998eaadb457c3615ac741ebfc",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:41.444509"
+}

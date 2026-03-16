@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2598610013",
+  "name": "Sith Saber",
+  "author": "BattleBob72",
+  "description": "***NEW DOUBLE BLADED LIGHTSABER*** - 7 colored single blades to choose from in options - Throwable and Controllable where it orbits/destroys by pressing RMB - Early Return after throw by pressing LMB - Press \"Z\" to put away lightsaber ***FORCE LIGHTNING*** - Press \"E\" to shoot powerfull lightning blasts out of your left hand ***FORCE LEVITATION*** - Press \"Q\" to force lift everything in front of you - Walk forward or backward while pressing Q to push/pull objects - ***FORCE CRUSH*** - Press \"C\" to pull everything in front of you and crush it into nothing - ***FORCE JUMP*** - Press and hold \"SpaceBar\" to force jump/levitate yourself.  Big thanks to ***Dzage*** for helping with improved force effects and providing a more \"Teardown\" like Sith hand model.  NEW UPDATE *** Even *** better force lightning and the ability to snuff out all fires when Pressing \"Z\" to put away lightsaber, thanks to Dzage.  New double bladed lightsaber thanks to Dzage and Micro. ***",
+  "tags": "Tool",
+  "lua_files": [
+    "main - Copy.lua",
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "3d7a4a4d664c88d1aacd341dcb811ab9bb52c55f6da5c9b8b180dedd55fbb7e9",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:09.517711",
+  "validation_notes": "Checks failed: SERVER-AUTH, UI-IN-DRAW"
+}

@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401872536",
+  "name": "Exploding Star",
+  "author": "My Cresta",
+  "description": "Throwing Stars that will stick to whatever it hits and will explode after timer. Options for explosion power and timer.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "985f2a415c3af233d76e43d8798b89a8372ad2aea1cbb8261694deccfcd9e2a8",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:01.791075"
+}

@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2401872753",
+  "name": "Guided Missile",
+  "author": "My Cresta",
+  "description": "[noupload] Guided Missile that you can control. While flying, Left-Click to explode, Right-Click to detach. Space to go faster. Vox model made by Alagabry and me.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "05ac520061bc9d9d795a3623c949291a4c8f7fdee775135a98f62b65ed3ef856",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:07.808499"
+}

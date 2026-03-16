@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3582628842",
+  "name": "RMW - QBZ-95",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Weapon of choice for the PLA of China for almost two decades. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "7a8e2a472e4c56b5e9f72eb7c20837dae06616f4db54905f900ba2e79894079d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:24.667102"
+}

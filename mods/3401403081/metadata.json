@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3401403081",
+  "name": "RMW - G17",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Austrian, Polymer, blocky. We all love it. Made for ALL purposes a handgun can be made for. Its everywhere in the western World. Police, Military, Everywhere. For good reason tho, reliable and accurate, easy to conceal. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "a77bc656e9be84136d21e77b6e8569ace1e6c375c76543316a1463d91b58db86",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:07.096854"
+}

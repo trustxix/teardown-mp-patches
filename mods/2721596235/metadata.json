@@ -1,0 +1,28 @@
+{
+  "workshop_id": "2721596235",
+  "name": "BHL-X42",
+  "author": "Geneosis",
+  "description": "[noupload]Launch tiny Black Holes, and watch them grow!",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\black_hole.lua",
+    "scripts\\debug.lua",
+    "scripts\\gun.lua",
+    "scripts\\projectiles.lua",
+    "scripts\\registry.lua",
+    "scripts\\sound.lua",
+    "scripts\\timers.lua",
+    "scripts\\tool.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "e3e9504b236b80aa6140a589c00847fd0a2bfbf062d7d988e4be831b48ab1a22",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:36.648815",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

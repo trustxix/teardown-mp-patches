@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2637503043",
+  "name": "M4A1",
+  "author": "Tesseractahedron",
+  "description": "[noupload]A famous pattern of rifle designed by Eugene Stoner.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "options2.lua"
+  ],
+  "sha256": "362556f23878e9f839c337b86c37a2d7de7b419ad66be3c0ecbb395bee7199a8",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:24.202050",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

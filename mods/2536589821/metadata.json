@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2536589821",
+  "name": "AK-105",
+  "author": "Tesseractahedron",
+  "description": "[noupload]A modern Russian assault rifle based on the infamous AK platform. The AK-105 is shortened carbine version of the AK-74M.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "options2.lua"
+  ],
+  "sha256": "f76232aacb68f5ffea6c5f985237d8de7a035f230251cfa514158e23f66cda6c",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:00.470734",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

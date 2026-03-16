@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2588821225",
+  "name": "G36K",
+  "author": "Tesseractahedron",
+  "description": "[noupload]A modern German assault rifle manufactured by Heckler and Koch. The G36K is shortened version of the G36 and is used by military and police forces around the world.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "options2.lua"
+  ],
+  "sha256": "04ac33b4c3c0b5eb045957290f16bb1b8cdae6d59d7e7aff07d71b24d9823b4e",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:08.175566",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

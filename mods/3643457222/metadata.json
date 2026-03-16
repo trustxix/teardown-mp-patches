@@ -1,0 +1,31 @@
+{
+  "workshop_id": "3643457222",
+  "name": "AndRe's Koenigsegg Agera",
+  "author": "And:Re",
+  "description": "High developed vehicles: Koenigsegg Agera",
+  "tags": "Vehicle, spawn",
+  "lua_files": [
+    "script\\Radio_Samara.lua",
+    "script\\trexroar.lua",
+    "script\\trextest.lua",
+    "Scripts\\EVF.lua",
+    "Scripts\\flying_car.lua",
+    "Scripts\\Lamp.lua",
+    "Scripts\\pine.lua",
+    "Scripts\\PoliceLightsF.lua",
+    "Scripts\\radio.lua",
+    "Scripts\\Radio_Car.lua",
+    "Scripts\\tree.lua",
+    "Sounds\\Radio_bass.lua",
+    "Sounds\\Radio_Car.lua",
+    "Sounds\\Radio_siren.lua",
+    "script\\car_mechanics\\car_lift.lua",
+    "script\\car_mechanics\\door_auto.lua"
+  ],
+  "sha256": "4f91f330979c9a34c0e0374c33fdc4f33d843969854257c7c9dd83bfad0f2e6a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:31.865404",
+  "validation_notes": "Checks failed: HANDLE-SAFE, SERVER-AUTH"
+}

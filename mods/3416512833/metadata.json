@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3416512833",
+  "name": "RMW - AKM",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - It is THE AK. The modernized\u2026 or at least an upgraded version of the all well know Type 1 AK-47. But over all it retained its original and very iconic shape. You can turn it into the an AKMS or the weird Romanian Foregrip AK's too. (YOU CAN MODIFY THE STOCK NOW TOO!!!!) >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "09fafbb1dae19dbc7f0f602ca102769951a2100034709bcd279bc57287570b11",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:09.924097"
+}

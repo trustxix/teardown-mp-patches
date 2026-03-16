@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3401402900",
+  "name": "RMW - MP443",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Russia needed a bit more modern sidearm, so they got one. Its a pretty standard 9x9mm handgun. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "1ee14db93573cf072fec26465762c8f27d09fae175a105d30eea75275d84ac95",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:06.934323"
+}

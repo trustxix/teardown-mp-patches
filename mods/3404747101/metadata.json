@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3404747101",
+  "name": "RMW - PKP Pecheneg",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Based on the PKM (pretty much being almost 1 to 1), the PKP Penecheg is a more accurate, ergonomic LMG, with better heat managment. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "2c5134d62fab0e79b5175c762a3f1e2ec646faf32067c8bd1a8a252f17559f66",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:07.426447"
+}

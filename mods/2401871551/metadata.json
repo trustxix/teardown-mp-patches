@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401871551",
+  "name": "P90",
+  "author": "My Cresta",
+  "description": "Standard P90. Press R to reload. Vox model made by landenbullard (mango.)",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "9667ea98193da9d0f9070ff1a44f94f4f2f8bcc46f9335f40b52d100b0596a8b",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:59.571722"
+}

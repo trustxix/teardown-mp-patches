@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3549181010",
+  "name": "Infinity technique",
+  "author": "DiggolBick",
+  "description": "[noupload] Satoru Gojo's Limitless / Infinity cursed technique. My first mod. Updated for the most recent teardown experimental update (sadly IDK how I'm going to port this to multiplayer yet, going to try and work on it eventually. maybe not)",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "62c4b3b9b96805a2689c1ab1b94d018740c084eb55fe0c8efc26b58662a1bde0",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:21.944532",
+  "validation_notes": "Checks failed: SERVER-AUTH"
+}

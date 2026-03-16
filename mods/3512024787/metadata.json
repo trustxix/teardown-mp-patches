@@ -1,0 +1,18 @@
+{
+  "workshop_id": "3512024787",
+  "name": "RMW - HK416",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - HnK like the AR15 so much they made their own. And its actually better than the original. Cos its HnK probably. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua",
+    "script\\FPArms.lua"
+  ],
+  "sha256": "d90ce0d87a9b51c9e22c747ea11c930ddbe0fe90f9b2484b64bb99ef82add591",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:21.235102"
+}

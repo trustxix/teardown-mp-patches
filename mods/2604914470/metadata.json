@@ -1,0 +1,19 @@
+{
+  "workshop_id": "2604914470",
+  "name": "Explosive Pack by gs_115",
+  "author": "gs_115",
+  "description": "Explosive Pack by gs_115. Controls: LMB: Place Explosive RMB/K: Detonate Explosives R: Remove All Explosives C: Change Explosif Explosif Types: C4 EMP(Don't work for all lights) Claymore Landmine Incendiary Door Breaching Charge The mod contains an edited script of Teardown's robot IA to implement damage, which requires a manual download.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "robotMod\\robot.lua",
+    "robotMod\\robotOriginal.lua"
+  ],
+  "sha256": "3570691fea9988c0c6bdfb5668c93711e5e5ceaef1642c0348814c74c4b8caac",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:10.352185",
+  "validation_notes": "Checks failed: HANDLE-SAFE, SERVER-AUTH"
+}

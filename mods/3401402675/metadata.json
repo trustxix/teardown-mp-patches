@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3401402675",
+  "name": "RMW - 92FS",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The Beretta 92FS was adopted by the US Police and Military Forces under the name \"M9\". It's an Italian Made 9x19mm handgun and it was adopted for it's accuracy mostly. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "ca9d53b4f8855f42ae77326384ec3fd42c6d28ca0db36dce5f3e5f91c33a8a2a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:06.771582"
+}

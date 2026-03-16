@@ -1,0 +1,1541 @@
+{
+  "SetPlayerHealth": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "SetPlayerHealth(health)",
+    "mp_signature": "SetPlayerHealth(playerId, health)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Must specify which player to set health for; only callable from server context."
+  },
+  "GetPlayerHealth": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerHealth()",
+    "mp_signature": "GetPlayerHealth(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Must specify which player's health to read; only callable from server context."
+  },
+  "ApplyPlayerDamage": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "ApplyPlayerDamage(damage)",
+    "mp_signature": "ApplyPlayerDamage(playerId, damage)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Damage application must target a specific player and run on server."
+  },
+  "RespawnPlayer": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "RespawnPlayer()",
+    "mp_signature": "RespawnPlayer(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Respawns the specified player at their last respawn point."
+  },
+  "RespawnPlayerAtTransform": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "RespawnPlayerAtTransform(transform)",
+    "mp_signature": "RespawnPlayerAtTransform(playerId, transform)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Respawns the specified player at an explicit transform."
+  },
+  "DisablePlayer": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "DisablePlayer(disabled)",
+    "mp_signature": "DisablePlayer(playerId, disabled)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Enables or disables the specified player; server authority required."
+  },
+  "DisablePlayerInput": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "DisablePlayerInput(disabled)",
+    "mp_signature": "DisablePlayerInput(playerId, disabled)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Locks or unlocks input for the specified player; server authority required."
+  },
+  "DisablePlayerDamage": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "DisablePlayerDamage(disabled)",
+    "mp_signature": "DisablePlayerDamage(playerId, disabled)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Toggles godmode for the specified player; server authority required."
+  },
+  "SetPlayerVehicle": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "SetPlayerVehicle(vehicle)",
+    "mp_signature": "SetPlayerVehicle(playerId, vehicle)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Forces the specified player into or out of a vehicle; server authority required."
+  },
+  "GetPlayerVehicle": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerVehicle()",
+    "mp_signature": "GetPlayerVehicle(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the vehicle handle the specified player is currently in, or 0 if on foot."
+  },
+  "GetPlayerTool": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerTool()",
+    "mp_signature": "GetPlayerTool(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the current tool name for the specified player."
+  },
+  "SetPlayerTool": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "SetPlayerTool(toolName)",
+    "mp_signature": "SetPlayerTool(playerId, toolName)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Switches the active tool for the specified player; server authority required."
+  },
+  "GetPlayerTransform": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerTransform()",
+    "mp_signature": "GetPlayerTransform(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space transform of the specified player."
+  },
+  "SetPlayerTransform": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "SetPlayerTransform(transform)",
+    "mp_signature": "SetPlayerTransform(playerId, transform)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Teleports the specified player to a world-space transform; server authority required."
+  },
+  "GetPlayerPos": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerPos()",
+    "mp_signature": "GetPlayerPos(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space position vector of the specified player."
+  },
+  "GetPlayerRigTransform": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerRigTransform()",
+    "mp_signature": "GetPlayerRigWorldTransform(playerId)",
+    "restricted_to": null,
+    "deprecated": "GetPlayerRigWorldTransform",
+    "notes": "Deprecated; use GetPlayerRigWorldTransform instead."
+  },
+  "GetPlayerRigWorldTransform": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerRigWorldTransform()",
+    "mp_signature": "GetPlayerRigWorldTransform(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the rig world-space transform for the specified player."
+  },
+  "GetAllPlayers": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "GetAllPlayers()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns a list of all connected player IDs."
+  },
+  "GetLocalPlayer": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "GetLocalPlayer()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns the player ID of the local client."
+  },
+  "GetPlayerCount": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "GetPlayerCount()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns the number of currently connected players."
+  },
+  "GetMaxPlayers": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "GetMaxPlayers()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns the maximum player slots for this session."
+  },
+  "GetAddedPlayers": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "GetAddedPlayers()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns players who joined since last tick."
+  },
+  "GetRemovedPlayers": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "GetRemovedPlayers()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns players who left since last tick."
+  },
+  "GetPlayerName": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "GetPlayerName(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns the display name string for the given player ID."
+  },
+  "IsPlayerLocal": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "IsPlayerLocal(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns true if the given player ID represents the local client."
+  },
+  "IsPlayerHost": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "IsPlayerHost(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns true if the given player ID is the session host."
+  },
+  "IsPlayerValid": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "IsPlayerValid(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Returns true if the given player ID is still connected."
+  },
+  "ClientCall": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "ClientCall(functionName, ...args)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Invokes a function on the client side; call from server to send to clients."
+  },
+  "ServerCall": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "ServerCall(functionName, ...args)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Invokes a function on the server side; call from client to request server action."
+  },
+  "PostEvent": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": null,
+    "mp_signature": "PostEvent(eventName, ...args)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "MP-only. Broadcasts an event to all listeners in the current domain."
+  },
+  "InputPressed": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "InputPressed(action)",
+    "mp_signature": "InputPressed(action)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true on the frame the local player presses the specified action. Client-only."
+  },
+  "InputReleased": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "InputReleased(action)",
+    "mp_signature": "InputReleased(action)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true on the frame the local player releases the specified action. Client-only."
+  },
+  "InputDown": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "InputDown(action)",
+    "mp_signature": "InputDown(action)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true while the local player holds the specified action. Client-only."
+  },
+  "InputValue": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "InputValue(action)",
+    "mp_signature": "InputValue(action)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the analog value (0.0\u00e2\u20ac\u201c1.0) for the specified action. Client-only."
+  },
+  "UiPush": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiPush()",
+    "mp_signature": "UiPush()",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Pushes a UI transform stack frame. Must be called from client draw callback."
+  },
+  "UiPop": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiPop()",
+    "mp_signature": "UiPop()",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Pops a UI transform stack frame. Must be called from client draw callback."
+  },
+  "UiTranslate": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiTranslate(x, y)",
+    "mp_signature": "UiTranslate(x, y)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Translates the UI origin by (x, y) pixels. Must be called from client draw callback."
+  },
+  "UiAlign": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiAlign(halign, valign)",
+    "mp_signature": "UiAlign(halign, valign)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Sets horizontal and vertical alignment for subsequent UI elements."
+  },
+  "UiText": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiText(text)",
+    "mp_signature": "UiText(text)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Renders a text string at the current UI origin."
+  },
+  "UiFont": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiFont(fontPath)",
+    "mp_signature": "UiFont(fontPath)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Sets the active font for subsequent UiText calls."
+  },
+  "UiColor": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiColor(r, g, b, a)",
+    "mp_signature": "UiColor(r, g, b, a)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Sets the active draw color for subsequent UI elements."
+  },
+  "UiRect": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiRect(w, h)",
+    "mp_signature": "UiRect(w, h)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws a filled rectangle of (w x h) pixels at the current UI origin."
+  },
+  "UiImage": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiImage(path, w, h)",
+    "mp_signature": "UiImage(path, w, h)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws an image at the current UI origin."
+  },
+  "UiCenter": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiCenter()",
+    "mp_signature": "UiCenter()",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Centers the UI origin horizontally on screen."
+  },
+  "UiMiddle": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiMiddle()",
+    "mp_signature": "UiMiddle()",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Centers the UI origin vertically on screen."
+  },
+  "UiWidth": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiWidth(w)",
+    "mp_signature": "UiWidth(w)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Sets the layout width constraint for the current UI element."
+  },
+  "UiHeight": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiHeight(h)",
+    "mp_signature": "UiHeight(h)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Sets the layout height constraint for the current UI element."
+  },
+  "UiWindow": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiWindow(title, w, h)",
+    "mp_signature": "UiWindow(title, w, h)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws a titled window panel at the current UI origin."
+  },
+  "UiButtonText": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiButtonText(label)",
+    "mp_signature": "UiButtonText(label)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws a clickable text button and returns true if clicked."
+  },
+  "UiSlider": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiSlider(value, min, max, step)",
+    "mp_signature": "UiSlider(value, min, max, step)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws a slider control and returns the current value."
+  },
+  "UiWordWrap": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiWordWrap(width)",
+    "mp_signature": "UiWordWrap(width)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Enables word-wrap at the specified pixel width for subsequent UiText calls."
+  },
+  "UiTextInput": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiTextInput(id, w, h)",
+    "mp_signature": "UiTextInput(id, w, h)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws a text input field and returns whether it has focus."
+  },
+  "UiGetTextInput": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiGetTextInput(id)",
+    "mp_signature": "UiGetTextInput(id)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Returns the current string value of the specified text input field."
+  },
+  "UiColorFilter": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiColorFilter(r, g, b, a)",
+    "mp_signature": "UiColorFilter(r, g, b, a)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Applies a multiplicative color filter to all subsequent UI draw calls."
+  },
+  "UiImageBox": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiImageBox(path, w, h, tx, ty)",
+    "mp_signature": "UiImageBox(path, w, h, tx, ty)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws a 9-slice image box at the current UI origin."
+  },
+  "UiBorderImage": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiBorderImage(path, w, h, border)",
+    "mp_signature": "UiBorderImage(path, w, h, border)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Draws a bordered image at the current UI origin."
+  },
+  "UiBlur": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiBlur(radius)",
+    "mp_signature": "UiBlur(radius)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Applies a blur effect to the UI region behind subsequent elements."
+  },
+  "UiGetWidth": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiGetWidth()",
+    "mp_signature": "UiGetWidth()",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Returns the screen width in pixels."
+  },
+  "UiGetHeight": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiGetHeight()",
+    "mp_signature": "UiGetHeight()",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Returns the screen height in pixels."
+  },
+  "UiScale": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiScale(scale)",
+    "mp_signature": "UiScale(scale)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Scales subsequent UI draw operations by the given factor."
+  },
+  "UiRotate": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiRotate(degrees)",
+    "mp_signature": "UiRotate(degrees)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Rotates the UI canvas by the specified number of degrees."
+  },
+  "UiOrder": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiOrder(z)",
+    "mp_signature": "UiOrder(z)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Sets the draw-order (Z) for the current UI group."
+  },
+  "UiCropRect": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiCropRect(x, y, w, h)",
+    "mp_signature": "UiCropRect(x, y, w, h)",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Clips subsequent UI draw calls to the specified rectangle."
+  },
+  "UiMakeInteractive": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "UiMakeInteractive()",
+    "mp_signature": "UiMakeInteractive()",
+    "restricted_to": "client.draw",
+    "deprecated": null,
+    "notes": "Marks the current UI element as mouse-interactive."
+  },
+  "PlaySound": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "PlaySound(sound, pos, volume)",
+    "mp_signature": "PlaySound(sound, pos, volume)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Plays a one-shot sound at a world position. Client-only; use ServerCall to trigger from server."
+  },
+  "PlayLoop": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "PlayLoop(sound, pos, volume)",
+    "mp_signature": "PlayLoop(sound, pos, volume)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Plays a looping sound at a world position. Client-only."
+  },
+  "LoadSound": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "LoadSound(path)",
+    "mp_signature": "LoadSound(path)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Pre-loads a sound asset and returns a handle. Client-only."
+  },
+  "StopSound": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "StopSound(sound)",
+    "mp_signature": "StopSound(sound)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Stops a one-shot sound. Client-only."
+  },
+  "StopLoop": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "StopLoop(sound)",
+    "mp_signature": "StopLoop(sound)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Stops a looping sound. Client-only."
+  },
+  "SpawnParticle": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "SpawnParticle(pos, vel)",
+    "mp_signature": "SpawnParticle(pos, vel)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Spawns a particle at a world position. Client-only visual effect."
+  },
+  "ParticleReset": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleReset()",
+    "mp_signature": "ParticleReset()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Resets particle system parameters to defaults. Client-only."
+  },
+  "ParticleType": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleType(type)",
+    "mp_signature": "ParticleType(type)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the particle type for subsequent SpawnParticle calls. Client-only."
+  },
+  "ParticleAlpha": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleAlpha(startAlpha, endAlpha)",
+    "mp_signature": "ParticleAlpha(startAlpha, endAlpha)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the alpha start/end for particles. Client-only."
+  },
+  "ParticleRadius": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleRadius(startRadius, endRadius)",
+    "mp_signature": "ParticleRadius(startRadius, endRadius)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the radius start/end for particles. Client-only."
+  },
+  "ParticleColor": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleColor(r, g, b)",
+    "mp_signature": "ParticleColor(r, g, b)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the color for particles. Client-only."
+  },
+  "ParticleDrag": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleDrag(drag)",
+    "mp_signature": "ParticleDrag(drag)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the drag coefficient for particles. Client-only."
+  },
+  "ParticleGravity": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleGravity(gravity)",
+    "mp_signature": "ParticleGravity(gravity)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the gravity multiplier for particles. Client-only."
+  },
+  "ParticleStretch": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleStretch(stretch)",
+    "mp_signature": "ParticleStretch(stretch)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets velocity stretch for particles. Client-only."
+  },
+  "ParticleSticky": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleSticky(sticky)",
+    "mp_signature": "ParticleSticky(sticky)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets whether particles stick to surfaces. Client-only."
+  },
+  "ParticleCollide": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleCollide(collide)",
+    "mp_signature": "ParticleCollide(collide)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Enables or disables particle collision. Client-only."
+  },
+  "ParticleEmissive": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleEmissive(emissive)",
+    "mp_signature": "ParticleEmissive(emissive)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the emissive intensity for particles. Client-only."
+  },
+  "ParticleTile": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "ParticleTile(tile)",
+    "mp_signature": "ParticleTile(tile)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the texture tile index for particles. Client-only."
+  },
+  "SpawnFire": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "SpawnFire(pos)",
+    "mp_signature": "SpawnFire(pos)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Spawns a fire effect at the given world position. Client-only visual."
+  },
+  "SpawnExplosion": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "SpawnExplosion(pos, radius)",
+    "mp_signature": "SpawnExplosion(pos, radius)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Spawns an explosion visual effect. Client-only; use ServerCall for authoritative physics."
+  },
+  "SetFireSpread": {
+    "domain": "client",
+    "needs_player_id": false,
+    "v1_signature": "SetFireSpread(enabled)",
+    "mp_signature": "SetFireSpread(enabled)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Toggles fire spread simulation. Client-only."
+  },
+  "FindBody": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "FindBody(tag, global)",
+    "mp_signature": "FindBody(tag, global)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Finds and returns the first body matching the given tag."
+  },
+  "FindShape": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "FindShape(tag, global)",
+    "mp_signature": "FindShape(tag, global)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Finds and returns the first shape matching the given tag."
+  },
+  "FindJoint": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "FindJoint(tag, global)",
+    "mp_signature": "FindJoint(tag, global)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Finds and returns the first joint matching the given tag."
+  },
+  "FindLight": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "FindLight(tag, global)",
+    "mp_signature": "FindLight(tag, global)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Finds and returns the first light matching the given tag."
+  },
+  "FindTrigger": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "FindTrigger(tag, global)",
+    "mp_signature": "FindTrigger(tag, global)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Finds and returns the first trigger volume matching the given tag."
+  },
+  "FindVehicle": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "FindVehicle(tag, global)",
+    "mp_signature": "FindVehicle(tag, global)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Finds and returns the first vehicle matching the given tag."
+  },
+  "GetBodyTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetBodyTransform(body)",
+    "mp_signature": "GetBodyTransform(body)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space transform of the specified body."
+  },
+  "SetBodyTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetBodyTransform(body, transform)",
+    "mp_signature": "SetBodyTransform(body, transform)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the world-space transform of the specified body. Server-authoritative in MP; call from server."
+  },
+  "GetBodyVelocity": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetBodyVelocity(body)",
+    "mp_signature": "GetBodyVelocity(body)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the linear velocity vector of the specified body."
+  },
+  "SetBodyVelocity": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetBodyVelocity(body, velocity)",
+    "mp_signature": "SetBodyVelocity(body, velocity)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the linear velocity of the specified body. Server-authoritative in MP."
+  },
+  "GetBodyAngularVelocity": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetBodyAngularVelocity(body)",
+    "mp_signature": "GetBodyAngularVelocity(body)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the angular velocity vector of the specified body."
+  },
+  "SetBodyAngularVelocity": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetBodyAngularVelocity(body, angVel)",
+    "mp_signature": "SetBodyAngularVelocity(body, angVel)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the angular velocity of the specified body. Server-authoritative in MP."
+  },
+  "IsBodyDynamic": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "IsBodyDynamic(body)",
+    "mp_signature": "IsBodyDynamic(body)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true if the body is dynamic (physics-simulated)."
+  },
+  "IsBodyActive": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "IsBodyActive(body)",
+    "mp_signature": "IsBodyActive(body)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true if the body is awake in the physics simulation."
+  },
+  "GetShapeWorldTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetShapeWorldTransform(shape)",
+    "mp_signature": "GetShapeWorldTransform(shape)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space transform of the specified shape."
+  },
+  "GetShapeLocalTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetShapeLocalTransform(shape)",
+    "mp_signature": "GetShapeLocalTransform(shape)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the local-space transform of the specified shape relative to its body."
+  },
+  "GetShapeBounds": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetShapeBounds(shape)",
+    "mp_signature": "GetShapeBounds(shape)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the AABB (min, max) of the specified shape in world space."
+  },
+  "GetVehicleTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetVehicleTransform(vehicle)",
+    "mp_signature": "GetVehicleTransform(vehicle)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space transform of the specified vehicle."
+  },
+  "GetVehicleBody": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetVehicleBody(vehicle)",
+    "mp_signature": "GetVehicleBody(vehicle)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the body handle for the specified vehicle."
+  },
+  "DriveVehicle": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "DriveVehicle(vehicle, throttle, steer, brake)",
+    "mp_signature": "DriveVehicle(vehicle, throttle, steer, brake)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Applies driving inputs to the specified vehicle. Call from server for authoritative control."
+  },
+  "GetJointType": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetJointType(joint)",
+    "mp_signature": "GetJointType(joint)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the type string of the specified joint."
+  },
+  "GetJointMovement": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetJointMovement(joint)",
+    "mp_signature": "GetJointMovement(joint)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the current movement (position or angle) of the specified joint."
+  },
+  "GetJointLimits": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetJointLimits(joint)",
+    "mp_signature": "GetJointLimits(joint)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the min/max movement limits of the specified joint."
+  },
+  "SetJointMotor": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetJointMotor(joint, speed, maxForce)",
+    "mp_signature": "SetJointMotor(joint, speed, maxForce)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets the motor parameters of the specified joint. Server-authoritative in MP."
+  },
+  "SetJointMotorTarget": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetJointMotorTarget(joint, target, maxForce)",
+    "mp_signature": "SetJointMotorTarget(joint, target, maxForce)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets a positional target for the joint motor. Server-authoritative in MP."
+  },
+  "GetLightTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetLightTransform(light)",
+    "mp_signature": "GetLightTransform(light)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space transform of the specified light."
+  },
+  "SetLightEnabled": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetLightEnabled(light, enabled)",
+    "mp_signature": "SetLightEnabled(light, enabled)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Enables or disables the specified light. Server-authoritative in MP."
+  },
+  "GetTriggerTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetTriggerTransform(trigger)",
+    "mp_signature": "GetTriggerTransform(trigger)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space transform of the specified trigger volume."
+  },
+  "IsPointInTrigger": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "IsPointInTrigger(trigger, point)",
+    "mp_signature": "IsPointInTrigger(trigger, point)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true if the world-space point is inside the trigger volume."
+  },
+  "IsTriggerEmpty": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "IsTriggerEmpty(trigger)",
+    "mp_signature": "IsTriggerEmpty(trigger)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true if no bodies are overlapping the trigger volume."
+  },
+  "IsBodyInTrigger": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "IsBodyInTrigger(trigger, body)",
+    "mp_signature": "IsBodyInTrigger(trigger, body)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true if the specified body overlaps the trigger volume."
+  },
+  "QueryRaycast": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QueryRaycast(origin, dir, maxDist)",
+    "mp_signature": "QueryRaycast(origin, dir, maxDist)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Casts a ray and returns hit information. Read-only; safe on any domain."
+  },
+  "QueryAabbBodies": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QueryAabbBodies(min, max)",
+    "mp_signature": "QueryAabbBodies(min, max)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns all bodies overlapping the given AABB. Read-only; safe on any domain."
+  },
+  "QueryAabbShapes": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QueryAabbShapes(min, max)",
+    "mp_signature": "QueryAabbShapes(min, max)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns all shapes overlapping the given AABB. Read-only; safe on any domain."
+  },
+  "QueryClosestPoint": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QueryClosestPoint(origin, maxDist)",
+    "mp_signature": "QueryClosestPoint(origin, maxDist)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the closest world-geometry point to the given origin. Read-only."
+  },
+  "MakeHole": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "MakeHole(pos, radius, dynamic)",
+    "mp_signature": "MakeHole(pos, radius, dynamic)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Carves a spherical hole in voxel geometry. Must run on server for authoritative world mutation."
+  },
+  "Shoot": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "Shoot(pos, dir, speed, spread, count)",
+    "mp_signature": "Shoot(pos, dir, speed, spread, count)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Fires projectiles into the world. Server-authoritative for damage; client can use for visual-only."
+  },
+  "Paint": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "Paint(pos, radius, type)",
+    "mp_signature": "Paint(pos, radius, type)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Paints voxels with the specified material at the given position. Server-authoritative in MP."
+  },
+  "GetCameraTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetCameraTransform()",
+    "mp_signature": "GetCameraTransform()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the current camera transform. On client returns local camera; on server returns a default."
+  },
+  "SetCameraTransform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetCameraTransform(transform)",
+    "mp_signature": "SetCameraTransform(transform)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Overrides the camera transform. Only meaningful on the client; no-op on server."
+  },
+  "SetCameraDof": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetCameraDof(focus, blur)",
+    "mp_signature": "SetCameraDof(focus, blur)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets camera depth-of-field parameters. Client-meaningful only."
+  },
+  "GetFireCount": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetFireCount()",
+    "mp_signature": "GetFireCount()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the number of active fire points in the scene."
+  },
+  "IsPointAffectedByFire": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "IsPointAffectedByFire(pos)",
+    "mp_signature": "IsPointAffectedByFire(pos)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true if the world-space point is within range of active fire."
+  },
+  "SetInt": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetInt(key, value)",
+    "mp_signature": "SetInt(key, value)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Stores an integer value in the registry under the given key."
+  },
+  "GetInt": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetInt(key, default)",
+    "mp_signature": "GetInt(key, default)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Reads an integer from the registry; returns default if key absent."
+  },
+  "SetFloat": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetFloat(key, value)",
+    "mp_signature": "SetFloat(key, value)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Stores a float value in the registry under the given key."
+  },
+  "GetFloat": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetFloat(key, default)",
+    "mp_signature": "GetFloat(key, default)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Reads a float from the registry; returns default if key absent."
+  },
+  "SetBool": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetBool(key, value)",
+    "mp_signature": "SetBool(key, value)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Stores a boolean value in the registry under the given key."
+  },
+  "GetBool": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetBool(key, default)",
+    "mp_signature": "GetBool(key, default)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Reads a boolean from the registry; returns default if key absent."
+  },
+  "SetString": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "SetString(key, value)",
+    "mp_signature": "SetString(key, value)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Stores a string value in the registry under the given key."
+  },
+  "GetString": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "GetString(key, default)",
+    "mp_signature": "GetString(key, default)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Reads a string from the registry; returns default if key absent."
+  },
+  "HasKey": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "HasKey(key)",
+    "mp_signature": "HasKey(key)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns true if the given key exists in the registry."
+  },
+  "ClearKey": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "ClearKey(key)",
+    "mp_signature": "ClearKey(key)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Removes the given key from the registry."
+  },
+  "ListKeys": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "ListKeys(prefix)",
+    "mp_signature": "ListKeys(prefix)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns a list of all registry keys matching the given prefix."
+  },
+  "RegisterTool": {
+    "domain": "server",
+    "needs_player_id": false,
+    "v1_signature": "RegisterTool(name, description, properties)",
+    "mp_signature": "RegisterTool(name, description, properties)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Registers a new tool with the game; must be called during init on the server."
+  },
+  "GetToolTransform": {
+    "domain": "server",
+    "needs_player_id": false,
+    "v1_signature": "GetToolTransform()",
+    "mp_signature": "GetToolTransform()",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the world-space transform of the currently equipped tool. Server-only."
+  },
+  "SetToolTransform": {
+    "domain": "server",
+    "needs_player_id": false,
+    "v1_signature": "SetToolTransform(transform)",
+    "mp_signature": "SetToolTransform(transform)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Overrides the world-space transform of the currently equipped tool. Server-only."
+  },
+  "Vec": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "Vec(x, y, z)",
+    "mp_signature": "Vec(x, y, z)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Constructs a Vec3 value. Pure math utility; safe on any domain."
+  },
+  "VecAdd": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecAdd(a, b)",
+    "mp_signature": "VecAdd(a, b)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns a + b. Pure math utility."
+  },
+  "VecSub": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecSub(a, b)",
+    "mp_signature": "VecSub(a, b)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns a - b. Pure math utility."
+  },
+  "VecScale": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecScale(v, s)",
+    "mp_signature": "VecScale(v, s)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns v * s. Pure math utility."
+  },
+  "VecLength": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecLength(v)",
+    "mp_signature": "VecLength(v)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the magnitude of v. Pure math utility."
+  },
+  "VecNormalize": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecNormalize(v)",
+    "mp_signature": "VecNormalize(v)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the unit-length direction of v. Pure math utility."
+  },
+  "VecDot": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecDot(a, b)",
+    "mp_signature": "VecDot(a, b)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the dot product of a and b. Pure math utility."
+  },
+  "VecCross": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecCross(a, b)",
+    "mp_signature": "VecCross(a, b)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns the cross product of a and b. Pure math utility."
+  },
+  "VecLerp": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "VecLerp(a, b, t)",
+    "mp_signature": "VecLerp(a, b, t)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Linearly interpolates between a and b by t. Pure math utility."
+  },
+  "Quat": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "Quat(x, y, z, w)",
+    "mp_signature": "Quat(x, y, z, w)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Constructs a quaternion. Pure math utility."
+  },
+  "QuatEuler": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QuatEuler(pitch, yaw, roll)",
+    "mp_signature": "QuatEuler(pitch, yaw, roll)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Constructs a quaternion from Euler angles (degrees). Pure math utility."
+  },
+  "QuatRotateQuat": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QuatRotateQuat(a, b)",
+    "mp_signature": "QuatRotateQuat(a, b)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Composes two quaternions. Pure math utility."
+  },
+  "QuatRotateVec": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QuatRotateVec(q, v)",
+    "mp_signature": "QuatRotateVec(q, v)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Rotates vector v by quaternion q. Pure math utility."
+  },
+  "QuatLookAt": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QuatLookAt(from, to)",
+    "mp_signature": "QuatLookAt(from, to)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns a quaternion that orients from toward to. Pure math utility."
+  },
+  "QuatSlerp": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "QuatSlerp(a, b, t)",
+    "mp_signature": "QuatSlerp(a, b, t)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Spherically interpolates between quaternions a and b by t. Pure math utility."
+  },
+  "Transform": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "Transform(pos, rot)",
+    "mp_signature": "Transform(pos, rot)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Constructs a Transform value from position and rotation. Pure math utility."
+  },
+  "TransformToParentPoint": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "TransformToParentPoint(transform, localPoint)",
+    "mp_signature": "TransformToParentPoint(transform, localPoint)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Converts a local-space point to the parent (world) space of the transform."
+  },
+  "TransformToParentVec": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "TransformToParentVec(transform, localVec)",
+    "mp_signature": "TransformToParentVec(transform, localVec)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Converts a local-space direction vector to parent space."
+  },
+  "TransformToLocalPoint": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "TransformToLocalPoint(transform, worldPoint)",
+    "mp_signature": "TransformToLocalPoint(transform, worldPoint)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Converts a world-space point to the local space of the transform."
+  },
+  "TransformToLocalVec": {
+    "domain": "both",
+    "needs_player_id": false,
+    "v1_signature": "TransformToLocalVec(transform, worldVec)",
+    "mp_signature": "TransformToLocalVec(transform, worldVec)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Converts a world-space direction vector to the local space of the transform."
+  },
+  "GetPlayerVelocity": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerVelocity()",
+    "mp_signature": "GetPlayerVelocity(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Returns player velocity vector; needs playerId in MP."
+  },
+  "SetPlayerVelocity": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "SetPlayerVelocity(velocity)",
+    "mp_signature": "SetPlayerVelocity(playerId, velocity)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Sets player velocity; needs playerId in MP."
+  },
+  "GetPlayerCameraTransform": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerCameraTransform()",
+    "mp_signature": "GetPlayerCameraTransform(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Gets player camera transform; needs playerId in MP."
+  },
+  "GetPlayerGrabShape": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerGrabShape()",
+    "mp_signature": "GetPlayerGrabShape(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Gets shape player is grabbing; needs playerId in MP."
+  },
+  "GetPlayerGrabBody": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerGrabBody()",
+    "mp_signature": "GetPlayerGrabBody(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Gets body player is grabbing; needs playerId in MP."
+  },
+  "GetPlayerInteractShape": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerInteractShape()",
+    "mp_signature": "GetPlayerInteractShape(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Gets shape player is interacting with; needs playerId in MP."
+  },
+  "GetPlayerInteractBody": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerInteractBody()",
+    "mp_signature": "GetPlayerInteractBody(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Gets body player is interacting with; needs playerId in MP."
+  },
+  "GetPlayerPickShape": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerPickShape()",
+    "mp_signature": "GetPlayerPickShape(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Gets shape player is picking; needs playerId in MP."
+  },
+  "GetPlayerPickBody": {
+    "domain": "server",
+    "needs_player_id": true,
+    "v1_signature": "GetPlayerPickBody()",
+    "mp_signature": "GetPlayerPickBody(playerId)",
+    "restricted_to": null,
+    "deprecated": null,
+    "notes": "Gets body player is picking; needs playerId in MP."
+  }
+}

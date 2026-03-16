@@ -1,0 +1,24 @@
+{
+  "workshop_id": "3134340282",
+  "name": "Control",
+  "author": "Geneosis",
+  "description": "[noupload]Provides a variety of telekinetic powers.",
+  "tags": "Gameplay,Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\control.lua",
+    "scripts\\debug.lua",
+    "scripts\\registry.lua",
+    "scripts\\tool.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "53f9c5cadf62b2372ab17c1108c965910ca44862c5d4f5ea3adda48c891ab8e1",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:41:09.862663",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

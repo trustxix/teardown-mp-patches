@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2461381268",
+  "name": "The World Trade Center",
+  "author": "steamcommunity.com/id/Land_Owl",
+  "description": "Highly recommended: Use experimental (Right click > Properties > Betas) and Performance mod",
+  "tags": "map",
+  "lua_files": [
+    "ground.lua",
+    "towerLift.lua"
+  ],
+  "sha256": "b459ab9ea0fc65574bd4510982f7c3619e88a7fc8294182d32b49b150c87c82d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:05.535400"
+}

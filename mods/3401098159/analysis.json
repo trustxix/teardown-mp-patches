@@ -1,0 +1,40 @@
+{
+  "mod_name": "RPM - Modern Military Playermodels REMASTERED (RAGDOLL UPDATE)",
+  "mod_type": "gameplay",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "animation.lua",
+      "lines": 16,
+      "callbacks_found": [
+        "init",
+        "tick"
+      ],
+      "api_calls": [],
+      "server_calls": 0,
+      "client_calls": 0,
+      "ambiguous_calls": 0,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": []
+    },
+    {
+      "file": "prefab\\ragdoll\\animation.lua",
+      "lines": 16,
+      "callbacks_found": [
+        "init",
+        "tick"
+      ],
+      "api_calls": [],
+      "server_calls": 0,
+      "client_calls": 0,
+      "ambiguous_calls": 0,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": []
+    }
+  ],
+  "complexity": "medium",
+  "estimated_approach": "template",
+  "issues": []
+}

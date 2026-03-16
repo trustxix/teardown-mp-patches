@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3401161489",
+  "name": "RMW - AK74M",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - Previously the Service Rifle of the Russian Ground Forces. But still sees some amount of service today. Originally designed by the legendary Mikhail Kalashinkov, the M variant sports polymer furtniture and better accuracy. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "c888776208152364ea7cbb9406ecee8b14d4c5cf478b2f5e2a777a95a14fda1d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:06.262624"
+}

@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3404785331",
+  "name": "RMW - M110 SASS",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The army needed a DMR. They loved the M16. Guess what happened. Its a 7.62 Nato Designated Marksman Rifle based on the AR15 Platform. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "943564dfa6cb5d1242ffdaed648ffaea3c7fc2e3ea61b71909a7ee4678225670",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:08.093469"
+}

@@ -1,0 +1,16 @@
+{
+  "workshop_id": "3578552621",
+  "name": "VectorRazor",
+  "author": "TheKnook",
+  "description": "Advanced vector-cutting system with precise laser deployment. Deploy smart charges that extend an extremely powerful and precise laser cutter to cut circles, squares, triangles, and even door-shaped openings in any material. Perfect for tactical breaching operations or gigs that require the utmost precision. Now features adjustable activation delay (0-5s) and an optional remote detonation mode so you can plant multiple charges and arm them simultaneously.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "f1991ad86fafd11f6e7e80ba26c5bc64d4b27e5f2ac9976787794ccd6390a31f",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:24.293992"
+}

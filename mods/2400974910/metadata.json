@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2400974910",
+  "name": "Minigun",
+  "author": "My Cresta",
+  "description": "Very fast Minigun that counts how many bullets you fire.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "cb32d61769e5168933b239aa69df0cde669e6c04aef65ac0e21dd4fe5c05cc5e",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:29:21.644896"
+}

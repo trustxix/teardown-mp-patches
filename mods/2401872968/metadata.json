@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2401872968",
+  "name": "HADOUKEN!",
+  "author": "My Cresta",
+  "description": "Hadouken from Street Fighter! LMB to Shoot balls, RMB to Explode balls.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "8559e87bf250d1993d7b4e80d55c24c73c0a039cffa74a95d41af714d04e5608",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:29.787374"
+}

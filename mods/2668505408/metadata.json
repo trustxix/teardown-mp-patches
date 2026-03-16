@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2668505408",
+  "name": "Ability to read",
+  "author": "Please Pick a Name",
+  "description": "Only modders will understand. Feel free to use this in your mods as a required item.",
+  "tags": "",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "82414f379153efb7b45a90087074e21eb53b91ca368d61e07f6110374a5a1543",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:40.453826"
+}

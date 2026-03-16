@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2597745035",
+  "name": "G17",
+  "author": "Tesseractahedron",
+  "description": "[nopload]A modern pistol made by Glock. It's on of the most iconic pistols and is used around the world.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "ea04e7a73b6484b4c772f7f2ac344397e9c2bb41a1be56a87ad8ae628cb476f6",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:09.176794",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

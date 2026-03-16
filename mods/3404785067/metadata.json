@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3404785067",
+  "name": "RMW - SVD",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The SVD is while not an AK but sniper, instead it's its own System, made with the soldiers already familiar with the AK ergonomics in mind. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "eb040a0d4a83f059f11b39bc28868accd736004a90707935a412f424fdc38e91",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:07.926064"
+}

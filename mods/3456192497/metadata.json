@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3456192497",
+  "name": "RMW - CZ Bren 2",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The go to rifle of the middle european modern armies. Designed as a successor to the Bren 805. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "beaebb2a1c88aaa3b4d96b510662f1c1f49872a960a074eb6011d54e65aef924",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:20.843381"
+}

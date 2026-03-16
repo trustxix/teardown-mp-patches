@@ -1,0 +1,24 @@
+{
+  "workshop_id": "2622849832",
+  "name": "Fire Locator",
+  "author": "NLferdiNL",
+  "description": "[noupload]Locate any active fires.",
+  "tags": "Gameplay, Tool",
+  "lua_files": [
+    "main.lua",
+    "options_disabled.lua",
+    "datascripts\\color4.lua",
+    "datascripts\\inputList.lua",
+    "datascripts\\keybinds.lua",
+    "scripts\\menu.lua",
+    "scripts\\savedata.lua",
+    "scripts\\textbox.lua",
+    "scripts\\ui.lua",
+    "scripts\\utils.lua"
+  ],
+  "sha256": "b6a860751fda5fcf297bcba6280b15d0a0c160a8ea4422bf3a2440beb3e3a828",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:11.822589"
+}

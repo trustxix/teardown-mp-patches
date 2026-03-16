@@ -1,0 +1,18 @@
+{
+  "workshop_id": "3401161277",
+  "name": "RMW - M4A1",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - M4A1 is the Military Designation for the M4 Carbine, which is a rifle that has been and is stil seen everywhere around the World, where there is a conflict of any sorts. Personal Favorite of mine. Eugene Stoner was really a genious. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua",
+    "script\\FPArms.lua"
+  ],
+  "sha256": "aa7379546ba8c8d5801cf72ab36dc696a9245820c89a46e66eaf3b070377f888",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:06.043006"
+}

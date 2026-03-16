@@ -1,0 +1,19 @@
+{
+  "workshop_id": "3592259278",
+  "name": "Artillery Barrage RELOADED",
+  "author": "Donnie Brasco",
+  "description": "Rebuilt from ground up.",
+  "tags": "Gameplay, Tool",
+  "lua_files": [
+    "custom_explosion.lua",
+    "i18n.lua",
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "7a8271056beea009b49c3626a3b418e98ae6c25e2725d380a858243311c28c3d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:25.669370",
+  "validation_notes": "Checks failed: HANDLE-SAFE"
+}

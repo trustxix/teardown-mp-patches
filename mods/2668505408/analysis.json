@@ -1,0 +1,28 @@
+{
+  "mod_name": "Ability to read",
+  "mod_type": "gameplay",
+  "current_version": 1,
+  "scripts": [
+    {
+      "file": "main.lua",
+      "lines": 30,
+      "callbacks_found": [
+        "init",
+        "tick",
+        "update",
+        "draw",
+        "deepcopy"
+      ],
+      "api_calls": [],
+      "server_calls": 0,
+      "client_calls": 0,
+      "ambiguous_calls": 0,
+      "deprecated_calls": [],
+      "entity_handle_checks": [],
+      "registry_usage": []
+    }
+  ],
+  "complexity": "simple",
+  "estimated_approach": "template",
+  "issues": []
+}

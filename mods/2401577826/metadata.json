@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401577826",
+  "name": "AWP",
+  "author": "My Cresta",
+  "description": "Sniper with 4 different ammo types. Press R to reload, Right Click to zoom and 'C' to switch ammo type. Change Zoom level with mouse scroll. Vox model made by Alagabry.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "ac69680d9cf557a5f1c46f8516dca8731eae44ad403f311137f6599f99280cdf",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:55.081001"
+}

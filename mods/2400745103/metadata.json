@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2400745103",
+  "name": "AK-47",
+  "author": "My Cresta",
+  "description": "Standard AK-47. Press R to reload. Options for unlimited ammo. Vox model made by Alagabry.",
+  "tags": "Tool",
+  "lua_files": [
+    "crestaoptions.lua",
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "3394f1d7827e1232e8ab80094d4a61120cc8fe994e62b03d40db9949d0b655f9",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:39:52.465483"
+}

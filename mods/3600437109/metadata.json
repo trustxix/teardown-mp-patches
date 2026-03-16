@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3600437109",
+  "name": "Multiple Grenade Launcher",
+  "author": "Cyber",
+  "description": "Nade Launcher. Launches various nades, and things of that nature.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "49e0021b4a90d4c1339c11209764e52b4aa865ab9e9cabe34cd4abb41f169761",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:13.381413",
+  "validation_notes": "SetPlayerHealth in client.tick - works on host"
+}

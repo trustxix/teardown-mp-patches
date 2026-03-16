@@ -1,0 +1,19 @@
+{
+  "workshop_id": "2826557844",
+  "name": "Acid Gun (voxels)",
+  "author": "Laz",
+  "description": "[noupload] Voxel version of the acid gun",
+  "tags": "",
+  "lua_files": [
+    "main.lua",
+    "main_old_tests.lua",
+    "options.lua",
+    "teardown_api.lua",
+    "unused.lua"
+  ],
+  "sha256": "f42cb7cb6b9f38ebe28dab1aceb69145d42c1c53e3f40111e07adbf6d5665e6a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:51.611920"
+}

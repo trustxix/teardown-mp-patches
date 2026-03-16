@@ -1,0 +1,21 @@
+{
+  "workshop_id": "3619318834",
+  "name": "[PB] Assault Pack 2",
+  "author": "SafetyCar",
+  "description": "Assault Pack 2 is here, the second expansion for ProBallistics, and it\u2019s packed with explosive action! Prepare for devastating firepower with the introduction of the Bazooka and Shotgun, alongside a suite of enhancements to the ProBallistics system itself.[noupload]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "src\\assault-pack2.lua",
+    "src\\bazooka.lua",
+    "src\\shotgun.lua",
+    "src\\sdk\\base.lua",
+    "src\\sdk\\symbols.lua",
+    "src\\sdk\\weapons.lua"
+  ],
+  "sha256": "4e77ed69719bbd07898b5e962f3f2424edf9b401ce8b34e7716f9f23f1f4313d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:28.881498"
+}

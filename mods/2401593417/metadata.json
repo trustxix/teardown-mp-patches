@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401593417",
+  "name": "Mj\u00f6lner",
+  "author": "My Cresta",
+  "description": "Thor's Hammer, Mj\u00f6lner. Press Left Click to strike lightning where you aim, Press Right Click to strike lightning from above your aim. You are immortal and can multi jump while holding the Mj\u00f6lner.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "9775d23369414c22c3f3ffda651c25e4fca1651c40026e3c17983747e212b0d1",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:58.477615"
+}

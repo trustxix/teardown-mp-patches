@@ -1,0 +1,24 @@
+{
+  "workshop_id": "2776716903",
+  "name": "Ultimate Jetpack",
+  "author": "Geneosis",
+  "description": "[noupload]An omnidirectional, highly customizable jetpack.",
+  "tags": "Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\jetpack.lua",
+    "scripts\\registry.lua",
+    "scripts\\sound.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "ea4717ae0735991918ef1daacbf8a948b2132b926b5aa7f43a53bb1636ddf171",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:38.419470",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

@@ -1,0 +1,30 @@
+{
+  "workshop_id": "3668043935",
+  "name": "[GLaD] GYM Ragdoll Framework",
+  "author": "GLaDOS Yulun PPAN",
+  "description": "Ragdoll Framework mady by GLaDOS Yulun & MTLdistributor. [noupload]",
+  "tags": "Asset , Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "lua\\gore v25.12.22.lua",
+    "lua\\gore v25.12.25.lua",
+    "lua\\gore v25.12.31.lua",
+    "lua\\gore v26.1.2.lua",
+    "lua\\gore v26.1.21.lua",
+    "lua\\gore v26.1.25.lua",
+    "lua\\gore v26.1.3.lua",
+    "lua\\gore v26.1.5.lua",
+    "lua\\gore.lua",
+    "lua\\main v26.1.2.lua",
+    "lua\\main v26.1.3.lua",
+    "lua\\main v26.1.4.lua",
+    "lua\\toolQuickerSpawner.lua"
+  ],
+  "sha256": "3f3cfec25ca0123d5bf31435d8f8aaa2b7a20bc7ce448009dae6c4c66bab82ec",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:35.161459",
+  "validation_notes": "Checks failed: HANDLE-SAFE, NO-V1-CBACKS"
+}

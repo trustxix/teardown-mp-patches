@@ -1,0 +1,4 @@
+name = Battle Royale Lite
+author = ComplexModder
+description = A simplified battle royale mode
+tags = Gameplay

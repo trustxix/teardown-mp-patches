@@ -1,0 +1,16 @@
+{
+  "workshop_id": "3173859813",
+  "name": "Lightning Gun",
+  "author": "Tuxedo Labs, Dzage, KBD2, Autumn, GalaxyPizza, Doomdrvk, Nolrm12345",
+  "description": "Feel the wrath of Lightning!",
+  "tags": "Tool",
+  "lua_files": [
+    "main before third person.lua",
+    "main.lua"
+  ],
+  "sha256": "40ff288976c73dbaedd2d8724337d114e690e16e481ba25e2deca822fa6bb99c",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:11.876211"
+}

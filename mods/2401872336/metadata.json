@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401872336",
+  "name": "Desert Eagle",
+  "author": "My Cresta",
+  "description": "Standard Desert Eagle. Press R to reload.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "b9db39c4132c1797cd068f40339499db61bbbe5bf71a175121a8468051aec99a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:01.249768"
+}

@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401871202",
+  "name": "Nova Shotgun",
+  "author": "My Cresta",
+  "description": "Standard Nova Shotgun. Press R to reload. Vox model made by Alagabry.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "371c62a8be82578d36c63d72d6ed4cbec55984e0908b2d54ba0f2a9e46cd8e7a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:59.019875"
+}

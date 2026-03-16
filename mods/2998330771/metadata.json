@@ -1,0 +1,15 @@
+{
+  "workshop_id": "2998330771",
+  "name": "Bridge Luancher System",
+  "author": "Smeshan",
+  "description": "Tank that launch mobile bridge. It can pass around 140 voxel of gap. You can take the brdige back on the tank (just meet the yellow parts and attach).",
+  "tags": "Asset, Vehicle, Spawn",
+  "lua_files": [
+    "assets\\vehicle\\military\\bridge_launcher.lua"
+  ],
+  "sha256": "27e264809e26cb3be06fdb7925a859eafb63df96a2ff4f1bb5c166bd9a95d9cf",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:31:40.926826"
+}

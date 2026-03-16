@@ -1,0 +1,25 @@
+{
+  "workshop_id": "2744169679",
+  "name": "Poltergeists",
+  "author": "Geneosis",
+  "description": "[noupload]You broke so many props... Now they want revenge!",
+  "tags": "Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\impact_damage.lua",
+    "scripts\\poltergeist.lua",
+    "scripts\\registry.lua",
+    "scripts\\sound.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "ee40b9c80f978e38246dbcbe474d01c1a934a9e5c1645df3ca55ea096b5b6ecd",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:37.448381",
+  "validation_notes": "Checks failed: SERVER-AUTH, UI-IN-DRAW, CLIENT-INPUT"
+}

@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3418348908",
+  "name": "RMW - M16",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - M16. The first assault rifle adopted by the US army and since then became synonimus with the American infantry. The A2 variant features a 3 round burst instead of the usual Automatic fire mode\u2026 worst idea ever. But still, its iconic. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "e5caf52738219ba509fda5e0db539f66e97bdb801329260fecae270b7f360b59",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:10.111773"
+}

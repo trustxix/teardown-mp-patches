@@ -1,0 +1,49 @@
+#version 2
+
+{{ module_locals }}
+
+{% if helper_functions %}
+{{ helper_functions }}
+
+{% endif %}
+{% if server_init_body %}
+function server.init()
+{{ server_init_body }}
+end
+
+{% endif %}
+{% if server_tick_body %}
+function server.tick(dt)
+{{ server_tick_body }}
+end
+
+{% endif %}
+{% if server_update_body %}
+function server.update(dt)
+{{ server_update_body }}
+end
+
+{% endif %}
+{% if client_init_body %}
+function client.init()
+{{ client_init_body }}
+end
+
+{% endif %}
+{% if client_tick_body %}
+function client.tick(dt)
+{{ client_tick_body }}
+end
+
+{% endif %}
+{% if client_update_body %}
+function client.update(dt)
+{{ client_update_body }}
+end
+
+{% endif %}
+{% if client_draw_body %}
+function client.draw()
+{{ client_draw_body }}
+end
+{% endif %}

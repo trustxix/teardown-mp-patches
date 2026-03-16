@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3404784805",
+  "name": "RMW - Colt King Cobra",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy' Modular Weaponry - It's high noon. Modern take on the old western revolver. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "974fec2fa4249d98d14c057fca320685dd5ed2fd177b071fb02305c7334672bc",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:07.761782"
+}

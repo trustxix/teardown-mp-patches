@@ -1,0 +1,15 @@
+{
+  "workshop_id": "3330426273",
+  "name": "Telekinesis",
+  "author": "stringie",
+  "description": "Move objects with the power of your mind! Rotate them, explode them, implode them, cut them, float them, freeze them, liquify them, throw them, pull them ... anything you'd want to do to manipulate them, all in one amazing mod!",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "af68c03e6cabb0657ac50b1280b845883f3d1e122200c19f28872a84b090e89f",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:01.756592"
+}

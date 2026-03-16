@@ -1,0 +1,15 @@
+{
+  "workshop_id": "3661732417",
+  "name": "M2A1 Flamethrower",
+  "author": "4EB!K",
+  "description": "M2A1 Flamethrower",
+  "tags": "Tool , spawn",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "892408bd6c2651083a021711f3ef72db647c8d52b3a2e267959164be47d083b6",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:29:22.715146"
+}

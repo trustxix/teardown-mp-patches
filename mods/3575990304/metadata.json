@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3575990304",
+  "name": "RMW - Bofors AK5",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The green menace of the north. Swedish standard issue assault rifle. Rugged and reliable. Also known to be used by the L\u00f6ckelle Homeguard and was the weapon of choice of L\u00f6ckelle armed police during the hostage situation in Frustrum in 2002. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "64c1cd492e44ad168f16abe6e4211535c738b42561c0ca3d4ded2498960a6937",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:23.542077"
+}

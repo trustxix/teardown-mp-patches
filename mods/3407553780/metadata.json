@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3407553780",
+  "name": "RMW - G36C",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The C stnads for compact. Its a shorter version of the famous G36K the Bundeswehr had used for years. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "82dd0d6f17b476f837f8c226b343255f1dc570322cca3c52cd816f3e19008dc0",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:09.073895"
+}

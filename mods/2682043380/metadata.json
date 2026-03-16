@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2682043380",
+  "name": "AK-74",
+  "author": "Tesseractahedron",
+  "description": "[noupload]A russian assault rifle developed in the 1970s to replace older AKs. Based on the AK platform, the AK74 fires the smaller 5.45x39 cartridge.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "options2.lua"
+  ],
+  "sha256": "895d54d2031e67b2cc1055ca7cb2c0d846296991bd32001b527d4f1387ef0d92",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:34.466162",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

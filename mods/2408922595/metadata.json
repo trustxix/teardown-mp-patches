@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2408922595",
+  "name": "M1 Garand",
+  "author": "My Cresta",
+  "description": "Iconic M1 Garand. Press R to reload. Right-Click to go into Iron Sight.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "aa3baffa100ed06d6bc7a38416cae30cbe98435334343b9b0167d9d5fdaea25a",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:02.329371"
+}

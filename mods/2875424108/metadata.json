@@ -1,0 +1,33 @@
+{
+  "workshop_id": "2875424108",
+  "name": "TEARMINATOR",
+  "author": "tislericsm",
+  "description": "That Terminator is out there! It can't be bargained with. It can't be reasoned with. It doesn't feel pity, or remorse, or fear. And it absolutely will not stop... ever, until you are dead!",
+  "tags": "",
+  "lua_files": [
+    "hrafn\\hrafn.lua",
+    "hrafn\\hrafnintro.lua",
+    "hrafn\\laser.lua",
+    "script\\chopper.lua",
+    "script\\endoskeleton.lua",
+    "script\\endoskeletonintro.lua",
+    "script\\flyover.lua",
+    "script\\huntedchopper.lua",
+    "script\\skyboxrotater.lua",
+    "script\\terminator.lua",
+    "script\\weaponscripts.lua",
+    "script\\winddust.lua",
+    "hrafn\\hrafnscripts\\aiscripts.lua",
+    "hrafn\\hrafnscripts\\bodyscripts.lua",
+    "hrafn\\hrafnscripts\\flightscripts.lua",
+    "hrafn\\hrafnscripts\\utilities.lua",
+    "hrafn\\hrafnscripts\\weaponscripts.lua",
+    "hrafn\\hrafnscripts\\weaponscripts2.lua"
+  ],
+  "sha256": "a5db21c99f8694b7efeb66ee1c3184dd550bcccd1a6a67c13ff9de75a9dceeda",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:52.474004",
+  "validation_notes": "Checks failed: HANDLE-SAFE"
+}

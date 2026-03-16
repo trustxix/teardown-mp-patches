@@ -1,0 +1,28 @@
+{
+  "workshop_id": "2945997960",
+  "name": "Tameable Dragon",
+  "author": "Geneosis",
+  "description": "Do you want a shiny dragon mount? You will have to tame it first! [noupload]",
+  "tags": "Gameplay, Vehicle, Asset",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\dragon_spawner.lua",
+    "scripts\\json.lua",
+    "scripts\\manager.lua",
+    "scripts\\registry.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua",
+    "dragon\\scripts\\dragon_ai.lua",
+    "dragon\\scripts\\dragon_controller.lua",
+    "dragon\\scripts\\dragon_vehicle.lua"
+  ],
+  "sha256": "da99a55a5790e04f20cea971019fa7b91ab0cfb5d6df481ad8351ac62bc4bb70",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:58.023083",
+  "validation_notes": "Checks failed: SERVER-AUTH, UI-IN-DRAW, CLIENT-INPUT"
+}

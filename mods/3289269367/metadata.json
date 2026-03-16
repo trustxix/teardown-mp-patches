@@ -1,0 +1,27 @@
+{
+  "workshop_id": "3289269367",
+  "name": "Synthetic Swarm",
+  "author": "Geneosis",
+  "description": "Spawnable Drone Swarm Factories [noupload]",
+  "tags": "Gameplay, Asset",
+  "lua_files": [
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\json.lua",
+    "scripts\\manager.lua",
+    "scripts\\registry.lua",
+    "scripts\\shape_utils.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua",
+    "nest\\scripts\\drones_nest.lua",
+    "drone\\scripts\\drone_ai.lua",
+    "drone\\scripts\\drone_controller.lua"
+  ],
+  "sha256": "25c040271993e4983672889cdb95222392eb3df1bf664b87f56ae20fa901fbf6",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:42:59.498540",
+  "validation_notes": "Checks failed: SERVER-AUTH"
+}

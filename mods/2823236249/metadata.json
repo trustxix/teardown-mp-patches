@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2823236249",
+  "name": "Spawnable Medieval Crossbow",
+  "author": "Autumnatic, DimasVoxel",
+  "description": "Spawnable medieval crossbow[noupload]",
+  "tags": "Gameplay, spawn, vehicle,content",
+  "lua_files": [
+    "script\\helper.lua",
+    "script\\machine.lua",
+    "script\\projectile.lua"
+  ],
+  "sha256": "4890f0f7e1a222102de23682eade221a2e5d2662125d46d66aabfde01bfc1e0f",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:47.068357",
+  "validation_notes": "Checks failed: HANDLE-SAFE"
+}

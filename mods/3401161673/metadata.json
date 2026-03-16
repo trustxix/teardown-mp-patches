@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3401161673",
+  "name": "RMW - RPG-7",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - While it doesnt stand for this in russian, in English, they use the Word for Rock\u00e9t Propelled Grenade. The RPG 7 first penetrates the armour then explodes. (Insert ur joke here) >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "2f0106704a428f4682a61baaec6c4899986dfd46c6bca00d58e0e7d079eb99fe",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:06.445444"
+}

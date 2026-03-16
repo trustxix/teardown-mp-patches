@@ -1,0 +1,16 @@
+{
+  "workshop_id": "3553116743",
+  "name": "Final Flash",
+  "author": "GalaxyPizza",
+  "description": "Final Flash from DBZ",
+  "tags": "Tool, Global",
+  "lua_files": [
+    "main.lua"
+  ],
+  "sha256": "4fd27091aa4454e07a65b97be21b14e06fd38615daaa4a6213ccee51e94a65e5",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:22.911954",
+  "validation_notes": "Checks failed: HANDLE-SAFE"
+}

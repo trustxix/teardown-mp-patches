@@ -1,0 +1,23 @@
+{
+  "workshop_id": "2994616319",
+  "name": "Omni Gun",
+  "author": "Geneosis",
+  "description": "[noupload]Shoots copies of anything!",
+  "tags": "Gameplay,Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\debug.lua",
+    "scripts\\registry.lua",
+    "scripts\\tool.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "a6f3c38713d4429d5b60b9d5e989a2bbc9bbb0d633b4164ac12866c0dd8b601c",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:41:00.929233",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

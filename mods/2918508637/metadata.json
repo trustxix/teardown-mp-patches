@@ -1,0 +1,28 @@
+{
+  "workshop_id": "2918508637",
+  "name": "AI Trainer",
+  "author": "Geneosis",
+  "description": "[noupload]A template for Machine Learning. This example lets you train a Neural Network using a Genetic Algorithm.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "scripts\\body_controller.lua",
+    "scripts\\debug.lua",
+    "scripts\\genetic_algo.lua",
+    "scripts\\json.lua",
+    "scripts\\neural_network.lua",
+    "scripts\\registry.lua",
+    "scripts\\tool.lua",
+    "scripts\\training.lua",
+    "scripts\\ui.lua",
+    "scripts\\umf.lua",
+    "scripts\\utility.lua"
+  ],
+  "sha256": "2262c3da107e3fcf2982eb251390aa6dd4a689e09e871ef3b9aebce2c0e548a3",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:57.129514",
+  "validation_notes": "Checks failed: UI-IN-DRAW, CLIENT-INPUT"
+}

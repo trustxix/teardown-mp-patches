@@ -1,0 +1,4 @@
+name = Monster Truck
+author = VehicleGuy
+description = A big monster truck
+tags = Vehicle

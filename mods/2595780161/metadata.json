@@ -1,0 +1,18 @@
+{
+  "workshop_id": "2595780161",
+  "name": "Kriss Vector",
+  "author": "Tesseractahedron",
+  "description": "[noupload]A modern American submachine gun manufactured by Kriss USA. The Vector is a compact firearm that is commonly chambered in different kinds of pistol cartridges such as 9x19mm.",
+  "tags": "Tool,Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "options2.lua"
+  ],
+  "sha256": "39c85ce5d5a2cc813e0dd1b85d8124b938b983e26159652f74233624bf73a667",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:08.691962",
+  "validation_notes": "Checks failed: HANDLE-SAFE, UI-IN-DRAW"
+}

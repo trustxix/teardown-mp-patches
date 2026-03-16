@@ -1,0 +1,28 @@
+{
+  "workshop_id": "3619320878",
+  "name": "Steve's NPCS",
+  "author": "Steve",
+  "description": "Play around with these modern AI NPCS, they react, panic, look eachother, avoid, wander, pathfinding, animations, killables, physical interactions, worry, chase food, NOTE: STILL WORK IN PROGRESS, MAY EXPECT BUGS!",
+  "tags": "Gameplay, Map",
+  "lua_files": [
+    "DESPAWNPOTIONEFFECT.lua",
+    "gorelaunchExplode.lua",
+    "gorelaunchExplodePurple.lua",
+    "Nextbot_visuals.lua",
+    "NPC_POTION_EFFECT.lua",
+    "NPC_SPAWNER.lua",
+    "NPC_SPAWNEROLD.lua",
+    "NPC_ZOMBIE_VIRUS.lua",
+    "PlayerAiTest.lua",
+    "PlayerAiTestold.lua",
+    "PlayerAiTestoldest.lua",
+    "propC.lua",
+    "RushVisuals.lua"
+  ],
+  "sha256": "96c733e4d0118c23f38212343586b8e766282d3684219dc7589a55d22615e163",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:29.176930",
+  "validation_notes": "Checks failed: HANDLE-SAFE, NO-V1-CBACKS"
+}

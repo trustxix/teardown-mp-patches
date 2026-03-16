@@ -1,0 +1,23 @@
+{
+  "workshop_id": "2515871265",
+  "name": "Thruster Tool",
+  "author": "NLferdiNL",
+  "description": "Thruster Tool from Garry's Mod",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "datascripts\\color4.lua",
+    "datascripts\\inputList.lua",
+    "scripts\\menu.lua",
+    "scripts\\savedata.lua",
+    "scripts\\textbox.lua",
+    "scripts\\ui.lua",
+    "scripts\\utils.lua"
+  ],
+  "sha256": "cb0d36c978dff1bc32d8e46a863a81fe7626f8530b8f52dce6a9bef8f348b70d",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:00.192496"
+}

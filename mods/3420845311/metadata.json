@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3420845311",
+  "name": "RMW - Barrett M82",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - No wonder Zakhaev was pissed. Getting shot with a sniper rifle chambered in .50 BMG is one way to ruin one's day. Designed to destroy enemy equipment, vehicles, and anything that moves. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "96e0c42fc8f3a5f31d8a821b8f71985e9fe2ca204dcdf4dc4ebd02d00b1deee6",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:10.284571"
+}

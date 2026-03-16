@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2401577403",
+  "name": "Scorpion",
+  "author": "My Cresta",
+  "description": "Scorpion from Mortal Kombat, you can punch stuff really hard or you can hook/pull stuff and yourself. Left-Click: Punch, Right-Click: Hook/Pull.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "f86fff8d9f2f1acf227b36e358133df898f287eaf94e61baab1eafd0c2e83658",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:54.481464",
+  "validation_notes": "SetPlayerHealth in client.tick - works on host"
+}

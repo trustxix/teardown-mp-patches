@@ -1,0 +1,16 @@
+{
+  "workshop_id": "3401098159",
+  "name": "RPM - Modern Military Playermodels REMASTERED (RAGDOLL UPDATE)",
+  "author": "Mr. Rubyyy",
+  "description": "A Pack of 21st century Military Playermodels! Includes: American, Russian, Chinese, British, French, German, Ukrainian, Israeli, Japanese, South Korean, North Korean, Turkish, Greek, Italian, Serbian, Slovakian, Czech, Croatian, Hungairan, Romanian, Finnish, Norwegian, Swedish, Australian, Austrian, Spanish, Canadian, Mexican, Polish, Brazilian troopers as well as PMC-s and Insurgents. NOW INCLUDES RAGDOLLS TOO!!! \u201cFrom the foggy Korean DMZ to the deserts of North Africa... from the Arctic Circle to the war-torn streets of Eastern Europe\u2026 the world is on fire\u2014choose your side.\u201d",
+  "tags": "Model, Tool",
+  "lua_files": [
+    "animation.lua",
+    "prefab\\ragdoll\\animation.lua"
+  ],
+  "sha256": "1d04fb19a1a4fbc25fdffb9712c2d3a0eb37c1ecfd9134508c8588d87116e2fd",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:36:12.615004"
+}

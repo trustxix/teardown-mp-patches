@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2854539326",
+  "name": "Lava Gun",
+  "author": "coolJWB, HorizonZer0, Deffcolony, Dzage, ComradeAlpaca, Dgeekmonkey",
+  "description": "Made based on Magma (Magmantius team), which was the evolution of coolJWB's water",
+  "tags": "",
+  "lua_files": [
+    "main backup.lua",
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "8d90290f2661a5b824c5e5b3851a944b73794eb33952fbdfa99ed1e846be62dc",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:52.128080"
+}

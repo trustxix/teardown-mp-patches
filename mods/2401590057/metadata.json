@@ -1,0 +1,16 @@
+{
+  "workshop_id": "2401590057",
+  "name": "SCAR-20",
+  "author": "My Cresta",
+  "description": "Scar-20, Auto-Sniper with 4 different ammo types. Press R to reload, Right Click to zoom and Press 'C' to switch ammo type. Change Zoom level with mouse scroll.",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua"
+  ],
+  "sha256": "fc7aaef87d70c9b4bb1d464584d913fa1a930374220e33c0e198275e7c227c7e",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:35:56.235137"
+}

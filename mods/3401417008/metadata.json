@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3401417008",
+  "name": "RMW - FN SCAR",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - FN made a rifle worhty of being the American Navy Seals Service rifle. Currently the Service Rifle of the Belgian Armed Forces. Good ol' 7.62 Nato rounds finally find use in the US army once more. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "c2b37ee69dc186f2113352a40e4b253900b1ffd9daa7670917b1059353e55829",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:07.259170"
+}

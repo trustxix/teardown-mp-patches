@@ -1,0 +1,17 @@
+{
+  "workshop_id": "2965297478",
+  "name": "High Tech Drone",
+  "author": "My Cresta",
+  "description": "High Tech Drone with smooth enjoyable movement and lots of cool features. Most notably the grappling hook [noupload]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "prefab\\remotescreen.lua"
+  ],
+  "sha256": "f95010e9459c1df577ffe0ec7f345383b49f21013e94aa8d87d02900962b6c61",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:59.451971",
+  "validation_notes": "Checks failed: UI-IN-DRAW"
+}

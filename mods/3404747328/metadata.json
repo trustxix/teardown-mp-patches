@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3404747328",
+  "name": "RMW - M249",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - M249 is the Army Designation for the FN Minimi with a swapped out heatshield. It has served the US army well for three decades so far. Lovely light machinegun sharing ammunition with the M4, the ol' 5.56 Nato. >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "083d87ec22ff404a1aa3899a986bc6e43472c53366a32b6ec35ebf119e34d69f",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:07.596090"
+}

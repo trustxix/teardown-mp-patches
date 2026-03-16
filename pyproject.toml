@@ -1,0 +1,18 @@
+[project]
+name = "teardown-mp-patcher"
+version = "0.1.0"
+description = "Automated pipeline to patch Teardown mods for multiplayer compatibility"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "jinja2>=3.1",
+    "tree-sitter>=0.23",
+    "tree-sitter-lua>=0.2",
+    "anthropic>=0.40",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-mock>=3.12"]
+
+[project.scripts]
+td-patch = "tools.patch:cli"

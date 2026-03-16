@@ -1,0 +1,19 @@
+{
+  "workshop_id": "2414735882",
+  "name": "YLVF (YuLun's Vehicle Frame) 0.9.4",
+  "author": "YuLun",
+  "description": "[noupload]A mod which supports extended vehicle features: Controlled lights, Mechenical arms, Winches and CUSTOMIZABLE SPAWING!!",
+  "tags": "Gameplay, Global",
+  "lua_files": [
+    "changeLog.lua",
+    "main.lua",
+    "options.lua",
+    "pauseMenu.lua",
+    "spawnPanel.lua"
+  ],
+  "sha256": "625e06a96bfcf98131b221f9cb1009a02f86179e118161afe7b24f6c132a4454",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:39:52.729377"
+}

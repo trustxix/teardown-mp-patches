@@ -1,0 +1,24 @@
+{
+  "workshop_id": "2622040244",
+  "name": "Adjustable Fire",
+  "author": "NLferdiNL",
+  "description": "[noupload]Adjustable fire.",
+  "tags": "Gameplay",
+  "lua_files": [
+    "main.lua",
+    "options_disabled.lua",
+    "datascripts\\color4.lua",
+    "datascripts\\inputList.lua",
+    "datascripts\\keybinds.lua",
+    "scripts\\menu.lua",
+    "scripts\\savedata.lua",
+    "scripts\\textbox.lua",
+    "scripts\\ui.lua",
+    "scripts\\utils.lua"
+  ],
+  "sha256": "4f282a9d3571a9316b391ef15e4ade039fe54e5a56354c77c848cfba23ea7dbe",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:40:11.625535"
+}

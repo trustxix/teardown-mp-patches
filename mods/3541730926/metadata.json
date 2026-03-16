@@ -1,0 +1,18 @@
+{
+  "workshop_id": "3541730926",
+  "name": "TABS Effect",
+  "author": "Okidoki",
+  "description": "my mod",
+  "tags": "Global",
+  "lua_files": [
+    "fire.lua",
+    "main.lua",
+    "options.lua",
+    "registry.lua"
+  ],
+  "sha256": "445a81d7d1f6eea6becee1aa0ec3809b64f56972e2a65cbc0917f3f95e986487",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:21.816098"
+}

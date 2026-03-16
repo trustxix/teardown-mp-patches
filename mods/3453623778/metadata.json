@@ -1,0 +1,17 @@
+{
+  "workshop_id": "3453623778",
+  "name": "RMW - AK74",
+  "author": "Mr. Rubyyy",
+  "description": "Rubyyy's Modular Weaponry - The USSR realized that 5.56 was actually a nice cartridge so they made an AK for it. The predecessor to the M variant. This one still rocks the Bakelite furtnitre and can be used with a folding Stock.  (YOU CAN MODIFY THE STOCK NOW TOO!!!!) >CONTROLS< : [MMB-Fire Selector] [RMB-Aim Down Sight] [R-Reload] [T-Attachment Menu] [SHIFT-Canting/Sprint]",
+  "tags": "Tool",
+  "lua_files": [
+    "main.lua",
+    "options.lua",
+    "safe.lua"
+  ],
+  "sha256": "48c473370c4fb860fa0ba8b0008830cf40ad549482b7865c96c908da21749ff7",
+  "status": "packaged",
+  "manual_edits": false,
+  "patch_version": "1.0",
+  "ingested_at": "2026-03-16T15:43:20.483665"
+}

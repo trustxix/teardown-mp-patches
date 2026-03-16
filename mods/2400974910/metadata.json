@@ -8,8 +8,8 @@
     "main.lua"
   ],
   "sha256": "cb32d61769e5168933b239aa69df0cde669e6c04aef65ac0e21dd4fe5c05cc5e",
-  "status": "packaged",
+  "status": "pending",
   "manual_edits": false,
   "patch_version": "1.0",
-  "ingested_at": "2026-03-16T15:29:21.644896"
+  "ingested_at": "2026-03-16T17:02:52.931723"
 }

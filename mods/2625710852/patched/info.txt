@@ -1,0 +1,5 @@
+name = Vacuum Cleaner
+author = My Cresta
+description = This overpowered vacuum cleaner can suck up infite amounts of debris and then shoot it out again.
+tags = Tool
+version = 2

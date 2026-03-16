@@ -1,0 +1,5 @@
+name = Dual Miniguns
+author = My Cresta
+description = Very fast Miniguns that counts how many bullets you fire. Fire with Left and Right Click.
+tags = Tool
+version = 2

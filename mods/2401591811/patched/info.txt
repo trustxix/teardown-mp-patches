@@ -1,0 +1,5 @@
+name = Dragonslayer
+author = My Cresta
+description = Dragonslayer from Berserk. Left-Click to swing sword, Right-Click to do spinning attack. You are immortal and can multi jump while holding the Dragonslayer.
+tags = Tool
+version = 2

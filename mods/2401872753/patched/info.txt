@@ -1,0 +1,4 @@
+name = Guided Missile
+author = My Cresta
+description = [noupload] Guided Missile that you can control. While flying, Left-Click to explode, Right-Click to detach. Space to go faster. Vox model made by Alagabry and me.
+tags = Toolversion = 2

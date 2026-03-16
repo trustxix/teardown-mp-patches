@@ -1,0 +1,4 @@
+name = Charge Shotgun
+author = My Cresta
+description = Charge Shotgun that can shoot up to 900 bullets at once. Hold Left-Click to charge, release to fire.
+tags=Toolversion = 2

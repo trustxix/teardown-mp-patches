@@ -1,0 +1,5 @@
+name = Lightkatana
+author = My Cresta
+description = Star Wars-inspired Lightkatana. Left-Click to swing vertically, Right-Click to swing horizontally. You are immortal and can multi jump while holding the Lightkatana.
+tags = Tool
+version = 2

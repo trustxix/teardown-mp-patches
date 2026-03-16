@@ -1,0 +1,5 @@
+name = Magic Bag
+author = My Cresta
+description = Magic Bag that lets you pick up an infinite amount of objects, you can throw the items from top order. Pick stuff with LMB. Hold RMB to increase power and release to throw.
+tags = Tool
+version = 2

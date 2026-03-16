@@ -132,40 +132,6 @@ function ProjectileOperations(projectile)
 	projectile.pos = point2
 end
 
-function tickGunState(gun, dt, inputDown, inputReleased)
-	if inputDown then
-		gun.angVel = math.min(500, gun.angVel + dt * 1000)
-		if gun.state == STATE_READY or gun.state == STATE_UNWINDING then
-			gun.state = STATE_WINDING
-		end
-	else
-		gun.angVel = math.max(0, gun.angVel - dt * 250)
-	end
-
-	if inputReleased then
-		if gun.state == STATE_FIRING or gun.state == STATE_WINDING then
-			gun.state = STATE_UNWINDING
-			gun.spreadTimer = 0
-			gun.simulBullets = 0
-		end
-	end
-
-	if gun.state == STATE_WINDING then
-		gun.startDelay = gun.startDelay - dt
-		if gun.startDelay <= 0 then
-			gun.state = STATE_FIRING
-		end
-	end
-
-	if gun.state == STATE_UNWINDING then
-		gun.startDelay = gun.startDelay + dt
-		if gun.startDelay > 0.6 then
-			gun.state = STATE_READY
-			gun.startDelay = 0.6
-		end
-	end
-end
-
 ---------- SERVER ----------
 
 function server.init()
@@ -198,29 +164,89 @@ function server.tickPlayer(p, dt)
 	local data = players[p]
 	if not data then return end
 
-	-- Process projectiles (server authoritative)
+	-- Process projectiles (server authoritative: MakeHole, DrawLine)
 	for key, shell in ipairs(data.projectileHandler.shells) do
 		if shell.active then
 			ProjectileOperations(shell)
 		end
 	end
 
-	-- Dual fire maxVel
+	-- Dual fire maxVel boost
 	if InputDown("usetool", p) and InputDown("rmb", p) then
 		data.maxVel = 9
 	else
 		data.maxVel = 6.5
 	end
 
-	-- Gun 1 state (LMB = usetool fires left barrel)
+	-- Gun 1 state machine (LMB = usetool)
 	local g1down = InputDown("usetool", p)
 	local g1released = InputReleased("usetool", p)
-	tickGunState(data.gun1, dt, g1down, g1released)
 
-	-- Gun 2 state (RMB = alttool fires right barrel)
+	if g1down then
+		data.gun1.angVel = math.min(500, data.gun1.angVel + dt * 1000)
+		if data.gun1.state == STATE_READY or data.gun1.state == STATE_UNWINDING then
+			data.gun1.state = STATE_WINDING
+		end
+	else
+		data.gun1.angVel = math.max(0, data.gun1.angVel - dt * 250)
+	end
+
+	if g1released then
+		if data.gun1.state == STATE_FIRING or data.gun1.state == STATE_WINDING then
+			data.gun1.state = STATE_UNWINDING
+			data.gun1.spreadTimer = 0
+			data.gun1.simulBullets = 0
+		end
+	end
+
+	if data.gun1.state == STATE_WINDING then
+		data.gun1.startDelay = data.gun1.startDelay - dt
+		if data.gun1.startDelay <= 0 then
+			data.gun1.state = STATE_FIRING
+		end
+	end
+	if data.gun1.state == STATE_UNWINDING then
+		data.gun1.startDelay = data.gun1.startDelay + dt
+		if data.gun1.startDelay > 0.6 then
+			data.gun1.state = STATE_READY
+			data.gun1.startDelay = 0.6
+		end
+	end
+
+	-- Gun 2 state machine (RMB)
 	local g2down = InputDown("rmb", p)
 	local g2released = InputReleased("rmb", p)
-	tickGunState(data.gun2, dt, g2down, g2released)
+
+	if g2down then
+		data.gun2.angVel = math.min(500, data.gun2.angVel + dt * 1000)
+		if data.gun2.state == STATE_READY or data.gun2.state == STATE_UNWINDING then
+			data.gun2.state = STATE_WINDING
+		end
+	else
+		data.gun2.angVel = math.max(0, data.gun2.angVel - dt * 250)
+	end
+
+	if g2released then
+		if data.gun2.state == STATE_FIRING or data.gun2.state == STATE_WINDING then
+			data.gun2.state = STATE_UNWINDING
+			data.gun2.spreadTimer = 0
+			data.gun2.simulBullets = 0
+		end
+	end
+
+	if data.gun2.state == STATE_WINDING then
+		data.gun2.startDelay = data.gun2.startDelay - dt
+		if data.gun2.startDelay <= 0 then
+			data.gun2.state = STATE_FIRING
+		end
+	end
+	if data.gun2.state == STATE_UNWINDING then
+		data.gun2.startDelay = data.gun2.startDelay + dt
+		if data.gun2.startDelay > 0.6 then
+			data.gun2.state = STATE_READY
+			data.gun2.startDelay = 0.6
+		end
+	end
 
 	-- Compute muzzle positions from tool body
 	local b = GetToolBody(p)
@@ -252,10 +278,12 @@ end
 
 function client.tick(dt)
 	for p in PlayersAdded() do
-		players[p] = createPlayerData()
-		local data = players[p]
-		for i = 1, 300 do
-			data.projectileHandler.shells[i] = deepcopy(data.projectileHandler.defaultShell)
+		if not players[p] then
+			players[p] = createPlayerData()
+			local data = players[p]
+			for i = 1, 300 do
+				data.projectileHandler.shells[i] = deepcopy(data.projectileHandler.defaultShell)
+			end
 		end
 	end
 
@@ -284,6 +312,46 @@ function client.tickPlayer(p, dt)
 	local data = players[p]
 	if not data then return end
 	local pt = GetPlayerTransform(p)
+
+	-- Tool transform and barrel animation (compute positions FIRST for effects)
+	local b = GetToolBody(p)
+	if b ~= 0 then
+		local heightOffset = InputDown("ctrl", p) and 0.3 or 0.2
+		local offset = Transform(Vec(0.1, heightOffset, 0))
+		SetToolTransform(offset, 1.0, p)
+
+		local toolTrans = GetBodyTransform(b)
+		data.leftPos = TransformToParentPoint(toolTrans, Vec(-0.55, -0.7, -2))
+		data.rightPos = TransformToParentPoint(toolTrans, Vec(0.35, -0.7, -2))
+
+		data.gun1.angle = data.gun1.angle + data.gun1.angVel * dt * 5
+		data.gun2.angle = data.gun2.angle + data.gun2.angVel * dt * 5
+
+		local voxSize = 0.1
+		local attach1 = Transform(Vec(2.8 * voxSize, -7.3 * voxSize, 0))
+		local attach2 = Transform(Vec(-5.3 * voxSize, -7.3 * voxSize, 0))
+
+		if data.body ~= b then
+			data.body = b
+			local shapes = GetBodyShapes(b)
+			data.barrel1 = shapes[1]
+			data.barrel2 = shapes[3]
+			data.barrelTransform1 = TransformToLocalTransform(attach1, GetShapeLocalTransform(data.barrel1))
+			data.barrelTransform2 = TransformToLocalTransform(attach2, GetShapeLocalTransform(data.barrel2))
+		end
+
+		if data.barrel1 and data.barrelTransform1 then
+			attach1.rot = QuatEuler(0, 0, -data.gun2.angle)
+			local t = TransformToParentTransform(attach1, data.barrelTransform1)
+			SetShapeLocalTransform(data.barrel1, t)
+		end
+
+		if data.barrel2 and data.barrelTransform2 then
+			attach2.rot = QuatEuler(0, 0, -data.gun1.angle)
+			local t2 = TransformToParentTransform(attach2, data.barrelTransform2)
+			SetShapeLocalTransform(data.barrel2, t2)
+		end
+	end
 
 	-- Mirror gun1 state (LMB = usetool)
 	local g1down = InputDown("usetool", p)
@@ -329,7 +397,7 @@ function client.tickPlayer(p, dt)
 		end
 	end
 
-	-- Mirror gun2 state (RMB = alttool)
+	-- Mirror gun2 state (RMB)
 	local g2down = InputDown("rmb", p)
 	local g2released = InputReleased("rmb", p)
 
@@ -384,46 +452,6 @@ function client.tickPlayer(p, dt)
 		PlayLoop(gunsound, pt.pos, 0.6)
 		SpawnParticle("fire", data.rightPos, Vec(0, 1.0 + math.random(1, 10) * 0.1, 0), 0.3, 0.15)
 		PointLight(data.rightPos, 1, 1, 1, 0.5)
-	end
-
-	-- Tool transform and barrel animation
-	local b = GetToolBody(p)
-	if b ~= 0 then
-		local heightOffset = InputDown("ctrl", p) and 0.3 or 0.2
-		local offset = Transform(Vec(0.1, heightOffset, 0))
-		SetToolTransform(offset, 1.0, p)
-
-		local toolTrans = GetBodyTransform(b)
-		data.leftPos = TransformToParentPoint(toolTrans, Vec(-0.55, -0.7, -2))
-		data.rightPos = TransformToParentPoint(toolTrans, Vec(0.35, -0.7, -2))
-
-		data.gun1.angle = data.gun1.angle + data.gun1.angVel * dt * 5
-		data.gun2.angle = data.gun2.angle + data.gun2.angVel * dt * 5
-
-		local voxSize = 0.1
-		local attach1 = Transform(Vec(2.8 * voxSize, -7.3 * voxSize, 0))
-		local attach2 = Transform(Vec(-5.3 * voxSize, -7.3 * voxSize, 0))
-
-		if data.body ~= b then
-			data.body = b
-			local shapes = GetBodyShapes(b)
-			data.barrel1 = shapes[1]
-			data.barrel2 = shapes[3]
-			data.barrelTransform1 = TransformToLocalTransform(attach1, GetShapeLocalTransform(data.barrel1))
-			data.barrelTransform2 = TransformToLocalTransform(attach2, GetShapeLocalTransform(data.barrel2))
-		end
-
-		if data.barrel1 and data.barrelTransform1 then
-			attach1.rot = QuatEuler(0, 0, -data.gun2.angle)
-			local t = TransformToParentTransform(attach1, data.barrelTransform1)
-			SetShapeLocalTransform(data.barrel1, t)
-		end
-
-		if data.barrel2 and data.barrelTransform2 then
-			attach2.rot = QuatEuler(0, 0, -data.gun1.angle)
-			local t2 = TransformToParentTransform(attach2, data.barrelTransform2)
-			SetShapeLocalTransform(data.barrel2, t2)
-		end
 	end
 
 	-- Smoke after sustained fire

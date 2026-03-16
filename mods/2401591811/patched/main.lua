@@ -128,16 +128,6 @@ function client.tickPlayer(p, dt)
 	end
 
 	if InputDown("rmb", p) then
-		-- Spin camera effect (local player only)
-		if p == GetLocalPlayer() then
-			local ct = GetPlayerEyeTransform(p)
-			local pt = GetPlayerTransform(p)
-			pt.pos[2] = pt.pos[2] + 1.8
-			ct.pos = pt.pos
-			ct.rot = QuatRotateQuat(ct.rot, QuatEuler(0, 10, 0))
-			SetCameraTransform(ct)
-		end
-
 		if d.smashTimer == 0 then d.smashTimer = 0.05 end
 		if d.soundtimer == 0 then d.soundtimer = 0.05 end
 		PlayLoop(spinsound)

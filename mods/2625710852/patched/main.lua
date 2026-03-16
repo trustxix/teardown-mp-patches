@@ -54,15 +54,13 @@ function GetAimPos(p)
 	return hit, shape
 end
 
-function Suction(p, data, shape)
-	if data.suckspeed > 0 then return end
-	local ct = GetPlayerEyeTransform(p)
+function Suction(p, pd, shape)
+	if pd.suckspeed > 0 then return end
 	local body = GetShapeBody(shape)
+	if not body then return end
 	local vehicle = GetBodyVehicle(body)
 
-	if not body then return end
-
-	local vacuummass = data.maxmass * data.vacuumpower
+	local vacuummass = pd.maxmass * pd.vacuumpower
 	local mass = GetBodyMass(body)
 	if mass > vacuummass then return end
 	if mass < 16 then
@@ -75,32 +73,32 @@ function Suction(p, data, shape)
 		Delete(joints[i])
 	end
 
-	local hidevec = Vec(0, -150 - (#data.items * 5), 0)
+	local hidevec = Vec(0, -150 - (#pd.items * 5), 0)
 	local hidepos = TransformToParentVec(Transform(Vec(0, 0, 0), Quat()), hidevec)
 	local bodyrot = GetBodyTransform(body).rot
 
 	SetBodyTransform(body, Transform(hidepos, bodyrot))
 	SetTag(body, "unbreakable")
-	data.items[data.count] = {}
-	data.items[data.count].shape = shape
-	data.items[data.count].body = body
-	data.items[data.count].rot = bodyrot
-	data.count = data.count + 1
+	pd.items[pd.count] = {}
+	pd.items[pd.count].shape = shape
+	pd.items[pd.count].body = body
+	pd.items[pd.count].rot = bodyrot
+	pd.count = pd.count + 1
 	if mass < 100 then
-		data.suckspeed = 0.1
+		pd.suckspeed = 0.1
 	elseif mass < 200 then
-		data.suckspeed = 0.15
+		pd.suckspeed = 0.15
 	else
-		data.suckspeed = 0.2
+		pd.suckspeed = 0.2
 	end
-	data.suckspeed = data.suckspeed / math.max(1, (data.vacuumpower / 25))
+	pd.suckspeed = pd.suckspeed / math.max(1, (pd.vacuumpower / 25))
 end
 
-function Vacuum(p, data)
-	local vacuumdist = data.maxdist * data.vacuumpower
-	local vacuummass = data.maxmass * data.vacuumpower
-	local mi = VecAdd(data.tooltop, Vec(-vacuumdist / 2, -vacuumdist / 2, -vacuumdist / 2))
-	local ma = VecAdd(data.tooltop, Vec(vacuumdist / 2, vacuumdist / 2, vacuumdist / 2))
+function Vacuum(p, pd)
+	local vacuumdist = pd.maxdist * pd.vacuumpower
+	local vacuummass = pd.maxmass * pd.vacuumpower
+	local mi = VecAdd(pd.tooltop, Vec(-vacuumdist / 2, -vacuumdist / 2, -vacuumdist / 2))
+	local ma = VecAdd(pd.tooltop, Vec(vacuumdist / 2, vacuumdist / 2, vacuumdist / 2))
 	QueryRequire("physical dynamic")
 	local shapes = QueryAabbShapes(mi, ma)
 
@@ -108,21 +106,21 @@ function Vacuum(p, data)
 		local shape = shapes[i]
 		local bmi, bma = GetShapeBounds(shape)
 		local bc = VecLerp(bmi, bma, 0.5)
-		local dir = VecSub(data.tooltop, bc)
+		local dir = VecSub(pd.tooltop, bc)
 		local dist = VecLength(dir)
 		dir = VecScale(dir, 1.0 / dist)
 
 		local body = GetShapeBody(shape)
 		local mass = GetBodyMass(body)
 
-		if dist < data.affectradius then
-			if data.deletestuff then Delete(shape) else Suction(p, data, shape) end
+		if dist < pd.affectradius then
+			if pd.deletestuff then Delete(shape) else Suction(p, pd, shape) end
 		end
 
 		if dist < vacuumdist and mass < vacuummass then
 			local massScale = 1 - math.min(mass / vacuummass, 1.0)
 			local distScale = 1 - math.min(dist / vacuumdist, 1.0)
-			local add = VecScale(dir, data.strength * massScale * distScale)
+			local add = VecScale(dir, pd.strength * massScale * distScale)
 			local vel = GetBodyVelocity(body)
 			vel = VecAdd(vel, add)
 			SetBodyVelocity(body, vel)
@@ -130,9 +128,9 @@ function Vacuum(p, data)
 	end
 end
 
-function Blower(p, data)
-	local vacuumdist = data.maxdist * data.spitpower / 1.5
-	local vacuummass = data.maxmass * data.spitpower / 1.5
+function Blower(p, pd)
+	local vacuumdist = pd.maxdist * pd.spitpower / 1.5
+	local vacuummass = pd.maxmass * pd.spitpower / 1.5
 	local t = GetPlayerEyeTransform(p)
 	local c = TransformToParentPoint(t, Vec(0, 0, -vacuumdist / 2))
 	local mi = VecAdd(c, Vec(-vacuumdist / 2, -vacuumdist / 2, -vacuumdist / 2))
@@ -144,7 +142,7 @@ function Blower(p, data)
 		local shape = shapes[i]
 		local bmi, bma = GetShapeBounds(shape)
 		local bc = VecLerp(bmi, bma, 0.5)
-		local dir = VecSub(bc, data.tooltop)
+		local dir = VecSub(bc, pd.tooltop)
 		local dist = VecLength(dir)
 		dir = VecScale(dir, 1.0 / dist)
 
@@ -154,7 +152,7 @@ function Blower(p, data)
 		if dist < vacuumdist and mass < vacuummass then
 			local massScale = 1 - math.min(mass / vacuummass, 1.0)
 			local distScale = 1 - math.min(dist / vacuumdist, 1.0)
-			local add = VecScale(dir, data.strength * massScale * distScale)
+			local add = VecScale(dir, pd.strength * massScale * distScale)
 			local vel = GetBodyVelocity(body)
 			vel = VecAdd(vel, add)
 			SetBodyVelocity(body, vel)
@@ -162,8 +160,8 @@ function Blower(p, data)
 	end
 end
 
-function Spition(p, data)
-	if data.count < 2 or data.spitspeed > 0 then return end
+function Spition(p, pd)
+	if pd.count < 2 or pd.spitspeed > 0 then return end
 
 	local ct = GetPlayerEyeTransform(p)
 	local startpos = TransformToParentPoint(ct, Vec(0, 0, -3))
@@ -172,11 +170,11 @@ function Spition(p, data)
 	direction[1] = direction[1] + (math.random() - 0.5)
 	direction[2] = direction[2] + (math.random() - 0.5)
 	direction[3] = direction[3] + (math.random() - 0.5)
-	local spitvelocity = data.velocity * data.spitpower / 5
+	local spitvelocity = pd.velocity * pd.spitpower / 5
 	direction = VecScale(direction, spitvelocity)
 
-	local body = data.items[data.count - 1].body
-	local shape = data.items[data.count - 1].shape
+	local body = pd.items[pd.count - 1].body
+	local shape = pd.items[pd.count - 1].shape
 	local mass = GetBodyMass(body)
 	local vehicle = GetBodyVehicle(body)
 
@@ -185,22 +183,24 @@ function Spition(p, data)
 		SetShapeLocalTransform(shape, transform)
 	end
 
-	SetBodyTransform(body, Transform(startpos, data.items[data.count - 1].rot))
+	SetBodyTransform(body, Transform(startpos, pd.items[pd.count - 1].rot))
 	RemoveTag(body, "unbreakable")
 	SetBodyDynamic(body, true)
 	SetBodyVelocity(body, direction)
-	data.count = data.count - 1
+	pd.count = pd.count - 1
 	if mass < 100 then
-		data.spitspeed = 0.2
+		pd.spitspeed = 0.2
 	elseif mass < 200 then
-		data.spitspeed = 0.25
+		pd.spitspeed = 0.25
 	else
-		data.spitspeed = 0.3
+		pd.spitspeed = 0.3
 	end
-	data.spitspeed = data.spitspeed / math.max(1, (data.spitpower / 25))
+	pd.spitspeed = pd.spitspeed / math.max(1, (pd.spitpower / 25))
 end
 
----------- SERVER ----------
+----------------------------------------------------------------------
+-- SERVER
+----------------------------------------------------------------------
 
 function server.init()
 	RegisterTool("cresta-vacuumcleaner", "Vacuum Cleaner", "MOD/vox/vacuumcleaner.vox")
@@ -210,12 +210,11 @@ function server.tick(dt)
 	for p in PlayersAdded() do
 		players[p] = createPlayerData()
 		SetToolEnabled("cresta-vacuumcleaner", true, p)
-		-- Load saved settings
-		local data = players[p]
+		local pd = players[p]
 		local vp = GetFloat("savegame.mod.vacuumpower")
 		local sp = GetFloat("savegame.mod.spitpower")
-		if vp > 0 then data.vacuumpower = vp end
-		if sp > 0 then data.spitpower = sp end
+		if vp > 0 then pd.vacuumpower = vp end
+		if sp > 0 then pd.spitpower = sp end
 	end
 
 	for p in PlayersRemoved() do
@@ -223,62 +222,71 @@ function server.tick(dt)
 	end
 
 	for p in Players() do
-		server.tickPlayer(p, dt)
+		local pd = players[p]
+		if pd then
+			server.tickPlayer(p, pd, dt)
+		end
 	end
 end
 
-function server.tickPlayer(p, dt)
-	if GetPlayerTool(p) ~= "cresta-vacuumcleaner" then return end
-
-	local data = players[p]
-	if not data then return end
+function server.tickPlayer(p, pd, dt)
+	if GetPlayerTool(p) ~= "cresta-vacuumcleaner" then
+		pd.state = STATE_READY
+		pd.startDelay = 0.35
+		return
+	end
 
 	local lmbdown = InputDown("usetool", p)
 	local lmbup = InputReleased("usetool", p)
 	local rmbdown = InputDown("rmb", p)
 	local rmbup = InputReleased("rmb", p)
 
-	-- State transitions
-	if lmbdown and (data.state == STATE_READY or data.state == STATE_SUCKEND) then
-		data.state = STATE_SUCKSTART
-		data.roll = 10
-		data.rollK = 1
+	-- LMB start
+	if lmbdown and (pd.state == STATE_READY or pd.state == STATE_SUCKEND) then
+		pd.state = STATE_SUCKSTART
+		pd.roll = 10
+		pd.rollK = 1
 	end
 
-	if rmbdown and (data.state == STATE_READY or data.state == STATE_SUCKEND) then
-		data.state = STATE_SUCKSTART
-		data.roll = 10
-		data.rollK = 1
+	-- RMB start
+	if rmbdown and (pd.state == STATE_READY or pd.state == STATE_SUCKEND) then
+		pd.state = STATE_SUCKSTART
+		pd.roll = 10
+		pd.rollK = 1
 	end
 
-	if lmbup and (data.state == STATE_SUCK or data.state == STATE_SPIT or data.state == STATE_SUCKSTART) then
-		data.state = STATE_SUCKEND
-		data.roll = 10
-		data.rollK = 1
+	-- LMB release
+	if lmbup and (pd.state == STATE_SUCK or pd.state == STATE_SPIT or pd.state == STATE_SUCKSTART) then
+		pd.state = STATE_SUCKEND
+		pd.roll = 10
+		pd.rollK = 1
 	end
 
-	if rmbup and (data.state == STATE_SUCK or data.state == STATE_SPIT or data.state == STATE_SUCKSTART) then
-		data.state = STATE_SUCKEND
-		data.roll = 10
-		data.rollK = 1
+	-- RMB release
+	if rmbup and (pd.state == STATE_SUCK or pd.state == STATE_SPIT or pd.state == STATE_SUCKSTART) then
+		pd.state = STATE_SUCKEND
+		pd.roll = 10
+		pd.rollK = 1
 	end
 
-	if data.state == STATE_SUCKSTART then
-		data.startDelay = data.startDelay - dt
-		if data.startDelay <= 0 then
+	-- Startup delay countdown
+	if pd.state == STATE_SUCKSTART then
+		pd.startDelay = pd.startDelay - dt
+		if pd.startDelay <= 0 then
 			if lmbdown then
-				data.state = STATE_SUCK
+				pd.state = STATE_SUCK
 			elseif rmbdown then
-				data.state = STATE_SPIT
+				pd.state = STATE_SPIT
 			end
 		end
 	end
 
-	if data.state == STATE_SUCKEND then
-		data.startDelay = data.startDelay + dt
-		if data.startDelay > 0.35 then
-			data.state = STATE_SUCKEND
-			data.startDelay = 0.35
+	-- Wind-down
+	if pd.state == STATE_SUCKEND then
+		pd.startDelay = pd.startDelay + dt
+		if pd.startDelay > 0.35 then
+			pd.state = STATE_SUCKEND
+			pd.startDelay = 0.35
 		end
 	end
 
@@ -286,34 +294,44 @@ function server.tickPlayer(p, dt)
 	local b = GetToolBody(p)
 	if b ~= 0 then
 		local toolTrans = GetBodyTransform(b)
-		data.tooltop = TransformToParentPoint(toolTrans, Vec(0.355, -0.425, -2))
+		pd.tooltop = TransformToParentPoint(toolTrans, Vec(0.355, -0.425, -2))
 	end
 
 	-- Vacuum (server authoritative: SetBodyVelocity, Delete, SetBodyTransform)
-	if data.state == STATE_SUCK then
-		Vacuum(p, data)
+	if pd.state == STATE_SUCK then
+		Vacuum(p, pd)
 	end
 
 	-- Spit (server authoritative: SetBodyVelocity, SetBodyTransform)
-	if data.state == STATE_SPIT then
-		Spition(p, data)
-		Blower(p, data)
+	if pd.state == STATE_SPIT then
+		Spition(p, pd)
+		Blower(p, pd)
 	end
 
-	if GetPlayerVehicle(p) ~= 0 then
-		data.state = STATE_READY
-		data.startDelay = 0.35
+	-- Decay speed timers
+	if pd.spitspeed > 0 then
+		pd.spitspeed = pd.spitspeed - dt
 	end
-
-	if data.spitspeed > 0 then
-		data.spitspeed = data.spitspeed - dt
-	end
-	if data.suckspeed > 0 then
-		data.suckspeed = data.suckspeed - dt
+	if pd.suckspeed > 0 then
+		pd.suckspeed = pd.suckspeed - dt
 	end
 end
 
----------- CLIENT ----------
+----------------------------------------------------------------------
+-- CLIENT
+----------------------------------------------------------------------
+
+local vacuumloop
+local vacuumloopfast
+local vacuumloopslow
+local vacuumstart
+local vacuumstartfast
+local vacuumstartslow
+local vacuumend
+local vacuumendfast
+local vacuumendslow
+local vacuumsuck
+local vacuumspit
 
 function client.init()
 	vacuumloop = LoadLoop("MOD/snd/vacuumloop.ogg")
@@ -331,12 +349,14 @@ end
 
 function client.tick(dt)
 	for p in PlayersAdded() do
-		players[p] = createPlayerData()
-		local data = players[p]
+		if not players[p] then
+			players[p] = createPlayerData()
+		end
+		local pd = players[p]
 		local vp = GetFloat("savegame.mod.vacuumpower")
 		local sp = GetFloat("savegame.mod.spitpower")
-		if vp > 0 then data.vacuumpower = vp end
-		if sp > 0 then data.spitpower = sp end
+		if vp > 0 then pd.vacuumpower = vp end
+		if sp > 0 then pd.spitpower = sp end
 	end
 
 	for p in PlayersRemoved() do
@@ -344,121 +364,123 @@ function client.tick(dt)
 	end
 
 	for p in Players() do
-		client.tickPlayer(p, dt)
+		local pd = players[p]
+		if pd then
+			client.tickPlayer(p, pd, dt)
+		end
 	end
 end
 
-function client.tickPlayer(p, dt)
-	if GetPlayerTool(p) ~= "cresta-vacuumcleaner" then return end
+function client.tickPlayer(p, pd, dt)
+	if GetPlayerTool(p) ~= "cresta-vacuumcleaner" then
+		pd.state = STATE_READY
+		pd.startDelay = 0.35
+		return
+	end
 
-	local data = players[p]
-	if not data then return end
 	local pt = GetPlayerTransform(p)
-	local isLocal = (p == GetLocalPlayer())
 
 	local lmbdown = InputDown("usetool", p)
 	local lmbup = InputReleased("usetool", p)
 	local rmbdown = InputDown("rmb", p)
 	local rmbup = InputReleased("rmb", p)
 
-	-- State machine with sounds
-	if lmbdown and (data.state == STATE_READY or data.state == STATE_SUCKEND) then
-		data.state = STATE_SUCKSTART
-		data.roll = 10
-		data.rollK = 1
-		if data.vacuumpower > 67 then
+	-- LMB start: play start sound
+	if lmbdown and (pd.state == STATE_READY or pd.state == STATE_SUCKEND) then
+		pd.state = STATE_SUCKSTART
+		pd.roll = 10
+		pd.rollK = 1
+		if pd.vacuumpower > 67 then
 			PlaySound(vacuumstartfast, pt.pos, 0.4)
-		elseif data.vacuumpower < 33 then
+		elseif pd.vacuumpower < 33 then
 			PlaySound(vacuumstartslow, pt.pos, 0.4)
 		else
 			PlaySound(vacuumstart, pt.pos, 0.4)
 		end
 	end
 
-	if rmbdown and (data.state == STATE_READY or data.state == STATE_SUCKEND) then
-		data.state = STATE_SUCKSTART
-		data.roll = 10
-		data.rollK = 1
-		if data.spitpower > 67 then
+	-- RMB start: play start sound
+	if rmbdown and (pd.state == STATE_READY or pd.state == STATE_SUCKEND) then
+		pd.state = STATE_SUCKSTART
+		pd.roll = 10
+		pd.rollK = 1
+		if pd.spitpower > 67 then
 			PlaySound(vacuumstartfast, pt.pos, 0.4)
-		elseif data.spitpower < 33 then
+		elseif pd.spitpower < 33 then
 			PlaySound(vacuumstartslow, pt.pos, 0.4)
 		else
 			PlaySound(vacuumstart, pt.pos, 0.4)
 		end
 	end
 
-	if lmbup and (data.state == STATE_SUCK or data.state == STATE_SPIT or data.state == STATE_SUCKSTART) then
-		data.state = STATE_SUCKEND
-		data.roll = 10
-		data.rollK = 1
-		if data.vacuumpower > 67 then
+	-- LMB release: play end sound
+	if lmbup and (pd.state == STATE_SUCK or pd.state == STATE_SPIT or pd.state == STATE_SUCKSTART) then
+		pd.state = STATE_SUCKEND
+		pd.roll = 10
+		pd.rollK = 1
+		if pd.vacuumpower > 67 then
 			PlaySound(vacuumendfast, pt.pos, 0.4)
-		elseif data.vacuumpower < 33 then
+		elseif pd.vacuumpower < 33 then
 			PlaySound(vacuumendslow, pt.pos, 0.4)
 		else
 			PlaySound(vacuumend, pt.pos, 0.4)
 		end
 	end
 
-	if rmbup and (data.state == STATE_SUCK or data.state == STATE_SPIT or data.state == STATE_SUCKSTART) then
-		data.state = STATE_SUCKEND
-		data.roll = 10
-		data.rollK = 1
-		if data.spitpower > 67 then
+	-- RMB release: play end sound
+	if rmbup and (pd.state == STATE_SUCK or pd.state == STATE_SPIT or pd.state == STATE_SUCKSTART) then
+		pd.state = STATE_SUCKEND
+		pd.roll = 10
+		pd.rollK = 1
+		if pd.spitpower > 67 then
 			PlaySound(vacuumendfast, pt.pos, 0.4)
-		elseif data.spitpower < 33 then
+		elseif pd.spitpower < 33 then
 			PlaySound(vacuumendslow, pt.pos, 0.4)
 		else
 			PlaySound(vacuumend, pt.pos, 0.4)
 		end
 	end
 
-	if data.state == STATE_SUCKSTART then
-		data.startDelay = data.startDelay - dt
-		if data.startDelay <= 0 then
+	-- Startup delay countdown (mirror server logic)
+	if pd.state == STATE_SUCKSTART then
+		pd.startDelay = pd.startDelay - dt
+		if pd.startDelay <= 0 then
 			if lmbdown then
-				data.state = STATE_SUCK
+				pd.state = STATE_SUCK
 			elseif rmbdown then
-				data.state = STATE_SPIT
+				pd.state = STATE_SPIT
 			end
 		end
 	end
 
-	if data.state == STATE_SUCKEND then
-		data.startDelay = data.startDelay + dt
-		if data.startDelay > 0.35 then
-			data.state = STATE_SUCKEND
-			data.startDelay = 0.35
+	-- Wind-down (mirror server logic)
+	if pd.state == STATE_SUCKEND then
+		pd.startDelay = pd.startDelay + dt
+		if pd.startDelay > 0.35 then
+			pd.state = STATE_SUCKEND
+			pd.startDelay = 0.35
 		end
 	end
 
-	-- Vacuum/spit loop sounds
-	if data.state == STATE_SUCK then
-		if data.vacuumpower > 67 then
+	-- Vacuum loop sounds
+	if pd.state == STATE_SUCK then
+		if pd.vacuumpower > 67 then
 			PlayLoop(vacuumloopfast, pt.pos, 0.4)
-		elseif data.vacuumpower < 33 then
+		elseif pd.vacuumpower < 33 then
 			PlayLoop(vacuumloopslow, pt.pos, 0.4)
 		else
 			PlayLoop(vacuumloop, pt.pos, 0.4)
 		end
-		-- Suck sound on pickup
-		if data.suckspeed > 0 then
-			PlaySound(vacuumsuck, pt.pos, 0.4)
-		end
 	end
 
-	if data.state == STATE_SPIT then
-		if data.spitpower > 67 then
+	-- Spit loop sounds
+	if pd.state == STATE_SPIT then
+		if pd.spitpower > 67 then
 			PlayLoop(vacuumloopfast, pt.pos, 0.4)
-		elseif data.spitpower < 33 then
+		elseif pd.spitpower < 33 then
 			PlayLoop(vacuumloopslow, pt.pos, 0.4)
 		else
 			PlayLoop(vacuumloop, pt.pos, 0.4)
-		end
-		-- Spit sound on launch
-		if data.spitspeed > 0 then
-			PlaySound(vacuumspit, pt.pos, 0.4)
 		end
 	end
 
@@ -466,54 +488,52 @@ function client.tickPlayer(p, dt)
 	local b = GetToolBody(p)
 	if b ~= 0 then
 		local toolTrans = GetBodyTransform(b)
-		data.tooltop = TransformToParentPoint(toolTrans, Vec(0.355, -0.425, -2))
+		pd.tooltop = TransformToParentPoint(toolTrans, Vec(0.355, -0.425, -2))
 
 		local framerate = dt * 60
-		data.angVel = data.angVel * math.pow(0.8, framerate) - 0.02 * data.ang
-		data.ang = data.ang + data.angVel * framerate
-		data.rollK = data.rollK + 0.01 * -data.rollK
-		data.rollVel = data.rollVel * math.pow(data.rollK, framerate) - 0.2 * data.roll
-		data.roll = data.roll + data.rollVel * framerate
+		pd.angVel = pd.angVel * math.pow(0.8, framerate) - 0.02 * pd.ang
+		pd.ang = pd.ang + pd.angVel * framerate
+		pd.rollK = pd.rollK + 0.01 * -pd.rollK
+		pd.rollVel = pd.rollVel * math.pow(pd.rollK, framerate) - 0.2 * pd.roll
+		pd.roll = pd.roll + pd.rollVel * framerate
 
-		local offsetTransform = Transform(Vec(0, 0, 0), QuatEuler(data.ang * 3, data.ang * 3, data.roll))
+		local offsetTransform = Transform(Vec(0, 0, 0), QuatEuler(pd.ang * 3, pd.ang * 3, pd.roll))
 		SetToolTransform(offsetTransform, 1.0, p)
 
-		if data.spitspeed > 0 then
+		if pd.spitspeed > 0 then
 			local t = Transform()
-			t.pos = Vec(0, 0, -data.spitspeed)
-			t.rot = QuatEuler(data.spitspeed * 20, 0, 0)
+			t.pos = Vec(0, 0, -pd.spitspeed)
+			t.rot = QuatEuler(pd.spitspeed * 20, 0, 0)
 			SetToolTransform(t, 1.0, p)
 		end
 
-		if data.suckspeed > 0 then
+		if pd.suckspeed > 0 then
 			local t = Transform()
-			t.pos = Vec(0, 0, data.suckspeed)
-			t.rot = QuatEuler(data.suckspeed * 20, 0, 0)
+			t.pos = Vec(0, 0, pd.suckspeed)
+			t.rot = QuatEuler(pd.suckspeed * 20, 0, 0)
 			SetToolTransform(t, 1.0, p)
 		end
 	end
 
-	if data.spitspeed > 0 then
-		data.spitspeed = data.spitspeed - dt
+	-- Decay speed timers (client mirrors for animation)
+	if pd.spitspeed > 0 then
+		pd.spitspeed = pd.spitspeed - dt
 	end
-	if data.suckspeed > 0 then
-		data.suckspeed = data.suckspeed - dt
-	end
-
-	if GetPlayerVehicle(p) ~= 0 then
-		data.state = STATE_READY
-		data.startDelay = 0.35
+	if pd.suckspeed > 0 then
+		pd.suckspeed = pd.suckspeed - dt
 	end
 
 	-- Options toggle (local player only)
-	if isLocal then
+	if p == GetLocalPlayer() then
 		if InputPressed("r", p) then
-			data.optionsopen = not data.optionsopen
+			pd.optionsopen = not pd.optionsopen
 		end
 	end
 end
 
----------- HUD ----------
+----------------------------------------------------------------------
+-- HUD
+----------------------------------------------------------------------
 
 function round(number, decimals)
 	local power = 10 ^ decimals
@@ -523,14 +543,14 @@ end
 function optionsSlider(val, min, max)
 	UiColor(0.2, 0.6, 1)
 	UiPush()
-	UiTranslate(0, -8)
-	val = (val - min) / (max - min)
-	local w = 195
-	UiRect(w, 3)
-	UiAlign("center middle")
-	UiTranslate(-195, 1)
-	val = UiSlider("ui/common/dot.png", "x", val * w, 0, w) / w
-	val = round((val * (max - min) + min), 2)
+		UiTranslate(0, -8)
+		val = (val - min) / (max - min)
+		local w = 195
+		UiRect(w, 3)
+		UiAlign("center middle")
+		UiTranslate(-195, 1)
+		val = UiSlider("ui/common/dot.png", "x", val * w, 0, w) / w
+		val = round((val * (max - min) + min), 2)
 	UiPop()
 	return val
 end
@@ -538,69 +558,68 @@ end
 function draw()
 	local p = GetLocalPlayer()
 	if not p then return end
-	local data = players[p]
-	if not data then return end
+	local pd = players[p]
+	if not pd then return end
 
-	if GetPlayerTool(p) == "cresta-vacuumcleaner" and GetPlayerVehicle(p) == 0 then
+	if GetPlayerTool(p) == "cresta-vacuumcleaner" then
 		UiPush()
-		UiTranslate(UiCenter(), UiHeight() - 60)
-		UiAlign("center middle")
-		UiColor(1, 1, 1)
-		UiFont("bold.ttf", 32)
-		UiTextOutline(0, 0, 0, 1, 0.1)
-		UiText(data.count - 1)
+			UiTranslate(UiCenter(), UiHeight() - 60)
+			UiAlign("center middle")
+			UiColor(1, 1, 1)
+			UiFont("bold.ttf", 32)
+			UiTextOutline(0, 0, 0, 1, 0.1)
+			UiText(pd.count - 1)
 		UiPop()
 	end
 
-	if GetPlayerTool(p) == "cresta-vacuumcleaner" and data.optionsopen then
+	if GetPlayerTool(p) == "cresta-vacuumcleaner" and pd.optionsopen then
 		UiMakeInteractive()
 		UiPush()
-		UiTranslate(UiCenter(), UiMiddle())
-		UiAlign("center middle")
-		UiColor(0, 0, 0, 0.8)
-		UiImageBox("common/box-solid-10.png", 225, 160, 5, 5)
-		UiWindow(200, 160)
+			UiTranslate(UiCenter(), UiMiddle())
+			UiAlign("center middle")
+			UiColor(0, 0, 0, 0.8)
+			UiImageBox("common/box-solid-10.png", 225, 160, 5, 5)
+			UiWindow(200, 160)
 
-		UiTranslate(-10, 0)
-		UiPush()
-		UiAlign("top left")
-		if InputPressed("lmb") and not UiIsMouseInRect(225, 160) then data.optionsopen = false end
-		UiTranslate(10, 10)
-		UiColor(1, 1, 1)
-		UiFont("bold.ttf", 24)
-		UiText("Vacuum Cleaner")
+			UiTranslate(-10, 0)
+			UiPush()
+				UiAlign("top left")
+				if InputPressed("lmb") and not UiIsMouseInRect(225, 160) then pd.optionsopen = false end
+				UiTranslate(10, 10)
+				UiColor(1, 1, 1)
+				UiFont("bold.ttf", 24)
+				UiText("Vacuum Cleaner")
 
-		local w = 195
-		UiTranslate(3, 28)
-		UiRect(w - 1, 2)
-		UiFont("bold.ttf", 20)
-		UiAlign("left")
-		UiTranslate(0, 32)
+				local w = 195
+				UiTranslate(3, 28)
+				UiRect(w - 1, 2)
+				UiFont("bold.ttf", 20)
+				UiAlign("left")
+				UiTranslate(0, 32)
 
-		UiPush()
-		UiText("Vacuum Power")
-		UiTranslate(w, 0)
-		UiAlign("right")
-		UiTranslate(0, 25)
-		data.vacuumpower = optionsSlider(data.vacuumpower, 1, 100)
-		SetFloat("savegame.mod.vacuumpower", data.vacuumpower)
-		UiTranslate(0, -25)
-		UiText(data.vacuumpower)
-		UiPop()
+				UiPush()
+					UiText("Vacuum Power")
+					UiTranslate(w, 0)
+					UiAlign("right")
+					UiTranslate(0, 25)
+					pd.vacuumpower = optionsSlider(pd.vacuumpower, 1, 100)
+					SetFloat("savegame.mod.vacuumpower", pd.vacuumpower)
+					UiTranslate(0, -25)
+					UiText(pd.vacuumpower)
+				UiPop()
 
-		UiTranslate(0, 50)
-		UiPush()
-		UiText("Spit Power")
-		UiTranslate(w, 0)
-		UiAlign("right")
-		UiTranslate(0, 25)
-		data.spitpower = optionsSlider(data.spitpower, 1, 100)
-		SetFloat("savegame.mod.spitpower", data.spitpower)
-		UiTranslate(0, -25)
-		UiText(data.spitpower)
-		UiPop()
-
-		UiPop()
+				UiTranslate(0, 50)
+				UiPush()
+					UiText("Spit Power")
+					UiTranslate(w, 0)
+					UiAlign("right")
+					UiTranslate(0, 25)
+					pd.spitpower = optionsSlider(pd.spitpower, 1, 100)
+					SetFloat("savegame.mod.spitpower", pd.spitpower)
+					UiTranslate(0, -25)
+					UiText(pd.spitpower)
+				UiPop()
+			UiPop()
 		UiPop()
 	end
 end

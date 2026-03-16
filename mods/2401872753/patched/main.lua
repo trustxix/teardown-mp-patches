@@ -1,4 +1,7 @@
+-- Guided Missile by My Cresta - v2 Multiplayer Patch
+
 #version 2
+
 #include "script/include/player.lua"
 
 players = {}
@@ -10,210 +13,171 @@ function createPlayerData()
 		primed = false,
 		piercing = false,
 		missileSpeed = 20,
-		missileStrength = 20,
-		camDist = 2,
-		missile = {},
-		missileTip = Vec(0, 0, 0),
-		smokePos = Vec(0, 0, 0),
+		missile = { pos = nil, rot = nil },
+		missileTip = Vec(),
+		smokePos = Vec(),
 		rocketBody = nil,
 		rocketTrans = nil,
 		body = nil,
+		rocket = nil,
 	}
 end
 
-----------------------------------------------------------------------
--- SERVER
-----------------------------------------------------------------------
+---------- SERVER ----------
 
 function server.init()
 	RegisterTool("guided", "Guided Missile", "MOD/vox/stinger.vox", 4)
 end
 
 function server.tick(dt)
-	-- Phase 1: PlayersAdded
 	for p in PlayersAdded() do
 		players[p] = createPlayerData()
 		SetToolEnabled("guided", true, p)
 	end
-
-	-- Phase 2: PlayersRemoved
 	for p in PlayersRemoved() do
-		local pd = players[p]
-		if pd and pd.rocketBody then
-			Delete(pd.rocketBody)
-		end
 		players[p] = nil
 	end
-
-	-- Phase 3: Active players
 	for p in Players() do
-		local pd = players[p]
-		if pd then
-			server.tickPlayer(p, dt)
-		end
+		server.tickPlayer(p, dt)
 	end
 end
 
 function server.tickPlayer(p, dt)
-	local pd = players[p]
-	if not pd then return end
+	local data = players[p]
+	if not data then return end
+	if GetPlayerTool(p) ~= "guided" or GetPlayerVehicle(p) ~= 0 then return end
 
-	if GetPlayerTool(p) == "guided" and GetPlayerVehicle(p) == 0 then
-		-- LMB: launch or detonate
-		if InputPressed("usetool", p) then
-			if not pd.flying and not pd.detached then
-				pd.flying = true
-				-- Get rocket shape transform from tool body for spawn position
-				local b = GetToolBody(p)
-				if b ~= 0 then
-					if pd.body ~= b then
-						pd.body = b
-						local shapes = GetBodyShapes(b)
-						if #shapes >= 2 then
-							pd.rocketTrans = GetShapeLocalTransform(shapes[2])
-						end
-					end
-				end
-				local spawnT = pd.rocketTrans or GetPlayerEyeTransform(p)
+	-- Get rocket shape transform from tool body
+	local b = GetToolBody(p)
+	if b ~= 0 then
+		if data.body ~= b then
+			data.body = b
+			local shapes = GetBodyShapes(b)
+			if #shapes >= 2 then
+				data.rocket = shapes[2]
+				data.rocketTrans = GetShapeLocalTransform(data.rocket)
+			end
+		end
+	end
+
+	-- Launch
+	if InputPressed("usetool", p) then
+		if not data.flying and not data.detached then
+			data.flying = true
+			if data.rocketTrans then
+				local spawnT = TransformToParentTransform(GetBodyTransform(GetToolBody(p)), data.rocketTrans)
 				local spawned = Spawn("MOD/vox/rocket.xml", spawnT)
-				pd.rocketBody = spawned[1]
-			elseif pd.primed and (pd.flying or pd.detached) then
-				-- Explode
-				serverExplode(p)
-			end
-		end
-
-		-- RMB: detach
-		if InputPressed("rmb", p) then
-			if pd.flying then
-				pd.flying = false
-				pd.detached = true
-			end
-		end
-
-		-- R: toggle piercing
-		if InputPressed("r", p) then
-			pd.piercing = not pd.piercing
-		end
-
-		-- Cache tool body
-		local b = GetToolBody(p)
-		if b ~= 0 then
-			if pd.body ~= b then
-				pd.body = b
-				local shapes = GetBodyShapes(b)
-				if #shapes >= 2 then
-					pd.rocketTrans = GetShapeLocalTransform(shapes[2])
+				if spawned and #spawned > 0 then
+					data.rocketBody = spawned[1]
 				end
 			end
+			local ct = GetPlayerEyeTransform(p)
+			data.missile.pos = ct.pos
+			data.missile.rot = ct.rot
+		elseif data.primed and (data.flying or data.detached) then
+			server.explode(p, data)
 		end
 	end
 
-	-- Mousewheel detach
-	if pd.flying and InputValue("mousewheel", p) ~= 0 then
-		pd.flying = false
-		pd.detached = true
+	-- Detach
+	if InputPressed("rmb", p) then
+		if data.flying then
+			data.flying = false
+			data.detached = true
+		end
 	end
 
-	-- Guided flight (server: physics + damage)
-	if pd.flying then
-		local ct = GetPlayerEyeTransform(p)
-		if not pd.missile.pos then pd.missile.pos = ct.pos end
-		if not pd.missile.rot then pd.missile.rot = ct.rot end
+	-- Scroll wheel detach
+	if data.flying and InputValue("mousewheel", p) ~= 0 then
+		data.flying = false
+		data.detached = true
+	end
 
+	-- Toggle piercing
+	if InputPressed("r", p) then
+		data.piercing = not data.piercing
+		SetString("hud.notification", "Piercing rocket " .. (data.piercing and "on" or "off"), true)
+	end
+
+	-- Flying (guided)
+	if data.flying and data.missile.pos then
 		local mx = InputValue("mousedx", p)
 		local my = InputValue("mousedy", p)
-		local s = InputDown("space", p)
+		local boosting = InputDown("space", p)
 
-		if s then
-			pd.missileSpeed = 40
+		if boosting then
+			data.missileSpeed = 40
 			mx = mx * 0.75
 			my = my * 0.75
 		else
-			pd.missileSpeed = 20
+			data.missileSpeed = 20
 		end
 
-		local forwPos = TransformToParentPoint(pd.missile, Vec(0, 0, -5))
-		pd.missile.pos = TransformToParentPoint(pd.missile, Vec(0, 0, -(pd.missileSpeed / 100)))
-		pd.missile.rot = QuatLookAt(pd.missile.pos, forwPos)
-		pd.missile.rot = QuatRotateQuat(pd.missile.rot, QuatEuler(-my / 10, -mx / 10, 0))
-		pd.missileTip = TransformToParentPoint(pd.missile, Vec(0, 0, -1.1))
-		pd.smokePos = TransformToParentPoint(pd.missile, Vec(0, 0, 0.9))
+		local forwPos = TransformToParentPoint(data.missile, Vec(0, 0, -5))
+		data.missile.pos = TransformToParentPoint(data.missile, Vec(0, 0, -(data.missileSpeed / 100)))
+		data.missile.rot = QuatLookAt(data.missile.pos, forwPos)
+		data.missile.rot = QuatRotateQuat(data.missile.rot, QuatEuler(-my / 10, -mx / 10, 0))
 
-		-- Set body transform
-		if pd.rocketBody then
-			local spritepos = TransformToParentPoint(pd.missile, Vec(0, 0, -0.75))
-			local rot = QuatLookAt(pd.missile.pos, pd.missileTip)
-			SetBodyTransform(pd.rocketBody, Transform(spritepos, rot))
+		data.missileTip = TransformToParentPoint(data.missile, Vec(0, 0, -1.1))
+		data.smokePos = TransformToParentPoint(data.missile, Vec(0, 0, 0.9))
+
+		if data.rocketBody then
+			local spritepos = TransformToParentPoint(data.missile, Vec(0, 0, -0.75))
+			local rot = QuatLookAt(data.missile.pos, data.missileTip)
+			SetBodyTransform(data.rocketBody, Transform(spritepos, rot))
 		end
 
-		pd.primed = true
-		serverCheckHit(p)
+		data.primed = true
+		server.checkHit(p, data)
 	end
 
-	-- Detached flight (server: physics + damage)
-	if pd.detached then
-		if not pd.missile.pos then return end
+	-- Detached (straight flight)
+	if data.detached and data.missile.pos then
+		data.missile.pos = TransformToParentPoint(data.missile, Vec(0, 0, -(data.missileSpeed / 100)))
+		data.missileTip = TransformToParentPoint(data.missile, Vec(0, 0, -1.1))
+		data.smokePos = TransformToParentPoint(data.missile, Vec(0, 0, 1))
 
-		pd.missile.pos = TransformToParentPoint(pd.missile, Vec(0, 0, -(pd.missileSpeed / 100)))
-		pd.missileTip = TransformToParentPoint(pd.missile, Vec(0, 0, -1.1))
-		pd.smokePos = TransformToParentPoint(pd.missile, Vec(0, 0, 1))
-
-		if pd.rocketBody then
-			local rot = QuatLookAt(pd.missile.pos, pd.missileTip)
-			SetBodyTransform(pd.rocketBody, Transform(pd.missile.pos, rot))
+		if data.rocketBody then
+			local rot = QuatLookAt(data.missile.pos, data.missileTip)
+			SetBodyTransform(data.rocketBody, Transform(data.missile.pos, rot))
 		end
 
-		pd.primed = true
-		serverCheckHit(p)
+		data.primed = true
+		server.checkHit(p, data)
 	end
 end
 
-function serverCheckHit(p)
-	local pd = players[p]
-	if not pd then return end
-
-	local fwdpos = TransformToParentPoint(pd.missile, Vec(0, 0, -1.1))
-	local dir = VecNormalize(VecSub(fwdpos, pd.missileTip))
-	if pd.rocketBody then
-		QueryRejectBody(pd.rocketBody)
-	end
-	local hit, dist = QueryRaycast(pd.missileTip, dir, VecLength(VecSub(fwdpos, pd.missileTip)), 0.1)
-
+function server.checkHit(p, data)
+	if not data.missile.pos or not data.rocketBody then return end
+	local fwdpos = TransformToParentPoint(data.missile, Vec(0, 0, -1.1))
+	local dir = VecNormalize(VecSub(fwdpos, data.missileTip))
+	QueryRejectBody(data.rocketBody)
+	local hit, dist = QueryRaycast(data.missileTip, dir, VecLength(VecSub(fwdpos, data.missileTip)), 0.1)
 	if hit then
-		if pd.piercing then
-			MakeHole(pd.missileTip, 0.3, 0.3, 0.3)
+		if data.piercing then
+			MakeHole(data.missileTip, 0.3, 0.3, 0.3)
 		else
-			serverExplode(p)
+			server.explode(p, data)
 		end
 	end
 end
 
-function serverExplode(p)
-	local pd = players[p]
-	if not pd then return end
-
-	Explosion(pd.missileTip, pd.missileStrength / 10)
-	if pd.rocketBody then
-		Delete(pd.rocketBody)
-		pd.rocketBody = nil
+function server.explode(p, data)
+	if data.missile.pos then
+		Explosion(data.missileTip, 2)
 	end
-	pd.missile.pos = nil
-	pd.missile.rot = nil
-	pd.primed = false
-	pd.flying = false
-	pd.detached = false
+	if data.rocketBody then
+		Delete(data.rocketBody)
+		data.rocketBody = nil
+	end
+	data.missile.pos = nil
+	data.missile.rot = nil
+	data.primed = false
+	data.flying = false
+	data.detached = false
 end
 
-----------------------------------------------------------------------
--- CLIENT
-----------------------------------------------------------------------
-
-local explosionSound
-local flyingSound
-local fireSound
-local boosterSound
-local missileSprite
+---------- CLIENT ----------
 
 function client.init()
 	explosionSound = LoadSound("MOD/snd/explosion.ogg")
@@ -224,218 +188,165 @@ function client.init()
 end
 
 function client.tick(dt)
-	-- Phase 1: PlayersAdded
 	for p in PlayersAdded() do
-		if not players[p] then
-			players[p] = createPlayerData()
-		end
+		players[p] = createPlayerData()
 	end
-
-	-- Phase 2: PlayersRemoved
 	for p in PlayersRemoved() do
 		players[p] = nil
 	end
-
-	-- Phase 3: Active players
 	for p in Players() do
-		local pd = players[p]
-		if pd then
-			client.tickPlayer(p, dt)
-		end
+		client.tickPlayer(p, dt)
 	end
 end
 
 function client.tickPlayer(p, dt)
-	local pd = players[p]
-	if not pd then return end
-	local isLocal = IsPlayerLocal(p)
+	local data = players[p]
+	if not data then return end
+	if GetPlayerTool(p) ~= "guided" or GetPlayerVehicle(p) ~= 0 then return end
+	local isLocal = (p == GetLocalPlayer())
 
-	if GetPlayerTool(p) == "guided" and GetPlayerVehicle(p) == 0 then
-		-- LMB: launch or detonate
-		if InputPressed("usetool", p) then
-			if not pd.flying and not pd.detached then
-				pd.flying = true
-				PlaySound(fireSound, GetPlayerTransform(p).pos, 1)
-				-- Client spawns rocket body for visuals
-				local b = GetToolBody(p)
-				if b ~= 0 then
-					if pd.body ~= b then
-						pd.body = b
-						local shapes = GetBodyShapes(b)
-						if #shapes >= 2 then
-							pd.rocketTrans = GetShapeLocalTransform(shapes[2])
-						end
-					end
-				end
-				local spawnT = pd.rocketTrans or GetPlayerEyeTransform(p)
+	-- Get tool body reference
+	local b = GetToolBody(p)
+	if b ~= 0 then
+		if data.body ~= b then
+			data.body = b
+			local shapes = GetBodyShapes(b)
+			if #shapes >= 2 then
+				data.rocket = shapes[2]
+				data.rocketTrans = GetShapeLocalTransform(data.rocket)
+			end
+		end
+	end
+
+	-- Launch sound + mirror state
+	if InputPressed("usetool", p) then
+		if not data.flying and not data.detached then
+			data.flying = true
+			PlaySound(fireSound, GetPlayerTransform(p).pos, 0.8)
+			local ct = GetPlayerEyeTransform(p)
+			data.missile.pos = ct.pos
+			data.missile.rot = ct.rot
+			-- Spawn rocket body on client too
+			if data.rocketTrans then
+				local spawnT = TransformToParentTransform(GetBodyTransform(GetToolBody(p)), data.rocketTrans)
 				local spawned = Spawn("MOD/vox/rocket.xml", spawnT)
-				pd.rocketBody = spawned[1]
-			elseif pd.primed and (pd.flying or pd.detached) then
-				clientExplode(p)
-			end
-		end
-
-		-- RMB: detach
-		if InputPressed("rmb", p) then
-			if pd.flying then
-				pd.flying = false
-				pd.detached = true
-			end
-		end
-
-		-- R: toggle piercing
-		if InputPressed("r", p) then
-			pd.piercing = not pd.piercing
-			if isLocal then
-				SetString("hud.notification", "Piercing rocket " .. (pd.piercing and "on" or "off"))
-			end
-		end
-
-		-- Cache tool body
-		local b = GetToolBody(p)
-		if b ~= 0 then
-			if pd.body ~= b then
-				pd.body = b
-				local shapes = GetBodyShapes(b)
-				if #shapes >= 2 then
-					pd.rocketTrans = GetShapeLocalTransform(shapes[2])
+				if spawned and #spawned > 0 then
+					data.rocketBody = spawned[1]
 				end
 			end
+		elseif data.primed and (data.flying or data.detached) then
+			if data.missileTip then
+				PlaySound(explosionSound, data.missileTip, 8)
+			end
+			if data.rocketBody then
+				Delete(data.rocketBody)
+				data.rocketBody = nil
+			end
+			data.missile.pos = nil
+			data.missile.rot = nil
+			data.primed = false
+			data.flying = false
+			data.detached = false
 		end
 	end
 
-	-- Mousewheel detach (local only)
-	if isLocal and pd.flying and InputValue("mousewheel", p) ~= 0 then
-		pd.flying = false
-		pd.detached = true
+	-- Detach mirror
+	if InputPressed("rmb", p) then
+		if data.flying then
+			data.flying = false
+			data.detached = true
+		end
+	end
+	if data.flying and InputValue("mousewheel", p) ~= 0 then
+		data.flying = false
+		data.detached = true
 	end
 
-	-- Guided flight (client: visuals + camera)
-	if pd.flying then
-		local ct = GetPlayerEyeTransform(p)
-		if not pd.missile.pos then pd.missile.pos = ct.pos end
-		if not pd.missile.rot then pd.missile.rot = ct.rot end
+	-- Piercing mirror
+	if InputPressed("r", p) then
+		data.piercing = not data.piercing
+	end
 
+	-- Flying: mirror missile movement + camera + effects
+	if data.flying and data.missile.pos then
 		local mx = InputValue("mousedx", p)
 		local my = InputValue("mousedy", p)
-		local s = InputDown("space", p)
+		local boosting = InputDown("space", p)
 
-		if s then
-			pd.missileSpeed = 40
-			PlayLoop(boosterSound, pd.missile.pos, 0.6, false)
+		if boosting then
+			data.missileSpeed = 40
 			mx = mx * 0.75
 			my = my * 0.75
 		else
-			pd.missileSpeed = 20
+			data.missileSpeed = 20
 		end
 
-		local forwPos = TransformToParentPoint(pd.missile, Vec(0, 0, -5))
-		pd.missile.pos = TransformToParentPoint(pd.missile, Vec(0, 0, -(pd.missileSpeed / 100)))
-		pd.missile.rot = QuatLookAt(pd.missile.pos, forwPos)
-		pd.missile.rot = QuatRotateQuat(pd.missile.rot, QuatEuler(-my / 10, -mx / 10, 0))
-		pd.missileTip = TransformToParentPoint(pd.missile, Vec(0, 0, -1.1))
-		pd.smokePos = TransformToParentPoint(pd.missile, Vec(0, 0, 0.9))
+		local forwPos = TransformToParentPoint(data.missile, Vec(0, 0, -5))
+		data.missile.pos = TransformToParentPoint(data.missile, Vec(0, 0, -(data.missileSpeed / 100)))
+		data.missile.rot = QuatLookAt(data.missile.pos, forwPos)
+		data.missile.rot = QuatRotateQuat(data.missile.rot, QuatEuler(-my / 10, -mx / 10, 0))
 
-		-- Guided camera only for local player
+		data.missileTip = TransformToParentPoint(data.missile, Vec(0, 0, -1.1))
+		data.smokePos = TransformToParentPoint(data.missile, Vec(0, 0, 0.9))
+
+		-- Move rocket body on client
+		if data.rocketBody then
+			local spritepos = TransformToParentPoint(data.missile, Vec(0, 0, -0.75))
+			local rot = QuatLookAt(data.missile.pos, data.missileTip)
+			SetBodyTransform(data.rocketBody, Transform(spritepos, rot))
+		end
+
+		-- Guided fly camera (LOCAL PLAYER ONLY)
 		if isLocal then
-			local flycam = {}
-			flycam.pos = TransformToParentPoint(pd.missile, Vec(0, pd.camDist / 3, pd.camDist))
-			flycam.rot = QuatCopy(pd.missile.rot)
-			SetCameraTransform(flycam)
+			local camdist = 2
+			local camPos = TransformToParentPoint(data.missile, Vec(0, camdist / 3, camdist))
+			local camRot = QuatCopy(data.missile.rot)
+			SetCameraTransform(Transform(camPos, camRot))
 		end
 
-		-- Set rocket body position
-		if pd.rocketBody then
-			local spritepos = TransformToParentPoint(pd.missile, Vec(0, 0, -0.75))
-			local rot = QuatLookAt(pd.missile.pos, pd.missileTip)
-			SetBodyTransform(pd.rocketBody, Transform(spritepos, rot))
+		-- Effects
+		PlayLoop(flyingSound, data.missile.pos, 0.2)
+		SpawnParticle("fire", data.smokePos, Vec(0, 0, 0), 0.75, 0.25)
+		SpawnParticle("smoke", data.smokePos, Vec(0, 0, 0), 1, 2)
+		if boosting then
+			PlayLoop(boosterSound, data.missile.pos, 0.6)
 		end
 
-		-- Visuals
-		PlayLoop(flyingSound, pd.missile.pos, 0.2, false)
-		SpawnParticle("fire", pd.smokePos, Vec(0, 0, 0), 0.75, 0.25)
-		SpawnParticle("smoke", pd.smokePos, Vec(0, 0, 0), 1, 2)
-		pd.primed = true
-
-		-- Client hit check for visual feedback (piercing sparks)
-		clientCheckHit(p)
+		data.primed = true
 	end
 
-	-- Detached flight (client: visuals)
-	if pd.detached then
-		if not pd.missile.pos then return end
+	-- Detached: mirror + effects (no camera)
+	if data.detached and data.missile.pos then
+		data.missile.pos = TransformToParentPoint(data.missile, Vec(0, 0, -(data.missileSpeed / 100)))
+		data.missileTip = TransformToParentPoint(data.missile, Vec(0, 0, -1.1))
+		data.smokePos = TransformToParentPoint(data.missile, Vec(0, 0, 1))
 
-		pd.missile.pos = TransformToParentPoint(pd.missile, Vec(0, 0, -(pd.missileSpeed / 100)))
-		pd.missileTip = TransformToParentPoint(pd.missile, Vec(0, 0, -1.1))
-		pd.smokePos = TransformToParentPoint(pd.missile, Vec(0, 0, 1))
-
-		if pd.rocketBody then
-			local rot = QuatLookAt(pd.missile.pos, pd.missileTip)
-			SetBodyTransform(pd.rocketBody, Transform(pd.missile.pos, rot))
+		if data.rocketBody then
+			local rot = QuatLookAt(data.missile.pos, data.missileTip)
+			SetBodyTransform(data.rocketBody, Transform(data.missile.pos, rot))
 		end
 
-		PlayLoop(flyingSound, pd.missile.pos, 0.2, false)
-		SpawnParticle("fire", pd.smokePos, Vec(0, 0, 0), 0.75, 0.25)
-		SpawnParticle("smoke", pd.smokePos, Vec(0, 0, 0), 1, 2)
-		pd.primed = true
-
-		clientCheckHit(p)
+		PlayLoop(flyingSound, data.missile.pos, 0.2)
+		SpawnParticle("fire", data.smokePos, Vec(0, 0, 0), 0.75, 0.25)
+		SpawnParticle("smoke", data.smokePos, Vec(0, 0, 0), 1, 2)
+		data.primed = true
 	end
 end
-
-function clientCheckHit(p)
-	local pd = players[p]
-	if not pd then return end
-
-	local fwdpos = TransformToParentPoint(pd.missile, Vec(0, 0, -1.1))
-	local dir = VecNormalize(VecSub(fwdpos, pd.missileTip))
-	if pd.rocketBody then
-		QueryRejectBody(pd.rocketBody)
-	end
-	local hit, dist = QueryRaycast(pd.missileTip, dir, VecLength(VecSub(fwdpos, pd.missileTip)), 0.1)
-
-	if hit then
-		if not pd.piercing then
-			clientExplode(p)
-		end
-	end
-end
-
-function clientExplode(p)
-	local pd = players[p]
-	if not pd then return end
-
-	PlaySound(explosionSound, pd.missile.pos, 8, false)
-	if pd.rocketBody then
-		Delete(pd.rocketBody)
-		pd.rocketBody = nil
-	end
-	pd.missile.pos = nil
-	pd.missile.rot = nil
-	pd.primed = false
-	pd.flying = false
-	pd.detached = false
-end
-
-----------------------------------------------------------------------
--- DRAW (HUD)
-----------------------------------------------------------------------
 
 function draw()
 	local p = GetLocalPlayer()
 	if not p then return end
-	local pd = players[p]
-	if not pd then return end
-	if GetPlayerTool(p) ~= "guided" then return end
+	local data = players[p]
+	if not data then return end
 
-	if pd.piercing then
+	if GetPlayerTool(p) == "guided" and data.piercing then
 		UiPush()
-			UiTranslate(UiCenter(), UiHeight() - 60)
-			UiAlign("center middle")
-			UiColor(1, 0.4, 0.4)
-			UiFont("bold.ttf", 24)
-			UiTextOutline(0, 0, 0, 1, 0.1)
-			UiText("PIERCING")
+		UiTranslate(UiCenter(), UiHeight() - 60)
+		UiAlign("center middle")
+		UiColor(1, 0.5, 0.5)
+		UiFont("bold.ttf", 24)
+		UiTextOutline(0, 0, 0, 1, 0.1)
+		UiText("PIERCING")
 		UiPop()
 	end
 end

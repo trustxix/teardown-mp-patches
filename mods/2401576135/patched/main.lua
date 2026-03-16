@@ -146,9 +146,18 @@ function server.tickPlayer(p, dt)
 		data.velocity = math.min(data.velocity + (dt * 50), 50)
 	end
 
-	-- Post-throw rotation control
+	-- Post-throw rotation control (server authoritative: SetBodyAngularVelocity)
 	if data.rottimer > 0 then
 		data.rottimer = data.rottimer - dt
+
+		local mx, my = InputValue("mousedx", p), InputValue("mousedy", p)
+		local rotvel = Vec(0, mx / 40, -my / 40)
+		if data.items[data.count] and data.items[data.count].body then
+			local angvel = GetBodyAngularVelocity(data.items[data.count].body)
+			local newvel = VecAdd(rotvel, angvel)
+			SetBodyAngularVelocity(data.items[data.count].body, newvel)
+		end
+
 		if data.rottimer <= 0 then
 			data.rottimer = 0
 		end
@@ -184,24 +193,30 @@ function client.tickPlayer(p, dt)
 	if not data then return end
 	local pt = GetPlayerTransform(p)
 
-	-- Mirror pick
+	-- Mirror pick (increment count for HUD)
 	if InputPressed("usetool", p) then
 		PlaySound(picksound, pt.pos, 0.5)
 		data.pickTimer = 0.1
+		data.count = data.count + 1
 	end
 
 	-- Mirror charge
 	if InputDown("rmb", p) then
-		if data.count >= 2 and data.rottimer <= 0 then
-			data.charging = true
-		end
+		if data.count < 2 or data.rottimer > 0 then return end
+		data.charging = true
 	end
 
-	-- Mirror throw release
+	-- Mirror throw release (decrement count for HUD)
 	if InputReleased("rmb", p) then
-		if data.charging and data.count >= 2 then
+		if data.count < 2 or data.rottimer > 0 then
+			data.charging = false
+			return
+		end
+		if data.charging then
 			PlaySound(throwsound, pt.pos, 0.5)
 			data.swingTimer = 0.2
+			data.rottimer = 0.15
+			data.count = data.count - 1
 		end
 		data.charging = false
 		data.velocity = 1

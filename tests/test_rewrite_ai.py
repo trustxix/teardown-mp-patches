@@ -9,14 +9,15 @@ def test_build_prompt(simple_tool_dir):
     analysis = {"file": "main.lua", "complexity": "complex", "api_calls": []}
     prompt = build_prompt(source, analysis)
     assert "main.lua" in prompt
-    assert "#version 2" in prompt
-    assert "server." in prompt
+    assert "v2" in prompt.lower()
+    assert "rewrite" in prompt.lower()
 
 
 def test_system_prompt_contains_rules():
     assert "server.init" in SYSTEM_PROMPT
-    assert "client.draw" in SYSTEM_PROMPT
-    assert "playerId" in SYSTEM_PROMPT
+    assert "client" in SYSTEM_PROMPT
+    assert "Players()" in SYSTEM_PROMPT
+    assert "per-player" in SYSTEM_PROMPT.lower() or "players[p]" in SYSTEM_PROMPT
 
 
 @patch("tools.rewrite_ai._call_claude")

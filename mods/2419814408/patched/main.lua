@@ -442,7 +442,7 @@ function client.tickPlayer(p, dt)
 	end
 
 	-- Toggle controls
-	if InputPressed("alttool", p) then
+	if InputPressed("rmb", p) then
 		data.flycamenabled = not data.flycamenabled
 	end
 	if isLocal and InputPressed("esc") then

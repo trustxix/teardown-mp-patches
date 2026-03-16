@@ -235,8 +235,8 @@ function server.tickPlayer(p, dt)
 
 	local lmbdown = InputDown("usetool", p)
 	local lmbup = InputReleased("usetool", p)
-	local rmbdown = InputDown("alttool", p)
-	local rmbup = InputReleased("alttool", p)
+	local rmbdown = InputDown("rmb", p)
+	local rmbup = InputReleased("rmb", p)
 
 	-- State transitions
 	if lmbdown and (data.state == STATE_READY or data.state == STATE_SUCKEND) then
@@ -358,8 +358,8 @@ function client.tickPlayer(p, dt)
 
 	local lmbdown = InputDown("usetool", p)
 	local lmbup = InputReleased("usetool", p)
-	local rmbdown = InputDown("alttool", p)
-	local rmbup = InputReleased("alttool", p)
+	local rmbdown = InputDown("rmb", p)
+	local rmbup = InputReleased("rmb", p)
 
 	-- State machine with sounds
 	if lmbdown and (data.state == STATE_READY or data.state == STATE_SUCKEND) then

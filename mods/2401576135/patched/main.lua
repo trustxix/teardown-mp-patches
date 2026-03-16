@@ -125,13 +125,13 @@ function server.tickPlayer(p, dt)
 	end
 
 	-- Charge throw
-	if InputDown("alttool", p) then
+	if InputDown("rmb", p) then
 		if data.count < 2 or data.rottimer > 0 then return end
 		data.charging = true
 	end
 
 	-- Release throw (server authoritative: SetBodyVelocity, SetBodyTransform)
-	if InputReleased("alttool", p) then
+	if InputReleased("rmb", p) then
 		if data.count < 2 or data.rottimer > 0 then
 			data.charging = false
 			return
@@ -191,14 +191,14 @@ function client.tickPlayer(p, dt)
 	end
 
 	-- Mirror charge
-	if InputDown("alttool", p) then
+	if InputDown("rmb", p) then
 		if data.count >= 2 and data.rottimer <= 0 then
 			data.charging = true
 		end
 	end
 
 	-- Mirror throw release
-	if InputReleased("alttool", p) then
+	if InputReleased("rmb", p) then
 		if data.charging and data.count >= 2 then
 			PlaySound(throwsound, pt.pos, 0.5)
 			data.swingTimer = 0.2

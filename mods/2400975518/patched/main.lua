@@ -206,7 +206,7 @@ function server.tickPlayer(p, dt)
 	end
 
 	-- Dual fire maxVel
-	if InputDown("usetool", p) and InputDown("alttool", p) then
+	if InputDown("usetool", p) and InputDown("rmb", p) then
 		data.maxVel = 9
 	else
 		data.maxVel = 6.5
@@ -218,8 +218,8 @@ function server.tickPlayer(p, dt)
 	tickGunState(data.gun1, dt, g1down, g1released)
 
 	-- Gun 2 state (RMB = alttool fires right barrel)
-	local g2down = InputDown("alttool", p)
-	local g2released = InputReleased("alttool", p)
+	local g2down = InputDown("rmb", p)
+	local g2released = InputReleased("rmb", p)
 	tickGunState(data.gun2, dt, g2down, g2released)
 
 	-- Compute muzzle positions from tool body
@@ -330,8 +330,8 @@ function client.tickPlayer(p, dt)
 	end
 
 	-- Mirror gun2 state (RMB = alttool)
-	local g2down = InputDown("alttool", p)
-	local g2released = InputReleased("alttool", p)
+	local g2down = InputDown("rmb", p)
+	local g2released = InputReleased("rmb", p)
 
 	if g2down then
 		data.gun2.angVel = math.min(500, data.gun2.angVel + dt * 1000)

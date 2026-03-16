@@ -31,13 +31,13 @@ end
 
 function server.tick(dt)
 	-- Phase 1: PlayersAdded
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
-		SetToolEnabled(p, "guided", true)
+		SetToolEnabled("guided", true, p)
 	end
 
 	-- Phase 2: PlayersRemoved
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		local pd = players[p]
 		if pd and pd.rocketBody then
 			Delete(pd.rocketBody)
@@ -46,7 +46,7 @@ function server.tick(dt)
 	end
 
 	-- Phase 3: Active players
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		local pd = players[p]
 		if pd then
 			server.tickPlayer(p, dt)
@@ -84,7 +84,7 @@ function server.tickPlayer(p, dt)
 		end
 
 		-- RMB: detach
-		if InputPressed("alttool", p) then
+		if InputPressed("rmb", p) then
 			if pd.flying then
 				pd.flying = false
 				pd.detached = true
@@ -225,19 +225,19 @@ end
 
 function client.tick(dt)
 	-- Phase 1: PlayersAdded
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		if not players[p] then
 			players[p] = createPlayerData()
 		end
 	end
 
 	-- Phase 2: PlayersRemoved
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
 
 	-- Phase 3: Active players
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		local pd = players[p]
 		if pd then
 			client.tickPlayer(p, dt)
@@ -276,7 +276,7 @@ function client.tickPlayer(p, dt)
 		end
 
 		-- RMB: detach
-		if InputPressed("alttool", p) then
+		if InputPressed("rmb", p) then
 			if pd.flying then
 				pd.flying = false
 				pd.detached = true

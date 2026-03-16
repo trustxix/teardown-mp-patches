@@ -94,14 +94,14 @@ function server.init()
 end
 
 function server.tick(dt)
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
-		SetToolEnabled(p, "holygrenade", true)
+		SetToolEnabled("holygrenade", true, p)
 	end
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		server.tickPlayer(p, dt)
 	end
 end
@@ -158,13 +158,13 @@ function client.init()
 end
 
 function client.tick(dt)
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
 	end
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		client.tickPlayer(p, dt)
 	end
 end

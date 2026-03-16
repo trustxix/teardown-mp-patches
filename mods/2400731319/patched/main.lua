@@ -65,19 +65,19 @@ end
 
 function server.tick(dt)
 	-- Phase 1: PlayersAdded
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
 		initShells(players[p])
-		SetToolEnabled(p, "cresta-chargeshotgun", true)
+		SetToolEnabled("cresta-chargeshotgun", true, p)
 	end
 
 	-- Phase 2: PlayersRemoved
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
 
 	-- Phase 3: Active players
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		local pd = players[p]
 		if pd then
 			server.tickPlayer(p, dt)
@@ -176,7 +176,7 @@ end
 
 function client.tick(dt)
 	-- Phase 1: PlayersAdded
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		if not players[p] then
 			players[p] = createPlayerData()
 			initShells(players[p])
@@ -184,12 +184,12 @@ function client.tick(dt)
 	end
 
 	-- Phase 2: PlayersRemoved
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
 
 	-- Phase 3: Active players
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		local pd = players[p]
 		if pd then
 			client.tickPlayer(p, dt)

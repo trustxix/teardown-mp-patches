@@ -1,0 +1,5 @@
+name = Minigun
+author = My Cresta
+description = Very fast Minigun that counts how many bullets you fire.
+tags = Tool
+version = 2

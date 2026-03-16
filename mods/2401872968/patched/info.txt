@@ -1,0 +1,5 @@
+name = HADOUKEN!
+author = My Cresta
+description = Hadouken from Street Fighter! LMB to Shoot balls, RMB to Explode balls.
+tags = Tool
+version = 2

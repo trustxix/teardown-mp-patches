@@ -31,14 +31,14 @@ function server.init()
 end
 
 function server.tick(dt)
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
-		SetToolEnabled(p, "dragonslayer", true)
+		SetToolEnabled("dragonslayer", true, p)
 	end
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		server.tickPlayer(p, dt)
 	end
 end
@@ -58,7 +58,7 @@ function server.tickPlayer(p, dt)
 		Boost(p)
 	end
 
-	if InputDown("alttool", p) then
+	if InputDown("rmb", p) then
 		if d.smashTimer == 0 then d.smashTimer = 0.05 end
 		if d.soundtimer == 0 then d.soundtimer = 0.05 end
 		d.spinsmash = true
@@ -107,13 +107,13 @@ function client.init()
 end
 
 function client.tick(dt)
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
 	end
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		client.tickPlayer(p, dt)
 	end
 end
@@ -127,7 +127,7 @@ function client.tickPlayer(p, dt)
 		if d.smashTimer == 0 then d.smashTimer = 0.1 end
 	end
 
-	if InputDown("alttool", p) then
+	if InputDown("rmb", p) then
 		-- Spin camera effect (local player only)
 		if p == GetLocalPlayer() then
 			local ct = GetPlayerEyeTransform(p)

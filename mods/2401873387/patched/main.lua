@@ -18,14 +18,14 @@ function server.init()
 end
 
 function server.tick(dt)
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
-		SetToolEnabled(p, "lightkatana", true)
+		SetToolEnabled("lightkatana", true, p)
 	end
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		server.tickPlayer(p, dt)
 	end
 end
@@ -50,7 +50,7 @@ function server.tickPlayer(p, dt)
 		if d.smashTimer == 0 then d.smashTimer = 0.1 end
 	end
 
-	if InputPressed("alttool", p) then
+	if InputPressed("rmb", p) then
 		d.spinsmash = true
 		if d.smashTimer == 0 then d.smashTimer = 0.1 end
 	end
@@ -113,13 +113,13 @@ function client.init()
 end
 
 function client.tick(dt)
-	for _, p in ipairs(PlayersAdded()) do
+	for p in PlayersAdded() do
 		players[p] = createPlayerData()
 	end
-	for _, p in ipairs(PlayersRemoved()) do
+	for p in PlayersRemoved() do
 		players[p] = nil
 	end
-	for _, p in ipairs(Players()) do
+	for p in Players() do
 		client.tickPlayer(p, dt)
 	end
 end
@@ -133,7 +133,7 @@ function client.tickPlayer(p, dt)
 		if d.smashTimer == 0 then d.smashTimer = 0.1 end
 	end
 
-	if InputPressed("alttool", p) then
+	if InputPressed("rmb", p) then
 		d.spinsmash = true
 		if d.smashTimer == 0 then d.smashTimer = 0.1 end
 	end
@@ -170,7 +170,7 @@ function client.tickPlayer(p, dt)
 	end
 
 	-- Spin camera effect (local player only)
-	if InputDown("alttool", p) and p == GetLocalPlayer() then
+	if InputDown("rmb", p) and p == GetLocalPlayer() then
 		local ct = GetPlayerEyeTransform(p)
 		local pt = GetPlayerTransform(p)
 		pt.pos[2] = pt.pos[2] + 1.8

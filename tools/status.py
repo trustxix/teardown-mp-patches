@@ -13,8 +13,8 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
         mods_dir = LIVE_MODS_DIR
 
     lines = []
-    lines.append("TEARDOWN MP PATCHER — Status")
-    lines.append("═" * 50)
+    lines.append("TEARDOWN MP PATCHER -- Status")
+    lines.append("=" * 50)
 
     # Mod count
     mods = discover_mods(mods_dir)
@@ -48,7 +48,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
                 total_errors = sum(len(errs) for errs in log_result["mods"].values())
                 mod_count = len(log_result["mods"])
                 if total_errors == 0:
-                    lines.append(f"Game log:         Teardown {log_result['version']} — 0 errors")
+                    lines.append(f"Game log:         Teardown {log_result['version']} - 0 errors")
                 else:
                     lines.append(f"Game log:         {mod_count} mod(s) with errors, {total_errors} total")
                     for mod_name, errors in sorted(log_result["mods"].items())[:3]:
@@ -77,7 +77,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
 
         lines.append("")
         if not tier1_errors:
-            lines.append(f"Lint (Tier 1):    0 hard errors across {len(mods)} mods ✓")
+            lines.append(f"Lint (Tier 1):    0 hard errors across {len(mods)} mods [OK]")
         else:
             lines.append(f"Lint (Tier 1):    {len(tier1_errors)} hard errors")
             for e in tier1_errors[:5]:

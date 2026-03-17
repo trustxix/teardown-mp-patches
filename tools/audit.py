@@ -20,7 +20,7 @@ _MAKEHOLE_RE = re.compile(r"\bMakeHole\s*\(")
 _GUN_KEYWORDS_RE = re.compile(r"\b(bullet|ammo|magazine|reload)\b", re.IGNORECASE)
 _UITEXT_RE = re.compile(r"\bUiText\s*\(")
 
-# Key-like word inside a quoted string — letters, digits, underscore, 1-12 chars
+# Key-like word inside a quoted string - letters, digits, underscore, 1-12 chars
 _KEY_LIKE_RE = re.compile(r'"([a-zA-Z][a-zA-Z0-9_]{0,11})"')
 _INPUT_PRESSED_RE = re.compile(r'\bInputPressed\s*\(')
 
@@ -161,10 +161,10 @@ def generate_report(audit_results: list[dict]) -> str:
         for key in col_keys:
             val = feats.get(key, False)
             if val:
-                cells.append("✓")
+                cells.append("Y")
             elif is_gun and key in ("has_shoot", "has_aim_info"):
-                # Gun mod missing these — flag as should-have
-                cells.append("✗")
+                # Gun mod missing these - flag as should-have
+                cells.append("X")
             else:
                 cells.append("")
         rows.append("| " + name + " | " + " | ".join(cells) + " |")

@@ -83,7 +83,7 @@ def logparse_cli(mod_name, raw):
     result = parse_log(content)
 
     click.echo(f"Teardown {result['version']}")
-    click.echo("\u2500" * 40)
+    click.echo("-" * 40)
 
     mods = result["mods"]
     if mod_name:
@@ -99,9 +99,9 @@ def logparse_cli(mod_name, raw):
         for err in errors:
             total_errors += 1
             if err["type"] == "runtime":
-                click.echo(f"  line {err['line']}: {err['type']} \u2014 {err['message']}")
+                click.echo(f"  line {err['line']}: {err['type']} - {err['message']}")
             else:
-                click.echo(f"  {err['file']}: {err['type']} \u2014 {err['message']}")
+                click.echo(f"  {err['file']}: {err['type']} - {err['message']}")
 
     click.echo(f"\n{len(mods)} mod(s) with errors, {total_errors} total errors")
 

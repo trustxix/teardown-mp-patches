@@ -88,4 +88,4 @@ def test_generate_report():
     report = generate_report(results)
     assert "AK-47" in report
     assert "Black_Hole" in report
-    assert "✓" in report
+    assert "Y" in report

@@ -106,7 +106,7 @@ def check_ipairs_iterator(source: str) -> list[dict]:
             findings.append(_finding(
                 "IPAIRS-ITERATOR",
                 lineno,
-                f"ipairs() on iterator {m.group(1)}() — use 'for p in {m.group(1)}() do' instead",
+                f"ipairs() on iterator {m.group(1)}() - use 'for p in {m.group(1)}() do' instead",
             ))
     return findings
 
@@ -136,7 +136,7 @@ def check_raw_key_player(source: str) -> list[dict]:
                 findings.append(_finding(
                     "RAW-KEY-PLAYER",
                     lineno,
-                    f"{func_name}(\"{key_name}\", p) — raw key with player arg silently fails; "
+                    f"{func_name}(\"{key_name}\", p) - raw key with player arg silently fails; "
                     f"use action key or InputPressed(\"{key_name}\") with isLocal check",
                 ))
     return findings
@@ -150,9 +150,9 @@ _SET_TOOL_ENABLED_RE = re.compile(r"SetToolEnabled\s*\(\s*([^\s,)]+)")
 
 
 def check_tool_enabled_order(source: str) -> list[dict]:
-    """Catch SetToolEnabled(p, 'id', true) — wrong argument order.
+    """Catch SetToolEnabled(p, 'id', true) - wrong argument order.
 
-    Correct form: SetToolEnabled("toolid", true, p) — first arg must be a string literal.
+    Correct form: SetToolEnabled("toolid", true, p) - first arg must be a string literal.
     """
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
@@ -177,7 +177,7 @@ _ALTTOOL_RE = re.compile(r'"alttool"')
 
 
 def check_alttool(source: str) -> list[dict]:
-    """Catch "alttool" anywhere in source — should be "rmb" instead."""
+    """Catch "alttool" anywhere in source - should be "rmb" instead."""
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
         stripped = _strip_comment(raw_line)
@@ -229,7 +229,7 @@ _MOUSEDX_RE = re.compile(r'"mousedx"|"mousedy"')
 
 
 def check_mousedx(source: str) -> list[dict]:
-    """Catch "mousedx" and "mousedy" key names — use "camerax"/"cameray" instead."""
+    """Catch "mousedx" and "mousedy" key names - use "camerax"/"cameray" instead."""
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
         stripped = _strip_comment(raw_line)
@@ -299,7 +299,7 @@ _BARE_DRAW_RE = re.compile(r"^\s*function\s+draw\s*\(")
 
 
 def check_draw_not_client(source: str) -> list[dict]:
-    """Catch bare function draw() at top level — must be client.draw() in v2."""
+    """Catch bare function draw() at top level - must be client.draw() in v2."""
     findings = []
     depth = 0
 
@@ -330,7 +330,7 @@ def check_draw_not_client(source: str) -> list[dict]:
 
 
 # ===========================================================================
-# Tier-2 checks — missing features / best practices
+# Tier-2 checks - missing features / best practices
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
@@ -363,7 +363,7 @@ def check_missing_ammo_display(source: str) -> list[dict]:
                     findings.append(_finding(
                         "MISSING-AMMO-DISPLAY",
                         lineno,
-                        f'RegisterTool("{tool_id}") has no SetString("game.tool.{tool_id}.ammo.display", "") — '
+                        f'RegisterTool("{tool_id}") has no SetString("game.tool.{tool_id}.ammo.display", "") - '
                         f"engine ammo counter will show by default",
                         severity="warn",
                     ))
@@ -395,7 +395,7 @@ def check_missing_tool_ammo(source: str) -> list[dict]:
             return [_finding(
                 "MISSING-TOOL-AMMO",
                 lineno,
-                "SetToolEnabled() present but no SetToolAmmo() found — "
+                "SetToolEnabled() present but no SetToolAmmo() found - "
                 "players may see 0 ammo on first equip",
                 severity="warn",
             )]
@@ -425,7 +425,7 @@ def check_missing_ammo_pickup(source: str) -> list[dict]:
             return [_finding(
                 "MISSING-AMMO-PICKUP",
                 lineno,
-                "RegisterTool() present but no SetToolAmmoPickupAmount() — "
+                "RegisterTool() present but no SetToolAmmoPickupAmount() - "
                 "ammo crates won't refill this tool",
                 severity="warn",
             )]
@@ -448,7 +448,7 @@ def check_missing_options_guard(source: str) -> list[dict]:
     or on the same line.
     """
     if not _OPTIONS_OPEN_RE.search(source):
-        # No optionsOpen concept at all — heuristic: skip if optionsOpen never used
+        # No optionsOpen concept at all - heuristic: skip if optionsOpen never used
         return []
 
     findings = []
@@ -467,7 +467,7 @@ def check_missing_options_guard(source: str) -> list[dict]:
             findings.append(_finding(
                 "MISSING-OPTIONS-GUARD",
                 lineno,
-                'InputPressed/Down("usetool") without nearby optionsOpen guard — '
+                'InputPressed/Down("usetool") without nearby optionsOpen guard - '
                 "tool fires while options menu is open",
                 severity="warn",
             ))
@@ -497,7 +497,7 @@ def check_missing_options_sync(source: str) -> list[dict]:
             return [_finding(
                 "MISSING-OPTIONS-SYNC",
                 lineno,
-                "optionsOpen used but no server.setOptionsOpen function found — "
+                "optionsOpen used but no server.setOptionsOpen function found - "
                 "options state may not sync across clients",
                 severity="warn",
             )]
@@ -512,7 +512,7 @@ _HANDLE_GT_ZERO_RE = re.compile(r"\w+\s*>\s*0\s+then\b")
 
 
 def check_handle_gt_zero(source: str) -> list[dict]:
-    """Warn on handle > 0 comparisons — v2 client handles can be negative.
+    """Warn on handle > 0 comparisons - v2 client handles can be negative.
 
     Entity handles in v2 multiplayer can be negative, so `handle > 0` may
     incorrectly treat valid handles as invalid. Use `handle ~= 0` instead.
@@ -524,7 +524,7 @@ def check_handle_gt_zero(source: str) -> list[dict]:
             findings.append(_finding(
                 "HANDLE-GT-ZERO",
                 lineno,
-                "handle > 0 comparison — v2 client handles can be negative; use ~= 0 instead",
+                "handle > 0 comparison - v2 client handles can be negative; use ~= 0 instead",
                 severity="warn",
             ))
     return findings
@@ -554,7 +554,7 @@ def check_manual_aim(source: str) -> list[dict]:
             return [_finding(
                 "MANUAL-AIM",
                 lineno,
-                "QueryRaycast() used without GetPlayerAimInfo() — "
+                "QueryRaycast() used without GetPlayerAimInfo() - "
                 "use GetPlayerAimInfo(muzzlePos, maxDist, p) for multiplayer-safe aiming",
                 severity="warn",
             )]
@@ -581,7 +581,7 @@ def check_makehole_damage(source: str) -> list[dict]:
             findings.append(_finding(
                 "MAKEHOLE-DAMAGE",
                 lineno,
-                "MakeHole() cannot damage players in v2 — "
+                "MakeHole() cannot damage players in v2 - "
                 "use Shoot() for weapons that should damage players",
                 severity="info",
             ))
@@ -617,7 +617,7 @@ def check_missing_keybind_hints(source: str) -> list[dict]:
     return [_finding(
         "MISSING-KEYBIND-HINTS",
         raw_key_lines[0],
-        f"{len(raw_key_lines)} single-letter InputPressed() calls found but no keybind hint UiText — "
+        f"{len(raw_key_lines)} single-letter InputPressed() calls found but no keybind hint UiText - "
         "consider displaying keybind hints to players",
         severity="warn",
     )]

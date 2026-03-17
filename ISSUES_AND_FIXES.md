@@ -18,6 +18,7 @@ All resolved bugs and the rules derived from them. Consult before making changes
 12. Use `getOptions()` savegame reads for options - never cache in `data.*` on server
 13. Gate tool input with `not data.optionsOpen` on BOTH server AND client
 14. Sync `optionsOpen` to server via `server.setOptionsOpen` ServerCall
+15. ALWAYS call `UiMakeInteractive()` before `UiPush()` in options menus
 15. ALWAYS edit files in `C:/Users/trust/Documents/Teardown/mods/` - NEVER the patches repo
 
 > **Note:** Issues #1-19 were resolved in earlier sessions. Their rules are captured above. Detailed entries for #1-19 are no longer available but all patterns are encoded in the lint tool (`python -m tools.lint`).
@@ -234,5 +235,63 @@ end
 **Applied to:** All 10 mods with options menus (Black Hole, Bee Gun, Guided Missile, Holy Grenade, Mjölner, Scorpion, Hook Shotgun, M1 Garand, Exploding Star, Laser Cutter).
 
 **RULE: Options menu state MUST be synced to server via `server.setOptionsOpen` ServerCall. Guard `usetool` on BOTH server and client with `not data.optionsOpen`. Client-only guards are insufficient — the server processes input independently.**
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Issue #33: 12 unlimitedammo mods had no options menu UI
+
+**Symptom:** Mods reading `savegame.mod.unlimitedammo` had no in-game UI to toggle the setting — players had to edit savegame files manually.
+
+**Root cause:** Options menus were only added to 10 mods with complex settings (Black Hole, Bee Gun, etc). Simple gun mods with just an `unlimitedammo` toggle were skipped.
+
+**Fix:** Added O-key options menu to 12 mods following the Black Hole pattern:
+1. `optionsOpen = false` in `createPlayerData()`
+2. `server.setOptionsOpen()` for server sync
+3. `and not data.optionsOpen` on all `usetool` checks (server + client)
+4. O-key toggle in `client.tickPlayer` (local player only)
+5. Options UI in `client.draw()` with toggle button and `[O] Options` hint
+
+**Applied to:** P90, 500_Magnum, AWP, AK-47 (+realisticdamage toggle), Desert_Eagle, Dual_Berettas, M249, M4A1, Multi_Grenade_Launcher, Nova_Shotgun, SCAR-20, SG553.
+
+**Skipped:** .500_Magnum (still v1 structure, needs full rewrite first).
+
+**RULE: Every mod with `savegame.mod.*` keys must have an O-key options menu so players can configure settings in-game. Follow the 5-point integration pattern above.**
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Issue #34: 7 rich-settings mods missing or incomplete options menus
+
+**Symptom:** Mods with multiple savegame settings (sliders, toggles, modes) either had no options menu, had menus without server sync, or were missing OptionsGuard on usetool.
+
+**Root cause:** These mods were more complex than the simple unlimitedammo toggles — each needed a custom menu layout with setting-specific UI.
+
+**Fix:** Added or completed options menus for all 7:
+- **C4:** Added O-key menu with explosion size +/- buttons and timer delay cycle. Moved timer cycling from O key into menu. Added savegame persistence for both settings.
+- **AC130_Airstrike_MP:** Added O-key menu with No Cooldown toggle.
+- **Lava_Gun:** Added O-key menu with Big/Small fire mode toggle. Server sync already present.
+- **Multiple_Grenade_Launcher:** Added O-key menu with 3 toggles (unlimitedammo, norecoil, noreticle). Server sync already present.
+- **High_Tech_Drone:** Already had full settings panel on E key. Added `server.setSettingsOpen()` for sync, added `not data.settingsOpen` guards on all usetool checks, added ServerCall on close button.
+- **Vacuum_Cleaner:** Already had slider UI on R key. Added `server.setOptionsOpen()` for sync, changed R→O key for consistency, added `not pd.optionsopen` guards on usetool/rmb checks.
+- **Revengeance_Katana:** Already had menu. Added missing `not data.optionsOpen` guard on client usetool check.
+
+**Also fixed:** MISSING-OPTIONS-SYNC on 5 mods (Lava_Gun, Lightning_Gun, M2A1_Flamethrower, Welding_Tool, Winch) — all were missing `server.setOptionsOpen()` function, causing server to process usetool while client showed menu.
+
+**RULE: Mods with existing settings panels must ALSO have server sync (`server.setOptionsOpen` or `server.setSettingsOpen`) and usetool guards on BOTH server and client. A menu without sync is worse than no menu — it gives false confidence that actions are blocked.**
+
+**Date fixed:** 2026-03-17
+
+## Issue #35: 16 mods with non-clickable options menus (missing UiMakeInteractive)
+
+**Symptom:** Options menu panels render visually when pressing O, but all buttons (Enable/Disable, Close) cannot be clicked. The menu appears but is completely non-functional.
+
+**Root cause:** `UiMakeInteractive()` was never called before drawing interactive UI elements. Without this call, `UiTextButton()` and `UiSlider()` draw visually but ignore mouse input. This was a systematic omission in the v2 conversion template.
+
+**Fix:** Added `UiMakeInteractive()` as the first call inside each `if data.optionsOpen then` block, before `UiPush()`. Applied to 16 mods: 500_Magnum, AC130_Airstrike_MP, AK-47, AWP, C4, Desert_Eagle, Dual_Berettas, Lava_Gun, M249, M4A1, Multi_Grenade_Launcher, Multiple_Grenade_Launcher, Nova_Shotgun, P90, SCAR-20, SG553.
+
+**RULE: Any in-game menu with clickable elements (UiTextButton, UiSlider, etc.) MUST call `UiMakeInteractive()` before any `UiPush()`. Without it, buttons render but don't respond to clicks.**
 
 **Date fixed:** 2026-03-17

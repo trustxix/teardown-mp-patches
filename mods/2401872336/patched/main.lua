@@ -78,7 +78,7 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("deagle", "Desert Eagle", "MOD/vox/deagle.vox")
+	RegisterTool("deagle", "Desert Eagle", "MOD/vox/deagle.vox", 3)
 end
 
 function server.tick(dt)
@@ -277,7 +277,7 @@ function client.tickPlayer(p, dt)
 	end
 end
 
-function draw()
+function client.draw()
 	local unlimitedammo = GetBool("savegame.mod.unlimitedammo")
 	local p = GetLocalPlayer()
 	if not p then return end

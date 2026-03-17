@@ -9,6 +9,7 @@ function createPlayerData()
 		fuseTime = 5,
 		shellNum = 1,
 		shells = createShellPool(),
+		optionsOpen = false,
 	}
 end
 
@@ -41,6 +42,54 @@ function deepcopy(orig)
 		copy = orig
 	end
 	return copy
+end
+
+---------- KEYBIND SYSTEM ----------
+
+local KEYBIND_DEFS = {
+	{ id = "fuseup", label = "Increase Fuse", default = "x" },
+	{ id = "fusedown", label = "Decrease Fuse", default = "z" },
+}
+
+local BINDABLE_KEYS = {
+	"a","b","c","d","e","f","g","h","i","j","k","l","m","n",
+	"p","q","r","s","t","u","v","w","x","y","z",
+	"1","2","3","4","5","6","7","8","9","0",
+	"rmb","mmb","space","shift","ctrl","alt",
+	"backspace","delete","return",
+	"f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12",
+}
+
+local KEY_DISPLAY = {
+	rmb="RMB", mmb="MMB", lmb="LMB", space="SPACE", shift="SHIFT",
+	ctrl="CTRL", alt="ALT", backspace="BKSP", delete="DEL", ["return"]="ENTER",
+}
+
+local keybinds = {}
+local keybindsLoaded = false
+local rebindingAction = nil
+
+function keyDisplayName(key)
+	return KEY_DISPLAY[key] or string.upper(key)
+end
+
+function loadKeybinds()
+	for _, def in ipairs(KEYBIND_DEFS) do
+		local skey = "savegame.mod.keys." .. def.id
+		if HasKey(skey) then
+			keybinds[def.id] = GetString(skey)
+		else
+			keybinds[def.id] = def.default
+		end
+	end
+	keybindsLoaded = true
+end
+
+function resetKeybinds()
+	for _, def in ipairs(KEYBIND_DEFS) do
+		keybinds[def.id] = def.default
+		SetString("savegame.mod.keys." .. def.id, def.default)
+	end
 end
 
 ---------- SHARED PROJECTILE PHYSICS ----------
@@ -90,7 +139,9 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("holygrenade", "Holy Grenade", "MOD/vox/holygrenade.vox")
+	RegisterTool("holygrenade", "Holy Grenade", "MOD/vox/holygrenade.vox", 4)
+	SetBool("game.tool.holygrenade.enabled", true)
+	SetString("game.tool.holygrenade.ammo.display", "")
 end
 
 function server.tick(dt)
@@ -106,6 +157,18 @@ function server.tick(dt)
 	end
 end
 
+function server.fuseUp(p)
+	local d = players[p]
+	if not d then return end
+	d.fuseTime = math.min(20, d.fuseTime + 1)
+end
+
+function server.fuseDown(p)
+	local d = players[p]
+	if not d then return end
+	d.fuseTime = math.max(1, d.fuseTime - 1)
+end
+
 function server.tickPlayer(p, dt)
 	local d = players[p]
 	if not d then return end
@@ -113,12 +176,6 @@ function server.tickPlayer(p, dt)
 	if GetPlayerTool(p) == "holygrenade" and GetPlayerVehicle(p) == 0 then
 		if InputPressed("usetool", p) then
 			ShootGrenade(p, d)
-		end
-
-		if InputPressed("X", p) then
-			d.fuseTime = math.min(20, d.fuseTime + 1)
-		elseif InputPressed("Z", p) then
-			d.fuseTime = math.max(1, d.fuseTime - 1)
 		end
 	end
 
@@ -173,16 +230,30 @@ function client.tickPlayer(p, dt)
 	local d = players[p]
 	if not d then return end
 
+	local isLocal = (p == GetLocalPlayer())
+
+	if isLocal and not keybindsLoaded then
+		loadKeybinds()
+	end
+
 	if GetPlayerTool(p) == "holygrenade" and GetPlayerVehicle(p) == 0 then
 		if InputPressed("usetool", p) then
 			ShootGrenade(p, d)
 			PlaySound(holygrenadethrowsound, GetPlayerEyeTransform(p).pos, 1, false)
 		end
 
-		if InputPressed("X", p) then
-			d.fuseTime = math.min(20, d.fuseTime + 1)
-		elseif InputPressed("Z", p) then
-			d.fuseTime = math.max(1, d.fuseTime - 1)
+		if isLocal and not rebindingAction then
+			if InputPressed("o") then
+				d.optionsOpen = not d.optionsOpen
+			end
+			if InputPressed(keybinds["fuseup"] or "x") then
+				d.fuseTime = math.min(20, d.fuseTime + 1)
+				ServerCall("server.fuseUp", GetLocalPlayer())
+			end
+			if InputPressed(keybinds["fusedown"] or "z") then
+				d.fuseTime = math.max(1, d.fuseTime - 1)
+				ServerCall("server.fuseDown", GetLocalPlayer())
+			end
 		end
 
 		-- Tool throw animation
@@ -236,15 +307,115 @@ end
 
 ---------- HUD ----------
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p or not players[p] then return end
 	local d = players[p]
-	UiAlign("center middle")
-	UiTranslate(UiCenter(), UiHeight() - 80)
+	if GetPlayerTool(p) ~= "holygrenade" or GetPlayerVehicle(p) ~= 0 then return end
+
+	-- Keybind hints + fuse info (bottom-left)
+	UiPush()
+	UiTranslate(10, UiHeight() - 120)
+	UiAlign("left bottom")
 	UiColor(1, 1, 1, 0.8)
-	UiFont("bold.ttf", 24)
-	if GetPlayerTool(p) == "holygrenade" and GetPlayerVehicle(p) == 0 then
-		UiText("Fuse: " .. d.fuseTime .. "s  [X]+  [Z]-")
+	UiFont("bold.ttf", 20)
+	UiTextOutline(0, 0, 0, 1, 0.1)
+	UiText("LMB - Throw Grenade\n" ..
+		keyDisplayName(keybinds["fuseup"] or "x") .. " - Increase Fuse\n" ..
+		keyDisplayName(keybinds["fusedown"] or "z") .. " - Decrease Fuse\n" ..
+		"O - Options")
+	UiPop()
+
+	-- Fuse timer display (bottom-center)
+	UiPush()
+	UiTranslate(UiCenter(), UiHeight() - 60)
+	UiAlign("center middle")
+	UiFont("bold.ttf", 28)
+	UiTextOutline(0, 0, 0, 1, 0.1)
+	UiColor(1, 0.9, 0.3)
+	UiText("Fuse: " .. d.fuseTime .. "s")
+	UiPop()
+
+	-- Options menu
+	if not d.optionsOpen then return end
+
+	UiMakeInteractive()
+	UiPush()
+	UiTranslate(20, UiMiddle() - 240/2)
+	UiAlign("top left")
+	UiColor(0, 0, 0, 0.75)
+	UiImageBox("ui/common/box-solid-6.png", 650, 240, 6, 6)
+	UiTranslate(300, 40)
+	UiColor(1, 1, 1)
+	UiFont("regular.ttf", 24)
+	UiAlign("center middle")
+	UiText("Holy Grenade Keybinds")
+
+	UiTranslate(0, 10)
+	UiFont("regular.ttf", 20)
+	UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
+	UiPush()
+	UiTranslate(-100, 0)
+	UiColor(0.5, 0.8, 1)
+	if UiTextButton("Defaults", 90, 30) then
+		resetKeybinds()
+		rebindingAction = nil
 	end
+	UiPop()
+	UiPush()
+	UiTranslate(100, 0)
+	UiColor(1, 0.4, 0.4)
+	if UiTextButton("Close", 90, 30) then
+		d.optionsOpen = false
+		rebindingAction = nil
+	end
+	UiPop()
+
+	UiTranslate(-200, 40)
+	UiFont("regular.ttf", 22)
+	UiAlign("left")
+
+	-- Rebind capture
+	if rebindingAction then
+		if InputPressed("esc") then
+			rebindingAction = nil
+		else
+			for _, key in ipairs(BINDABLE_KEYS) do
+				if InputPressed(key) then
+					keybinds[rebindingAction] = key
+					SetString("savegame.mod.keys." .. rebindingAction, key)
+					rebindingAction = nil
+					break
+				end
+			end
+		end
+	end
+
+	for _, def in ipairs(KEYBIND_DEFS) do
+		UiPush()
+		UiColor(1, 1, 1)
+		UiText(def.label)
+		UiTranslate(250, 0)
+		if rebindingAction == def.id then
+			UiColor(1, 1, 0.3)
+			UiText("[Press key...]")
+			UiTranslate(130, 0)
+			UiColor(1, 0.4, 0.4)
+			UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
+			if UiTextButton("Cancel", 70, 25) then rebindingAction = nil end
+		else
+			UiColor(0.2, 0.6, 1)
+			UiFont("bold.ttf", 22)
+			UiText("[" .. keyDisplayName(keybinds[def.id] or def.default) .. "]")
+			UiFont("regular.ttf", 22)
+			UiTranslate(130, 0)
+			UiColor(0.5, 0.8, 1)
+			UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
+			if UiTextButton("Rebind", 70, 25) then rebindingAction = def.id end
+		end
+		UiPop()
+		UiTranslate(0, 50)
+	end
+
+	UiPop()
 end

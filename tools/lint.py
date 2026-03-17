@@ -438,7 +438,8 @@ def check_missing_ammo_pickup(source: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 _USETOOL_INPUT_RE = re.compile(r'Input(?:Pressed|Down)\s*\(\s*"usetool"')
-_OPTIONS_OPEN_RE = re.compile(r"\boptionsOpen\b")
+_NEGATED_USETOOL_RE = re.compile(r'not\s+Input(?:Pressed|Down)\s*\(\s*"usetool"')
+_OPTIONS_OPEN_RE = re.compile(r"\b(?:optionsOpen|optionsopen|settingsOpen)\b")
 
 
 def check_missing_options_guard(source: str) -> list[dict]:
@@ -446,7 +447,8 @@ def check_missing_options_guard(source: str) -> list[dict]:
 
     Without the guard, the tool fires while the options menu is open.
     The guard should appear within 3 lines before the usetool check,
-    or on the same line.
+    or on the same line. Negated patterns (not InputDown("usetool"))
+    are excluded — they run when NOT pressing trigger (e.g. spread decay).
     """
     if not _OPTIONS_OPEN_RE.search(source):
         # No optionsOpen concept at all - heuristic: skip if optionsOpen never used
@@ -457,6 +459,10 @@ def check_missing_options_guard(source: str) -> list[dict]:
     for lineno, raw_line in enumerate(lines, 1):
         stripped = _strip_comment(raw_line)
         if not _USETOOL_INPUT_RE.search(stripped):
+            continue
+        # Skip negated patterns: "not InputDown("usetool")" — these are
+        # spread-decay or idle checks that correctly run regardless of menu state
+        if _NEGATED_USETOOL_RE.search(stripped):
             continue
         # Check this line and up to 3 lines before for optionsOpen
         window_start = max(0, lineno - 4)  # lineno is 1-based; lines[lineno-1] is current
@@ -480,7 +486,7 @@ def check_missing_options_guard(source: str) -> list[dict]:
 # Check T2-5: Missing server.setOptionsOpen function
 # ---------------------------------------------------------------------------
 
-_SERVER_SET_OPTIONS_RE = re.compile(r"\bserver\.setOptionsOpen\b")
+_SERVER_SET_OPTIONS_RE = re.compile(r"\bserver\.set(?:Options|Settings)Open\b")
 
 
 def check_missing_options_sync(source: str) -> list[dict]:
@@ -542,10 +548,13 @@ _GET_PLAYER_AIM_INFO_RE = re.compile(r"\bGetPlayerAimInfo\s*\(")
 
 
 def check_manual_aim(source: str) -> list[dict]:
-    """Warn if QueryRaycast is used without GetPlayerAimInfo.
+    """Info if QueryRaycast is used without GetPlayerAimInfo.
 
-    GetPlayerAimInfo is the preferred API in v2; manual QueryRaycast
-    from client eye transform can desync in multiplayer.
+    GetPlayerAimInfo is the preferred API in v2 for weapon aim; manual
+    QueryRaycast from client eye transform can desync in multiplayer.
+    However, many mods use QueryRaycast for non-aim purposes (collision,
+    particles, utility tools needing shape/body/normal returns) where
+    GetPlayerAimInfo is not a suitable replacement.
     """
     if not _QUERY_RAYCAST_RE.search(source):
         return []
@@ -558,9 +567,10 @@ def check_manual_aim(source: str) -> list[dict]:
                 "MANUAL-AIM",
                 lineno,
                 "QueryRaycast() used without GetPlayerAimInfo() - "
-                "use GetPlayerAimInfo(muzzlePos, maxDist, p) for multiplayer-safe aiming. "
+                "consider GetPlayerAimInfo(muzzlePos, maxDist, p) for weapon aim. "
+                "Note: QueryRaycast is valid for non-aim uses (collision, shape lookup). "
                 "See docs/RESEARCH.md Finding #1",
-                severity="warn",
+                severity="info",
             )]
     return []
 
@@ -599,6 +609,39 @@ def check_makehole_damage(source: str) -> list[dict]:
 
 _RAW_SINGLE_KEY_RE = re.compile(r'InputPressed\s*\(\s*"([a-z])"')
 _UI_KEYBIND_HINT_RE = re.compile(r'UiText\s*\(.*(?:LMB|RMB|key|bind|press)', re.IGNORECASE)
+
+
+def check_missing_interactive(source: str) -> list[dict]:
+    """Warn if optionsOpen UI block has UiTextButton but no UiMakeInteractive.
+
+    Without UiMakeInteractive(), buttons render but cannot be clicked.
+    """
+    if not _OPTIONS_OPEN_RE.search(source):
+        return []
+
+    ui_interactive_re = re.compile(r"\bUiMakeInteractive\s*\(")
+    ui_button_re = re.compile(r"\bUiTextButton\s*\(")
+
+    if not ui_button_re.search(source):
+        return []
+
+    if ui_interactive_re.search(source):
+        return []
+
+    # Has optionsOpen + UiTextButton but no UiMakeInteractive
+    # Find the first UiTextButton line for reporting
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        if ui_button_re.search(stripped):
+            return [_finding(
+                "MISSING-INTERACTIVE",
+                lineno,
+                "UiTextButton() found but no UiMakeInteractive() call - "
+                "buttons render but cannot be clicked. Add UiMakeInteractive() "
+                "before UiPush() in options menu. See ISSUES_AND_FIXES.md Issue #35",
+                severity="warn",
+            )]
+    return []
 
 
 def check_missing_keybind_hints(source: str) -> list[dict]:
@@ -649,6 +692,7 @@ TIER2_CHECKS = [
     check_missing_ammo_pickup,
     check_missing_options_guard,
     check_missing_options_sync,
+    check_missing_interactive,
     check_handle_gt_zero,
     check_manual_aim,
     check_makehole_damage,

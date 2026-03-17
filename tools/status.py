@@ -115,6 +115,20 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     except Exception:
         lines.append("Missing features: N/A")
 
+    # Task queue
+    try:
+        queue_path = Path(__file__).parent.parent / "TASK_QUEUE.md"
+        if queue_path.exists():
+            queue = queue_path.read_text(encoding="utf-8")
+            open_count = queue.count("**Status:** OPEN")
+            progress_count = queue.count("**Status:** IN PROGRESS")
+            if open_count + progress_count > 0:
+                lines.append(f"Task queue:       {open_count} open, {progress_count} in progress — run: cat TASK_QUEUE.md")
+            else:
+                lines.append("Task queue:       all tasks complete")
+    except Exception:
+        pass
+
     # Recommended reading based on current state
     lines.append("")
     lines.append("Recommended reading for this session:")

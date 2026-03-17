@@ -135,7 +135,7 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("dualminiguns", "Dual Miniguns", "MOD/vox/dualminiguns.vox")
+	RegisterTool("dualminiguns", "Dual Miniguns", "MOD/vox/dualminiguns.vox", 3)
 end
 
 function server.tick(dt)
@@ -469,7 +469,7 @@ end
 
 ---------- HUD ----------
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p then return end
 	local data = players[p]

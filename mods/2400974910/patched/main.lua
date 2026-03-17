@@ -87,7 +87,7 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("crestaminigun", "Minigun", "MOD/vox/crestaminigun.vox")
+	RegisterTool("crestaminigun", "Minigun", "MOD/vox/crestaminigun.vox", 3)
 end
 
 function server.tick(dt)
@@ -346,7 +346,7 @@ function client.tickPlayer(p, dt)
 	end
 end
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p then return end
 	local data = players[p]

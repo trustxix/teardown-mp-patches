@@ -9,10 +9,10 @@ from tools.common import discover_mods, read_lua_files
 
 # ── Feature detection ────────────────────────────────────────────────────────
 
-_SHOOT_RE = re.compile(r"\bShoot\s*\(")
+_SHOOT_RE = re.compile(r"\bShoot\s*\(|\bQueryShot\s*\(")
 _AIM_INFO_RE = re.compile(r"\bGetPlayerAimInfo\s*\(")
 _AMMO_PICKUP_RE = re.compile(r"\bSetToolAmmoPickupAmount\s*\(")
-_OPTIONS_OPEN_RE = re.compile(r"optionsOpen")
+_OPTIONS_OPEN_RE = re.compile(r"optionsOpen|optionsopen|settingsOpen", re.IGNORECASE)
 _UI_INTERACTIVE_RE = re.compile(r"\bUiMakeInteractive\s*\(")
 _KEYBIND_REMAP_RE = re.compile(r'savegame\.mod\.keys')
 _AMMO_DISPLAY_RE = re.compile(r'SetString\s*\(\s*"game\.tool\.\w+\.ammo\.display"')

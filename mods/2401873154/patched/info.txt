@@ -1,4 +1,5 @@
 name = Holy Grenade
 author = My Cresta
 description = Holy Hand Grenade from Worms. Explodes after 5sec, change timer with 'Z' and 'X'.
-tags = Toolversion = 2
+tags = Tool
+version = 2

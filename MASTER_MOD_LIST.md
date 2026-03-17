@@ -6,7 +6,7 @@
 
 | Status | Count |
 |--------|-------|
-| **Fully Patched (v2 rewrite)** | 45 |
+| **Fully Patched (v2 rewrite)** | 49 |
 | **Unpatched (template only)** | 133 |
 | **Total Downloaded** | 178 |
 
@@ -60,3 +60,10 @@
 - Revengeance Katana (2648760922)
 - Thruster Tool (2515871265)
 - Winch (3681340622)
+
+## Fully Patched Mods (Batch 3 — 3 mods)
+
+- .500 Magnum v2 Rewrite (2401591426)
+- Asteroid Strike (2614499023)
+- Welding Tool (2840497593)
+- Fire Locator (2622849832)

@@ -18,13 +18,15 @@ function createPlayerData()
 	}
 end
 
+local PICKUP_RANGE = 8
+
 function GetAimPos(p)
 	local ct = GetPlayerEyeTransform(p)
-	local forwardPos = TransformToParentPoint(ct, Vec(0, 0, -100))
+	local forwardPos = TransformToParentPoint(ct, Vec(0, 0, -PICKUP_RANGE))
 	local direction = VecSub(forwardPos, ct.pos)
 	local distance = VecLength(direction)
 	direction = VecNormalize(direction)
-	local hit, hitDistance, normal, shape = QueryRaycast(ct.pos, direction, distance)
+	local hit, hitDistance, normal, shape = QueryRaycast(ct.pos, direction, PICKUP_RANGE)
 	if hit then
 		forwardPos = TransformToParentPoint(ct, Vec(0, 0, -hitDistance))
 	end
@@ -93,7 +95,7 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("magicbag", "Magic Bag", "MOD/vox/magicbag.vox")
+	RegisterTool("magicbag", "Magic Bag", "MOD/vox/magicbag.vox", 4)
 end
 
 function server.tick(dt)
@@ -124,44 +126,41 @@ function server.tickPlayer(p, dt)
 		data.pickTimer = 0.1
 	end
 
-	-- Charge throw
-	if InputDown("rmb", p) then
-		if data.count < 2 or data.rottimer > 0 then return end
-		data.charging = true
-	end
-
-	-- Release throw (server authoritative: SetBodyVelocity, SetBodyTransform)
-	if InputReleased("rmb", p) then
-		if data.count < 2 or data.rottimer > 0 then
-			data.charging = false
-			return
-		end
-		ThrowItem(p, data)
-		data.charging = false
-		data.velocity = 1
-		data.swingTimer = 0.2
-	end
+	-- Charge and throw handled via ServerCall from client (rmb doesn't work with player param)
 
 	if data.charging then
 		data.velocity = math.min(data.velocity + (dt * 50), 50)
 	end
 
-	-- Post-throw rotation control (server authoritative: SetBodyAngularVelocity)
+	-- Post-throw rotation
 	if data.rottimer > 0 then
 		data.rottimer = data.rottimer - dt
-
-		local mx, my = InputValue("mousedx", p), InputValue("mousedy", p)
-		local rotvel = Vec(0, mx / 40, -my / 40)
-		if data.items[data.count] and data.items[data.count].body then
-			local angvel = GetBodyAngularVelocity(data.items[data.count].body)
-			local newvel = VecAdd(rotvel, angvel)
-			SetBodyAngularVelocity(data.items[data.count].body, newvel)
-		end
-
 		if data.rottimer <= 0 then
 			data.rottimer = 0
 		end
 	end
+end
+
+-- ServerCall: start charging throw
+function server.startCharge(p)
+	local data = players[p]
+	if not data then return end
+	if data.count < 2 or data.rottimer > 0 then return end
+	data.charging = true
+end
+
+-- ServerCall: release throw
+function server.releaseThrow(p)
+	local data = players[p]
+	if not data then return end
+	if data.count < 2 or data.rottimer > 0 then
+		data.charging = false
+		return
+	end
+	ThrowItem(p, data)
+	data.charging = false
+	data.velocity = 1
+	data.swingTimer = 0.2
 end
 
 ---------- CLIENT ----------
@@ -193,33 +192,36 @@ function client.tickPlayer(p, dt)
 	if not data then return end
 	local pt = GetPlayerTransform(p)
 
-	-- Mirror pick (increment count for HUD)
+	local isLocal = IsPlayerLocal(p)
+
+	-- Pick sound (don't increment count here — server handles actual pickup)
 	if InputPressed("usetool", p) then
 		PlaySound(picksound, pt.pos, 0.5)
 		data.pickTimer = 0.1
-		data.count = data.count + 1
 	end
 
-	-- Mirror charge
-	if InputDown("rmb", p) then
-		if data.count < 2 or data.rottimer > 0 then return end
-		data.charging = true
-	end
+	-- RMB charge/throw (local only, no player param for rmb)
+	if isLocal then
+		if InputDown("rmb") then
+			if data.count >= 2 and data.rottimer <= 0 and not data.charging then
+				data.charging = true
+				ServerCall("server.startCharge", GetLocalPlayer())
+			end
+		end
 
-	-- Mirror throw release (decrement count for HUD)
-	if InputReleased("rmb", p) then
-		if data.count < 2 or data.rottimer > 0 then
+		if InputReleased("rmb") then
+			if data.charging then
+				if data.count >= 2 and data.rottimer <= 0 then
+					PlaySound(throwsound, pt.pos, 0.5)
+					data.swingTimer = 0.2
+					data.rottimer = 0.15
+					data.count = math.max(1, data.count - 1)
+					ServerCall("server.releaseThrow", GetLocalPlayer())
+				end
+			end
 			data.charging = false
-			return
+			data.velocity = 1
 		end
-		if data.charging then
-			PlaySound(throwsound, pt.pos, 0.5)
-			data.swingTimer = 0.2
-			data.rottimer = 0.15
-			data.count = data.count - 1
-		end
-		data.charging = false
-		data.velocity = 1
 	end
 
 	if data.charging then
@@ -259,7 +261,7 @@ end
 
 ---------- HUD ----------
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p then return end
 	local data = players[p]

@@ -65,7 +65,7 @@ end
 local hadoukenSprite = nil
 
 function server.init()
-	RegisterTool("hadouken", "Hadouken", "MOD/vox/hadouken.vox")
+	RegisterTool("hadouken", "Hadouken", "MOD/vox/hadouken.vox", 4)
 	hadoukenSprite = LoadSprite("MOD/img/hadouken.png")
 end
 

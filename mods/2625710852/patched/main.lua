@@ -203,7 +203,7 @@ end
 ----------------------------------------------------------------------
 
 function server.init()
-	RegisterTool("cresta-vacuumcleaner", "Vacuum Cleaner", "MOD/vox/vacuumcleaner.vox")
+	RegisterTool("cresta-vacuumcleaner", "Vacuum Cleaner", "MOD/vox/vacuumcleaner.vox", 6)
 end
 
 function server.tick(dt)
@@ -555,7 +555,7 @@ function optionsSlider(val, min, max)
 	return val
 end
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p then return end
 	local pd = players[p]

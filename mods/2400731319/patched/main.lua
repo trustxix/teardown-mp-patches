@@ -60,7 +60,7 @@ local VELOCITY = 50
 ----------------------------------------------------------------------
 
 function server.init()
-	RegisterTool("cresta-chargeshotgun", "Charge Shotgun", "MOD/vox/chargeshotgun.vox")
+	RegisterTool("cresta-chargeshotgun", "Charge Shotgun", "MOD/vox/chargeshotgun.vox", 3)
 end
 
 function server.tick(dt)
@@ -302,7 +302,7 @@ end
 -- DRAW (HUD)
 ----------------------------------------------------------------------
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p then return end
 	local pd = players[p]

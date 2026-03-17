@@ -14,7 +14,7 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("lightkatana", "Lightkatana", "MOD/vox/lightkatana.vox")
+	RegisterTool("lightkatana", "Lightkatana", "MOD/vox/lightkatana.vox", 5)
 end
 
 function server.tick(dt)
@@ -182,7 +182,7 @@ end
 
 ---------- HUD ----------
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p or not players[p] then return end
 end

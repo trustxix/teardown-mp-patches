@@ -821,7 +821,7 @@ class TestManualAim:
         findings = check_manual_aim(src)
         assert len(findings) == 1
         assert findings[0]["check"] == "MANUAL-AIM"
-        assert findings[0]["severity"] == "warn"
+        assert findings[0]["severity"] == "info"
 
     def test_get_player_aim_info_present_clean(self):
         src = (

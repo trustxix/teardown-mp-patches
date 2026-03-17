@@ -133,7 +133,7 @@ function GetShootDistance(data)
 	return distance
 end
 
-function ProjectileOperations(projectile, dt)
+function ServerProjectileOperations(projectile, dt)
 	local gravity = Vec()
 	projectile.predictedBulletVelocity = VecAdd(projectile.predictedBulletVelocity, VecScale(gravity, dt))
 	local point2 = VecAdd(projectile.pos, VecScale(projectile.predictedBulletVelocity, dt))
@@ -143,6 +143,20 @@ function ProjectileOperations(projectile, dt)
 		local hitPos = VecAdd(projectile.pos, VecScale(VecNormalize(pointsDist), dist))
 		projectile.active = false
 		MakeHole(hitPos, 1, 0.85, 0.7)
+		return
+	end
+	projectile.pos = point2
+end
+
+function ClientProjectileOperations(projectile, dt)
+	local gravity = Vec()
+	projectile.predictedBulletVelocity = VecAdd(projectile.predictedBulletVelocity, VecScale(gravity, dt))
+	local point2 = VecAdd(projectile.pos, VecScale(projectile.predictedBulletVelocity, dt))
+	local pointsDist = VecSub(point2, projectile.pos)
+	local hit, dist = QueryRaycast(projectile.pos, VecNormalize(pointsDist), VecLength(pointsDist))
+	if hit then
+		local hitPos = VecAdd(projectile.pos, VecScale(VecNormalize(pointsDist), dist))
+		projectile.active = false
 		SpawnParticle("smoke", hitPos, Vec(0, 1.0 + math.random(1, 10) * 0.1, 0), 0.6, 1)
 		return
 	else
@@ -259,15 +273,19 @@ function droneMovement(p, data, dt)
 	data.droneTargetRot = rot
 end
 
+-- FlyCam is only called for the local player on the client.
+-- Raw key names only work WITHOUT a player parameter in v2.
+-- Use "camerax"/"cameray" instead of "mousedx"/"mousedy" to respect game sensitivity.
 function FlyCam(p, data)
-	local mx, my = InputValue("mousedx"), -InputValue("mousedy")
-	local w = InputDown("w", p)
-	local a = InputDown("a", p)
-	local s = InputDown("s", p)
-	local d = InputDown("d", p)
-	local ctrl = InputDown("ctrl", p)
-	local space = InputDown("jump", p)
-	data.droneSpeed = InputDown("shift", p) and 50 or 25
+	local mx = InputValue("camerax") * 180 / math.pi
+	local my = -InputValue("cameray") * 180 / math.pi
+	local w = InputDown("w")
+	local a = InputDown("a")
+	local s = InputDown("s")
+	local d = InputDown("d")
+	local ctrl = InputDown("ctrl")
+	local space = InputDown("space")
+	data.droneSpeed = InputDown("shift") and 50 or 25
 
 	local upAngle = orientation(Transform(data.drone.barrel.pos, data.drone.barrel.rot), 1)
 	local downAngle = orientation(Transform(data.drone.barrel.pos, data.drone.barrel.rot), -1)
@@ -282,11 +300,15 @@ function FlyCam(p, data)
 		data.drone.barrel.rot = QuatLookAt(data.drone.barrel.pos, forwPos)
 	end
 
-	local rotdiv = 20
-	data.drone.barrel.rot = QuatRotateQuat(data.drone.barrel.rot, QuatEuler(my / rotdiv, -mx / rotdiv, 0))
+	data.drone.barrel.rot = QuatRotateQuat(data.drone.barrel.rot, QuatEuler(my, -mx, 0))
 	local newT = Transform(data.drone.barrel.pos, data.drone.barrel.rot)
-	SetCameraTransform(newT)
-	SetPlayerTransform(GetPlayerTransform(p), p)
+
+	-- SetCameraTransform only works for the local player
+	if IsPlayerLocal(p) then
+		SetCameraTransform(newT)
+	end
+	-- Note: SetPlayerTransform is server-only in v2, cannot call from client.
+	-- Player movement during flycam is handled by the engine's normal controls.
 
 	if a or d or w or s or ctrl or space then
 		data.droneTargetPos = TransformToParentPoint(newT, Vec(aorb(a, d, -data.droneSpeed), aorb(ctrl, space, -data.droneSpeed), aorb(w, s, -data.droneSpeed)))
@@ -306,13 +328,16 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("attackdrone", "Attack Drone", "MOD/vox/attackdrone.vox")
+	RegisterTool("attackdrone", "Attack Drone", "MOD/vox/attackdrone.vox", 6)
+	SetBool("game.tool.attackdrone.enabled", true)
+	SetString("game.tool.attackdrone.ammo.display", "")
 end
 
 function server.tick(dt)
 	for p in PlayersAdded() do
 		players[p] = createPlayerData()
 		SetToolEnabled("attackdrone", true, p)
+		SetToolAmmo("attackdrone", 101, p)
 		local data = players[p]
 		for i = 1, 100 do
 			data.projectileHandler.shells[i] = deepcopy(data.projectileHandler.defaultShell)
@@ -346,19 +371,21 @@ function server.tickPlayer(p, dt)
 		data.drone.rot = QuatRotateQuat(Quat(), QuatEuler(-90, -90, 0))
 	end
 
-	-- Toggle controls
-	if InputPressed("m", p) then
-		data.magnet = not data.magnet
-	end
+	-- Toggle controls are handled via ServerCall from client
+	-- (raw key names like "rmb", "m", "n", "r" don't work with player param in v2)
 
-	if InputPressed("r", p) then
-		data.lockCam = not data.lockCam
-	end
-
-	-- Aim pos
+	-- Freeze player in place during flycam (SetPlayerTransform is server-only)
 	if data.flycamenabled then
-		data.aimpos = GetCamLookPos(data)
+		if not data.frozenTransform then
+			data.frozenTransform = GetPlayerTransform(p)
+		end
+		SetPlayerTransform(data.frozenTransform, p)
 	else
+		data.frozenTransform = nil
+	end
+
+	-- Aim pos (in flycam mode, client sends aimpos via ServerCall)
+	if not data.flycamenabled then
 		data.aimpos = GetAimPos(p)
 	end
 
@@ -373,14 +400,14 @@ function server.tickPlayer(p, dt)
 		Magnet(data)
 	end
 
-	-- Projectile processing
+	-- Projectile processing (server: MakeHole)
 	for key, shell in ipairs(data.projectileHandler.shells) do
 		if shell.active then
-			ProjectileOperations(shell, dt)
+			ServerProjectileOperations(shell, dt)
 		end
 	end
 
-	-- Drone movement
+	-- Drone movement (orbit around player when not in flycam)
 	if not data.flycamenabled then
 		droneMovement(p, data, dt)
 	end
@@ -388,11 +415,61 @@ function server.tickPlayer(p, dt)
 	-- Drone barrel position
 	data.drone.barrel.pos = TransformToParentPoint(data.drone, Vec(0.5, 0.25, -0.2))
 
-	-- Drone physics
-	dronePhysicsStep(data, dt)
-
+	-- Shoot timer countdown
 	if data.shoottimer > 0 then
 		data.shoottimer = data.shoottimer - dt
+	end
+end
+
+function server.update(dt)
+	for p in Players() do
+		local data = players[p]
+		if data and GetPlayerTool(p) == "attackdrone" and GetPlayerVehicle(p) == 0 then
+			dronePhysicsStep(data, dt)
+			data.drone.barrel.pos = TransformToParentPoint(data.drone, Vec(0.5, 0.25, -0.2))
+
+			-- Sync drone state to all clients via registry
+			SetFloat("drone."..p..".px", data.drone.pos[1], true)
+			SetFloat("drone."..p..".py", data.drone.pos[2], true)
+			SetFloat("drone."..p..".pz", data.drone.pos[3], true)
+			SetFloat("drone."..p..".rx", data.drone.rot[1], true)
+			SetFloat("drone."..p..".ry", data.drone.rot[2], true)
+			SetFloat("drone."..p..".rz", data.drone.rot[3], true)
+			SetFloat("drone."..p..".rw", data.drone.rot[4], true)
+			SetBool("drone."..p..".firing", data.firing, true)
+			SetBool("drone."..p..".flycam", data.flycamenabled, true)
+			SetBool("drone."..p..".active", data.attackdroneenabled, true)
+		end
+	end
+end
+
+-- ServerCall handlers: client notifies server of state changes
+-- (because raw key names don't work with player param in v2)
+function server.toggleFlyCam(p, enabled)
+	local data = players[p]
+	if data then
+		data.flycamenabled = enabled
+	end
+end
+
+function server.toggleMagnet(p)
+	local data = players[p]
+	if data then
+		data.magnet = not data.magnet
+	end
+end
+
+function server.setDroneTarget(p, x, y, z)
+	local data = players[p]
+	if data then
+		data.droneTargetPos = Vec(x, y, z)
+	end
+end
+
+function server.setAimPos(p, x, y, z)
+	local data = players[p]
+	if data then
+		data.aimpos = Vec(x, y, z)
 	end
 end
 
@@ -405,10 +482,12 @@ end
 
 function client.tick(dt)
 	for p in PlayersAdded() do
-		players[p] = createPlayerData()
-		local data = players[p]
-		for i = 1, 100 do
-			data.projectileHandler.shells[i] = deepcopy(data.projectileHandler.defaultShell)
+		if not players[p] then
+			players[p] = createPlayerData()
+			local data = players[p]
+			for i = 1, 100 do
+				data.projectileHandler.shells[i] = deepcopy(data.projectileHandler.defaultShell)
+			end
 		end
 	end
 
@@ -425,15 +504,20 @@ function client.tickPlayer(p, dt)
 	local data = players[p]
 	if not data then return end
 
+	-- Remote players: use server-synced drone state
+	if not IsPlayerLocal(p) then
+		client.tickRemotePlayer(p, data, dt)
+		return
+	end
+
+	-- LOCAL PLAYER: full client-side simulation for responsiveness
 	if GetPlayerTool(p) ~= "attackdrone" or GetPlayerVehicle(p) ~= 0 then
 		data.attackdroneenabled = false
 		data.flycamenabled = false
 		return
 	end
 
-	local isLocal = (p == GetLocalPlayer())
-
-	-- Initialize drone on equip
+	-- Initialize drone on equip (mirror server)
 	if not data.attackdroneenabled then
 		data.attackdroneenabled = true
 		data.droneTargetPos = GetPlayerTransform(p).pos
@@ -441,58 +525,59 @@ function client.tickPlayer(p, dt)
 		data.drone.rot = QuatRotateQuat(Quat(), QuatEuler(-90, -90, 0))
 	end
 
-	-- Toggle controls
-	if InputPressed("rmb", p) then
+	-- Toggle controls: use raw key names WITHOUT player param (v2 requirement)
+	-- Then notify server via ServerCall for state that needs server authority
+	if InputPressed("rmb") then
 		data.flycamenabled = not data.flycamenabled
+		ServerCall("server.toggleFlyCam", GetLocalPlayer(), data.flycamenabled)
 	end
-	if isLocal and InputPressed("esc") then
+	if InputPressed("esc") then
 		data.flycamenabled = false
+		ServerCall("server.toggleFlyCam", GetLocalPlayer(), false)
 	end
 
-	if InputPressed("m", p) then
+	if InputPressed("m") then
 		data.magnet = not data.magnet
-		if isLocal then
-			SetString("hud.notification", "Magnet " .. (data.magnet and "on" or "off"))
-		end
+		SetString("hud.notification", "Magnet " .. (data.magnet and "on" or "off"))
+		ServerCall("server.toggleMagnet", GetLocalPlayer())
 	end
 
-	if InputPressed("n", p) then
+	if InputPressed("n") then
 		data.hideSight = not data.hideSight
-		if isLocal then
-			SetString("hud.notification", "Hide crosshair " .. (data.hideSight and "on" or "off"))
-		end
+		SetString("hud.notification", "Hide crosshair " .. (data.hideSight and "on" or "off"))
 	end
 
-	if InputPressed("r", p) then
+	if InputPressed("r") then
 		data.lockCam = not data.lockCam
-		if isLocal then
-			SetString("hud.notification", "Lock cam " .. (data.lockCam and "on" or "off"))
-		end
+		SetString("hud.notification", "Lock cam " .. (data.lockCam and "on" or "off"))
 	end
 
 	-- Aim pos
 	if data.flycamenabled then
 		data.aimpos = GetCamLookPos(data)
+		-- Send aim pos to server (needed for server-side Shoot direction)
+		ServerCall("server.setAimPos", GetLocalPlayer(), data.aimpos[1], data.aimpos[2], data.aimpos[3])
 	else
 		data.aimpos = GetAimPos(p)
 	end
 
-	-- Fly cam (local player only)
-	if data.flycamenabled and isLocal then
+	-- Fly cam (camera control + drone movement via WASD)
+	if data.flycamenabled then
 		FlyCam(p, data)
+		-- Send drone target position to server (server computes physics)
+		ServerCall("server.setDroneTarget", GetLocalPlayer(), data.droneTargetPos[1], data.droneTargetPos[2], data.droneTargetPos[3])
 	end
 
 	-- Drone sound
 	PlayLoop(dronesound, data.drone.pos, 0.6)
 
-	-- Firing sounds and visuals
+	-- Firing: create client-side projectile entries for visual tracers
 	data.firing = InputDown("usetool", p)
 	if data.firing then
 		if data.shoottimer <= 0 then
+			Shoot(p, data)
 			local volume = data.flycamenabled and 0.4 or 0.5
 			PlaySound(gunsound, data.drone.barrel.pos, volume)
-			data.lightTimer = 0.05
-			data.shoottimer = data.shotDelay
 		end
 	end
 
@@ -525,6 +610,13 @@ function client.tickPlayer(p, dt)
 		end
 	end
 
+	-- Client projectile visuals (DrawLine, SpawnParticle)
+	for key, shell in ipairs(data.projectileHandler.shells) do
+		if shell.active then
+			ClientProjectileOperations(shell, dt)
+		end
+	end
+
 	-- Drone movement (client mirrors for smooth visuals)
 	if not data.flycamenabled then
 		droneMovement(p, data, dt)
@@ -535,6 +627,96 @@ function client.tickPlayer(p, dt)
 	-- Drone physics step (mirror)
 	dronePhysicsStep(data, dt)
 
+	-- Shoot timer countdown
+	if data.shoottimer > 0 then
+		data.shoottimer = data.shoottimer - dt
+	end
+end
+
+-- REMOTE PLAYER: read server-synced drone state, interpolate smoothly
+function client.tickRemotePlayer(p, data, dt)
+	local isActive = GetBool("drone."..p..".active")
+
+	if not isActive or GetPlayerTool(p) ~= "attackdrone" or GetPlayerVehicle(p) ~= 0 then
+		data.attackdroneenabled = false
+		return
+	end
+
+	-- Read synced drone position from server
+	local syncPos = Vec(
+		GetFloat("drone."..p..".px"),
+		GetFloat("drone."..p..".py"),
+		GetFloat("drone."..p..".pz")
+	)
+	local syncRot = Quat()
+	syncRot[1] = GetFloat("drone."..p..".rx")
+	syncRot[2] = GetFloat("drone."..p..".ry")
+	syncRot[3] = GetFloat("drone."..p..".rz")
+	syncRot[4] = GetFloat("drone."..p..".rw")
+
+	-- On first encounter, snap directly to synced position (no lerp)
+	if not data.attackdroneenabled then
+		data.attackdroneenabled = true
+		if VecLength(syncPos) > 0 then
+			data.drone.pos = VecCopy(syncPos)
+			data.drone.rot[1] = syncRot[1]
+			data.drone.rot[2] = syncRot[2]
+			data.drone.rot[3] = syncRot[3]
+			data.drone.rot[4] = syncRot[4]
+		end
+	end
+
+	-- Smooth interpolation towards server-synced position
+	if VecLength(syncPos) > 0 then
+		data.drone.pos = VecLerp(data.drone.pos, syncPos, 0.3)
+		data.drone.rot = QuatSlerp(data.drone.rot, syncRot, 0.3)
+	end
+
+	data.drone.barrel.pos = TransformToParentPoint(data.drone, Vec(0.5, 0.25, -0.2))
+
+	-- Read synced state
+	data.firing = GetBool("drone."..p..".firing")
+	data.flycamenabled = GetBool("drone."..p..".flycam")
+
+	-- Drone sound at synced position
+	PlayLoop(dronesound, data.drone.pos, 0.6)
+
+	-- Firing effects (sound + light)
+	if data.firing and data.shoottimer <= 0 then
+		PlaySound(gunsound, data.drone.barrel.pos, 0.5)
+		data.lightTimer = 0.05
+		data.shoottimer = data.shotDelay
+	end
+
+	if data.lightTimer > 0 then
+		PointLight(data.drone.barrel.pos, 1, 1, 1, 1)
+		data.lightTimer = data.lightTimer - dt
+	end
+
+	-- Tool body shape positioning (drone shape follows synced position)
+	local b = GetToolBody(p)
+	if b ~= 0 then
+		if data.body ~= b then
+			data.body = b
+			local shapes = GetBodyShapes(b)
+			data.droneshape = shapes[1]
+			data.controlshape = shapes[2]
+			data.dronetransformation = GetShapeLocalTransform(data.droneshape)
+			data.controltransformation = GetShapeLocalTransform(data.controlshape)
+		end
+
+		if data.controltransformation then
+			local ct = TransformCopy(data.controltransformation)
+			ct.rot = QuatRotateQuat(ct.rot, QuatEuler(-25, 0, 0))
+			SetShapeLocalTransform(data.controlshape, ct)
+		end
+
+		if data.droneshape then
+			SetShapeLocalTransform(data.droneshape, TransformToLocalTransform(GetBodyTransform(GetToolBody(p)), data.drone))
+		end
+	end
+
+	-- Shoot timer countdown
 	if data.shoottimer > 0 then
 		data.shoottimer = data.shoottimer - dt
 	end
@@ -542,13 +724,15 @@ end
 
 ---------- HUD ----------
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p then return end
 	local data = players[p]
 	if not data then return end
 
-	if GetPlayerTool(p) == "attackdrone" and GetPlayerVehicle(p) == 0 and data.flycamenabled and not data.hideSight then
+	if GetPlayerTool(p) ~= "attackdrone" or GetPlayerVehicle(p) ~= 0 then return end
+
+	if data.flycamenabled and not data.hideSight then
 		UiPush()
 		UiTranslate(UiCenter(), UiMiddle())
 		UiColor(1, 1, 1, 0.5)
@@ -556,4 +740,14 @@ function draw()
 		UiImage("MOD/img/crosshair.png")
 		UiPop()
 	end
+
+	-- Keybind hints
+	UiPush()
+	UiTranslate(10, UiHeight() - 160)
+	UiAlign("left bottom")
+	UiColor(1, 1, 1, 0.8)
+	UiFont("bold.ttf", 20)
+	UiTextOutline(0, 0, 0, 1, 0.1)
+	UiText("RMB - Drone Camera\nM - Toggle Magnet\nN - Toggle Crosshair\nR - Lock Camera\nLMB - Shoot")
+	UiPop()
 end

@@ -1,4 +1,5 @@
 name = Attack Drone
 author = My Cresta
 description = Half-Autonomous Attack Drone that will follow the player and hover nearby, you can shoot from the drone with LMB and go into drone camera view with RMB. [noupload]
-tags = Toolversion = 2
+tags = Tool
+version = 2

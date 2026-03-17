@@ -27,7 +27,7 @@ end
 ---------- SERVER ----------
 
 function server.init()
-	RegisterTool("dragonslayer", "Dragonslayer", "MOD/vox/dragonslayer.vox")
+	RegisterTool("dragonslayer", "Dragonslayer", "MOD/vox/dragonslayer.vox", 5)
 end
 
 function server.tick(dt)
@@ -183,7 +183,7 @@ end
 
 ---------- HUD ----------
 
-function draw()
+function client.draw()
 	local p = GetLocalPlayer()
 	if not p or not players[p] then return end
 end

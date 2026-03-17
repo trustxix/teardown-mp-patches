@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd C:/Users/trust/teardown-mp-patches && python .comms/check_all_inboxes.py 2>/dev/null"
+          }
+        ]
+      }
     ]
   }
 }

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teardown MP — Team Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    padding: 20px;
+    min-height: 100vh;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #21262d;
+}
+.header h1 {
+    font-size: 24px;
+    color: #58a6ff;
+    font-weight: 600;
+}
+.header .status {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+.killswitch {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.killswitch.active { background: #da3633; color: #fff; }
+.killswitch.inactive { background: #238636; color: #fff; }
+.focus-bar {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.focus-bar .label { color: #8b949e; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+.focus-bar .value { color: #f0883e; font-size: 16px; font-weight: 600; }
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+}
+.card:hover { border-color: #58a6ff; }
+.card h3 {
+    font-size: 14px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+.card .big-number {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+.card .subtitle { color: #8b949e; font-size: 13px; }
+.green { color: #3fb950; }
+.yellow { color: #d29922; }
+.red { color: #f85149; }
+.blue { color: #58a6ff; }
+.orange { color: #f0883e; }
+.purple { color: #bc8cff; }
+.terminals { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.terminal-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px;
+}
+.terminal-card .role-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.terminal-card .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot.active { background: #3fb950; box-shadow: 0 0 6px #3fb950; }
+.dot.idle { background: #484f58; }
+.dot.urgent { background: #f85149; box-shadow: 0 0 6px #f85149; animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.terminal-card .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 13px;
+}
+.terminal-card .stat-label { color: #8b949e; }
+.terminal-card .stat-value { font-weight: 600; text-align: right; }
+.progress-section { margin-bottom: 20px; }
+.progress-section h2 { font-size: 16px; color: #c9d1d9; margin-bottom: 12px; }
+.progress-bar-container {
+    background: #21262d;
+    border-radius: 8px;
+    height: 28px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    position: relative;
+}
+.progress-bar {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    min-width: 60px;
+}
+.progress-bar.green-bar { background: linear-gradient(90deg, #238636, #2ea043); }
+.progress-bar.blue-bar { background: linear-gradient(90deg, #1f6feb, #388bfd); }
+.progress-bar.orange-bar { background: linear-gradient(90deg, #9e6a03, #d29922); }
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #8b949e;
+    margin-bottom: 4px;
+}
+.task-list { margin-bottom: 20px; }
+.task-list h2 { font-size: 16px; color: #c9d1d9; margin-bottom: 12px; }
+.task-item {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.task-item .task-title { font-size: 14px; }
+.task-item .task-meta { display: flex; gap: 8px; align-items: center; }
+.badge {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.high { background: #da363322; color: #f85149; border: 1px solid #f8514933; }
+.badge.medium { background: #d2992222; color: #d29922; border: 1px solid #d2992233; }
+.badge.low { background: #23863622; color: #3fb950; border: 1px solid #3fb95033; }
+.badge.critical { background: #da363344; color: #ff7b72; border: 1px solid #f8514955; }
+.badge.role { background: #1f6feb22; color: #58a6ff; border: 1px solid #58a6ff33; }
+.badge.in-progress { background: #1f6feb22; color: #58a6ff; border: 1px solid #58a6ff33; }
+.servers { display: flex; gap: 8px; flex-wrap: wrap; }
+.server-pill {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.server-pill.online { background: #23863622; color: #3fb950; border: 1px solid #3fb95033; }
+.server-pill.offline { background: #da363322; color: #f85149; border: 1px solid #f8514933; }
+.timestamp {
+    text-align: center;
+    color: #484f58;
+    font-size: 12px;
+    margin-top: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Teardown MP — Team Dashboard</h1>
+    <div class="status">
+        <div id="killswitch" class="killswitch inactive">RUNNING</div>
+        <div style="color: #484f58; font-size: 13px;" id="update-time">updating...</div>
+    </div>
+</div>
+
+<div class="focus-bar">
+    <span class="label">FOCUS</span>
+    <span class="value" id="focus">Loading...</span>
+</div>
+
+<div class="terminals" id="terminals"></div>
+
+<div class="progress-section">
+    <h2>Project Progress</h2>
+    <div>
+        <div class="progress-label"><span>Tasks Completed</span><span id="task-pct">0%</span></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar green-bar" id="task-bar" style="width: 0%"></div>
+        </div>
+    </div>
+    <div style="margin-top: 12px;">
+        <div class="progress-label"><span>Options Menus</span><span id="options-pct">0%</span></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar blue-bar" id="options-bar" style="width: 0%"></div>
+        </div>
+    </div>
+    <div style="margin-top: 12px;">
+        <div class="progress-label"><span>Keybind Hints</span><span id="hints-pct">0%</span></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar orange-bar" id="hints-bar" style="width: 0%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h3>Mods</h3>
+        <div class="big-number blue" id="mod-count">0</div>
+        <div class="subtitle">installed & patched</div>
+    </div>
+    <div class="card">
+        <h3>Lint Health</h3>
+        <div class="big-number" id="lint-number">0</div>
+        <div class="subtitle" id="lint-detail">loading...</div>
+    </div>
+    <div class="card">
+        <h3>Changes Tracked</h3>
+        <div class="big-number purple" id="changes-count">0</div>
+        <div class="subtitle" id="changes-detail">loading...</div>
+    </div>
+    <div class="card">
+        <h3>MCP Servers</h3>
+        <div class="servers" id="servers"></div>
+    </div>
+</div>
+
+<div class="task-list">
+    <h2>Active & Open Tasks</h2>
+    <div id="task-items"></div>
+</div>
+
+<div class="timestamp" id="footer-time"></div>
+
+<script>
+const ROLE_DISPLAY = {
+    qa_lead: {name: "QA Lead", icon: "\u{1F451}"},
+    api_surgeon: {name: "API Surgeon", icon: "\u{1FA78}"},
+    mod_converter: {name: "Mod Converter", icon: "\u{1F527}"},
+    docs_keeper: {name: "Docs Keeper", icon: "\u{1F4DA}"},
+};
+
+function updateDashboard(data) {
+    const ks = document.getElementById("killswitch");
+    if (data.killswitch) {
+        ks.className = "killswitch active";
+        ks.textContent = "STOPPED";
+    } else {
+        ks.className = "killswitch inactive";
+        ks.textContent = "RUNNING";
+    }
+
+    document.getElementById("focus").textContent = data.focus || "Not set";
+
+    const terminalsEl = document.getElementById("terminals");
+    terminalsEl.innerHTML = "";
+    for (const [role, info] of Object.entries(data.inboxes)) {
+        const display = ROLE_DISPLAY[role] || {name: role, icon: "\u{1F4BB}"};
+        const roleTaskInfo = data.tasks.by_role?.[role] || {};
+        const isActive = (roleTaskInfo.in_progress || 0) > 0;
+        const isUrgent = info.urgent > 0;
+        const dotClass = isUrgent ? "urgent" : isActive ? "active" : "idle";
+
+        const activeTask = data.tasks.in_progress?.find(t => t.role === role);
+        const taskText = activeTask ? activeTask.title : "Idle";
+
+        const card = document.createElement("div");
+        card.className = "terminal-card";
+        card.innerHTML =
+            '<div class="role-name"><span class="dot ' + dotClass + '"></span>' + display.icon + ' ' + display.name + '</div>' +
+            '<div style="font-size: 12px; color: #8b949e; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' + taskText + '">' + taskText + '</div>' +
+            '<div class="stats">' +
+                '<span class="stat-label">Inbox</span><span class="stat-value ' + (info.inbox > 0 ? (info.urgent > 0 ? 'red' : 'yellow') : 'green') + '">' + info.inbox + '</span>' +
+                '<span class="stat-label">Sent</span><span class="stat-value">' + info.outbox + '</span>' +
+                '<span class="stat-label">Open</span><span class="stat-value">' + (roleTaskInfo.open || 0) + '</span>' +
+                '<span class="stat-label">Done</span><span class="stat-value green">' + (roleTaskInfo.done || 0) + '</span>' +
+            '</div>';
+        terminalsEl.appendChild(card);
+    }
+
+    const tasks = data.tasks;
+    const totalTasks = Math.max(tasks.total || 1, 1);
+    const doneCount = tasks.done_count || 0;
+    const taskPct = Math.round((doneCount / totalTasks) * 100);
+    document.getElementById("task-bar").style.width = taskPct + "%";
+    document.getElementById("task-bar").textContent = doneCount + " / " + totalTasks;
+    document.getElementById("task-pct").textContent = taskPct + "%";
+
+    const mods = data.mods;
+    const modTotal = Math.max(mods.total || 1, 1);
+    const optPct = Math.round((mods.with_options / modTotal) * 100);
+    document.getElementById("options-bar").style.width = optPct + "%";
+    document.getElementById("options-bar").textContent = mods.with_options + " / " + modTotal;
+    document.getElementById("options-pct").textContent = optPct + "%";
+
+    const hintPct = Math.round((mods.with_hints / modTotal) * 100);
+    document.getElementById("hints-bar").style.width = hintPct + "%";
+    document.getElementById("hints-bar").textContent = mods.with_hints + " / " + modTotal;
+    document.getElementById("hints-pct").textContent = hintPct + "%";
+
+    document.getElementById("mod-count").textContent = mods.total;
+
+    const lint = data.lint;
+    const lintEl = document.getElementById("lint-number");
+    const lintDetail = document.getElementById("lint-detail");
+    if (lint.FAIL > 0) {
+        lintEl.textContent = lint.FAIL;
+        lintEl.className = "big-number red";
+        lintDetail.textContent = lint.FAIL + " errors, " + lint.WARN + " warnings";
+    } else if (lint.WARN > 0) {
+        lintEl.textContent = lint.WARN;
+        lintEl.className = "big-number yellow";
+        lintDetail.textContent = lint.WARN + " warnings, " + lint.INFO + " info";
+    } else {
+        lintEl.textContent = "\u2713";
+        lintEl.className = "big-number green";
+        lintDetail.textContent = lint.INFO + " info notes (clean)";
+    }
+
+    document.getElementById("changes-count").textContent = data.changes.total;
+    document.getElementById("changes-detail").textContent = data.changes.undocumented + " undocumented";
+
+    const serversEl = document.getElementById("servers");
+    serversEl.innerHTML = "";
+    for (const s of data.servers) {
+        const cls = s.exists ? "online" : "offline";
+        const dot = s.exists ? "\u25CF" : "\u25CB";
+        const pill = document.createElement("div");
+        pill.className = "server-pill " + cls;
+        pill.textContent = dot + " " + s.name;
+        serversEl.appendChild(pill);
+    }
+
+    const taskItems = document.getElementById("task-items");
+    taskItems.innerHTML = "";
+    const allTasks = [...(tasks.in_progress || []).map(function(t) { return Object.assign({}, t, {status: "in_progress"}); }), ...(tasks.open || []).map(function(t) { return Object.assign({}, t, {status: "open"}); })];
+    if (allTasks.length === 0) {
+        taskItems.innerHTML = '<div style="color: #484f58; padding: 12px; text-align: center;">No active or open tasks</div>';
+    }
+    for (const t of allTasks) {
+        const priorityCls = t.priority || "medium";
+        const statusBadge = t.status === "in_progress" ? '<span class="badge in-progress">IN PROGRESS</span>' : '';
+        const display = ROLE_DISPLAY[t.role] || {name: t.role};
+        const item = document.createElement("div");
+        item.className = "task-item";
+        item.innerHTML =
+            '<span class="task-title">' + t.id + ' — ' + t.title + '</span>' +
+            '<div class="task-meta">' +
+                '<span class="badge role">' + display.name + '</span>' +
+                '<span class="badge ' + priorityCls + '">' + priorityCls + '</span>' +
+                statusBadge +
+            '</div>';
+        taskItems.appendChild(item);
+    }
+
+    const now = new Date();
+    document.getElementById("update-time").textContent = "Updated " + now.toLocaleTimeString();
+    document.getElementById("footer-time").textContent = "Auto-refreshes every 5 seconds";
+}
+
+async function fetchData() {
+    try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        updateDashboard(data);
+    } catch (e) {
+        document.getElementById("update-time").textContent = "Error: " + e.message;
+    }
+}
+
+fetchData();
+setInterval(fetchData, 5000);
+</script>
+</body>
+</html>

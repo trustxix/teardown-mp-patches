@@ -15,6 +15,10 @@ from tools.validate import validate_mod
 from tools.package import package_mod
 from tools.dashboard import generate_dashboard
 from tools.release import release_mod, release_all
+from tools.lint import lint_cli
+from tools.fix import fix_cli
+from tools.audit import audit_cli
+from tools.logparse import logparse_cli
 
 
 OUTPUT_DIR = Path("mods")
@@ -24,6 +28,12 @@ OUTPUT_DIR = Path("mods")
 def cli():
     """Teardown MP Mod Patcher - Patch v1 mods for multiplayer."""
     pass
+
+
+cli.add_command(lint_cli)
+cli.add_command(fix_cli)
+cli.add_command(audit_cli)
+cli.add_command(logparse_cli)
 
 
 @cli.command()

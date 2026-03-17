@@ -1,4 +1,4 @@
-"""Tests for tools/lint.py — tier-1 hard error checks."""
+"""Tests for tools/lint.py — tier-1 hard error checks and tier-2 best-practice checks."""
 
 import pytest
 
@@ -11,6 +11,16 @@ from tools.lint import (
     check_mousedx,
     check_set_player_transform_client,
     check_draw_not_client,
+    # Tier-2
+    check_missing_ammo_display,
+    check_missing_tool_ammo,
+    check_missing_ammo_pickup,
+    check_missing_options_guard,
+    check_missing_options_sync,
+    check_handle_gt_zero,
+    check_manual_aim,
+    check_makehole_damage,
+    check_missing_keybind_hints,
     lint_source,
 )
 
@@ -411,7 +421,8 @@ class TestDrawNotClient:
 # ===========================================================================
 
 class TestLintSource:
-    def test_clean_source_no_findings(self):
+    def test_clean_source_no_tier1_findings(self):
+        """A well-formed v2 mod produces no tier-1 errors."""
         src = (
             "#version 2\n"
             "function server.init()\n"
@@ -421,6 +432,41 @@ class TestLintSource:
             "function server.tick(dt)\n"
             "    for p in PlayersAdded() do\n"
             '        SetToolEnabled("gun", true, p)\n'
+            "    end\n"
+            "    for p in Players() do\n"
+            '        if GetBool("game.tool.gun.trigger." .. p) then\n'
+            "            SetPlayerTransform(p, Transform())\n"
+            "        end\n"
+            "    end\n"
+            "end\n"
+            "\n"
+            "function client.tick(dt)\n"
+            '    if InputPressed("usetool") then\n'
+            '        ServerCall("fire")\n'
+            "    end\n"
+            "end\n"
+            "\n"
+            "function client.draw()\n"
+            "    UiText('Score')\n"
+            "end\n"
+        )
+        findings = lint_source(src, "test.lua", tier="1")
+        assert findings == []
+
+    def test_fully_clean_source_no_findings(self):
+        """A fully-featured v2 mod with all tier-2 best practices produces no findings."""
+        src = (
+            "#version 2\n"
+            "function server.init()\n"
+            '    RegisterTool("gun", "Gun", "MOD/vox/gun.vox")\n'
+            '    SetString("game.tool.gun.ammo.display", "")\n'
+            '    SetToolAmmoPickupAmount("gun", 10)\n'
+            "end\n"
+            "\n"
+            "function server.tick(dt)\n"
+            "    for p in PlayersAdded() do\n"
+            '        SetToolEnabled("gun", true, p)\n'
+            '        SetToolAmmo("gun", 30, p)\n'
             "    end\n"
             "    for p in Players() do\n"
             '        if GetBool("game.tool.gun.trigger." .. p) then\n'
@@ -463,10 +509,28 @@ class TestLintSource:
         assert all(f["file"] == "mymod/script.lua" for f in findings)
 
     def test_tier_param_accepted(self):
-        # tier param is accepted without error (ignored for now)
+        # Unknown tier string falls back to running all checks
         src = "for i, p in ipairs(Players()) do end"
         findings = lint_source(src, "x.lua", tier="tier1")
         assert len(findings) >= 1
+
+    def test_tier_1_only(self):
+        # tier="1" runs only tier-1 checks (IPAIRS-ITERATOR is tier-1)
+        src = "for i, p in ipairs(Players()) do end"
+        findings = lint_source(src, "x.lua", tier="1")
+        assert any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_tier_2_only_no_tier1(self):
+        # tier="2" should not produce tier-1 findings like IPAIRS-ITERATOR
+        src = "for i, p in ipairs(Players()) do end"
+        findings = lint_source(src, "x.lua", tier="2")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_tier_2_only_produces_tier2(self):
+        # tier="2" should produce tier-2 findings like MAKEHOLE-DAMAGE
+        src = "MakeHole(pos, 1.0, false)"
+        findings = lint_source(src, "x.lua", tier="2")
+        assert any(f["check"] == "MAKEHOLE-DAMAGE" for f in findings)
 
     def test_all_checks_appear_in_aggregation(self):
         src = "\n".join([
@@ -503,3 +567,359 @@ class TestLintSource:
         assert f["file"] == "foo.lua"
         assert isinstance(f["line"], int)
         assert isinstance(f["detail"], str)
+
+
+# ===========================================================================
+# Tier-2 checks
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# check_missing_ammo_display
+# ---------------------------------------------------------------------------
+
+class TestMissingAmmoDisplay:
+    def test_missing_flagged(self):
+        src = 'RegisterTool("gun", "Gun", "MOD/vox/gun.vox")'
+        findings = check_missing_ammo_display(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-AMMO-DISPLAY"
+        assert findings[0]["severity"] == "warn"
+        assert "gun" in findings[0]["detail"]
+
+    def test_present_clean(self):
+        src = (
+            'RegisterTool("gun", "Gun", "MOD/vox/gun.vox")\n'
+            'SetString("game.tool.gun.ammo.display", "")\n'
+        )
+        assert check_missing_ammo_display(src) == []
+
+    def test_no_register_tool_clean(self):
+        src = 'SetString("game.tool.gun.ammo.display", "")'
+        assert check_missing_ammo_display(src) == []
+
+    def test_multiple_tools_one_missing(self):
+        src = (
+            'RegisterTool("gun", "Gun", "MOD/vox/gun.vox")\n'
+            'RegisterTool("sword", "Sword", "MOD/vox/sword.vox")\n'
+            'SetString("game.tool.gun.ammo.display", "")\n'
+        )
+        findings = check_missing_ammo_display(src)
+        assert len(findings) == 1
+        assert "sword" in findings[0]["detail"]
+
+    def test_multiple_tools_both_present_clean(self):
+        src = (
+            'RegisterTool("gun", "Gun", "MOD/vox/gun.vox")\n'
+            'RegisterTool("sword", "Sword", "MOD/vox/sword.vox")\n'
+            'SetString("game.tool.gun.ammo.display", "")\n'
+            'SetString("game.tool.sword.ammo.display", "")\n'
+        )
+        assert check_missing_ammo_display(src) == []
+
+    def test_line_number_correct(self):
+        src = "-- header\nRegisterTool(\"gun\", \"Gun\", \"MOD/vox/gun.vox\")"
+        findings = check_missing_ammo_display(src)
+        assert findings[0]["line"] == 2
+
+    def test_comment_ignored(self):
+        src = '-- RegisterTool("gun", "Gun", "MOD/vox/gun.vox")'
+        assert check_missing_ammo_display(src) == []
+
+
+# ---------------------------------------------------------------------------
+# check_missing_tool_ammo
+# ---------------------------------------------------------------------------
+
+class TestMissingToolAmmo:
+    def test_missing_flagged(self):
+        src = 'SetToolEnabled("gun", true, p)'
+        findings = check_missing_tool_ammo(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-TOOL-AMMO"
+        assert findings[0]["severity"] == "warn"
+
+    def test_both_present_clean(self):
+        src = (
+            'SetToolEnabled("gun", true, p)\n'
+            'SetToolAmmo("gun", 30, p)\n'
+        )
+        assert check_missing_tool_ammo(src) == []
+
+    def test_no_set_tool_enabled_clean(self):
+        src = 'SetToolAmmo("gun", 30, p)'
+        assert check_missing_tool_ammo(src) == []
+
+    def test_neither_clean(self):
+        src = 'RegisterTool("gun", "Gun", "MOD/vox/gun.vox")'
+        assert check_missing_tool_ammo(src) == []
+
+
+# ---------------------------------------------------------------------------
+# check_missing_ammo_pickup
+# ---------------------------------------------------------------------------
+
+class TestMissingAmmoPickup:
+    def test_missing_flagged(self):
+        src = 'RegisterTool("gun", "Gun", "MOD/vox/gun.vox")'
+        findings = check_missing_ammo_pickup(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-AMMO-PICKUP"
+        assert findings[0]["severity"] == "warn"
+
+    def test_present_clean(self):
+        src = (
+            'RegisterTool("gun", "Gun", "MOD/vox/gun.vox")\n'
+            'SetToolAmmoPickupAmount("gun", 10)\n'
+        )
+        assert check_missing_ammo_pickup(src) == []
+
+    def test_no_register_tool_clean(self):
+        src = 'SetToolAmmoPickupAmount("gun", 10)'
+        assert check_missing_ammo_pickup(src) == []
+
+    def test_line_number_correct(self):
+        src = "-- header\nRegisterTool(\"gun\", \"Gun\", \"MOD/vox/gun.vox\")"
+        findings = check_missing_ammo_pickup(src)
+        assert findings[0]["line"] == 2
+
+
+# ---------------------------------------------------------------------------
+# check_missing_options_guard
+# ---------------------------------------------------------------------------
+
+class TestMissingOptionsGuard:
+    def test_missing_flagged(self):
+        # optionsOpen exists in the file but is far from the usetool check
+        src = (
+            "local optionsOpen = data.optionsOpen\n"
+            "local a = 1\n"
+            "local b = 2\n"
+            "local c = 3\n"
+            "local d = 4\n"
+            'if InputPressed("usetool") then\n'
+            "end\n"
+        )
+        findings = check_missing_options_guard(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-OPTIONS-GUARD"
+        assert findings[0]["severity"] == "warn"
+
+    def test_guard_same_line_clean(self):
+        src = (
+            "local optionsOpen = false\n"
+            'if not optionsOpen and InputPressed("usetool") then\n'
+            "end\n"
+        )
+        assert check_missing_options_guard(src) == []
+
+    def test_guard_nearby_clean(self):
+        src = (
+            "local optionsOpen = false\n"
+            "if not optionsOpen then\n"
+            '    if InputPressed("usetool") then\n'
+            "    end\n"
+            "end\n"
+        )
+        assert check_missing_options_guard(src) == []
+
+    def test_no_options_open_skipped(self):
+        # No optionsOpen concept → skip entirely (not our concern)
+        src = 'if InputPressed("usetool") then end'
+        assert check_missing_options_guard(src) == []
+
+    def test_guard_within_3_lines_clean(self):
+        src = (
+            "local optionsOpen = data.optionsOpen\n"
+            "local x = 1\n"
+            "local y = 2\n"
+            'if InputPressed("usetool") then\n'
+            "end\n"
+        )
+        assert check_missing_options_guard(src) == []
+
+    def test_guard_too_far_flagged(self):
+        src = (
+            "local optionsOpen = data.optionsOpen\n"
+            "local a = 1\n"
+            "local b = 2\n"
+            "local c = 3\n"
+            "local d = 4\n"
+            'if InputPressed("usetool") then\n'
+            "end\n"
+        )
+        findings = check_missing_options_guard(src)
+        assert len(findings) == 1
+
+
+# ---------------------------------------------------------------------------
+# check_missing_options_sync
+# ---------------------------------------------------------------------------
+
+class TestMissingOptionsSync:
+    def test_missing_flagged(self):
+        src = "local optionsOpen = data.optionsOpen"
+        findings = check_missing_options_sync(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-OPTIONS-SYNC"
+        assert findings[0]["severity"] == "warn"
+
+    def test_present_clean(self):
+        src = (
+            "local optionsOpen = data.optionsOpen\n"
+            "function server.setOptionsOpen(p, v)\n"
+            "    data[p].optionsOpen = v\n"
+            "end\n"
+        )
+        assert check_missing_options_sync(src) == []
+
+    def test_no_options_open_clean(self):
+        src = "function server.tick(dt)\nend"
+        assert check_missing_options_sync(src) == []
+
+
+# ---------------------------------------------------------------------------
+# check_handle_gt_zero
+# ---------------------------------------------------------------------------
+
+class TestHandleGtZero:
+    def test_flagged(self):
+        src = "if handle > 0 then\nend"
+        findings = check_handle_gt_zero(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "HANDLE-GT-ZERO"
+        assert findings[0]["severity"] == "warn"
+
+    def test_neq_zero_clean(self):
+        src = "if handle ~= 0 then\nend"
+        assert check_handle_gt_zero(src) == []
+
+    def test_number_comparison_clean(self):
+        # Non-handle comparisons — but the heuristic may still catch them
+        # The check is a heuristic so we just test the basic case
+        src = "if count > 0 then\nend"
+        findings = check_handle_gt_zero(src)
+        # Heuristic: this will flag — that's expected behavior
+        assert len(findings) == 1
+
+    def test_comment_ignored(self):
+        src = "-- if handle > 0 then"
+        assert check_handle_gt_zero(src) == []
+
+    def test_line_number_correct(self):
+        src = "local x = 1\nif body > 0 then\nend"
+        findings = check_handle_gt_zero(src)
+        assert findings[0]["line"] == 2
+
+
+# ---------------------------------------------------------------------------
+# check_manual_aim
+# ---------------------------------------------------------------------------
+
+class TestManualAim:
+    def test_query_raycast_alone_flagged(self):
+        src = "local hit, dist, normal = QueryRaycast(pos, dir, 100)"
+        findings = check_manual_aim(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MANUAL-AIM"
+        assert findings[0]["severity"] == "warn"
+
+    def test_get_player_aim_info_present_clean(self):
+        src = (
+            "local hit, dist, normal = QueryRaycast(pos, dir, 100)\n"
+            "local aim = GetPlayerAimInfo(muzzle, 200, p)\n"
+        )
+        assert check_manual_aim(src) == []
+
+    def test_no_query_raycast_clean(self):
+        src = "local aim = GetPlayerAimInfo(muzzle, 200, p)"
+        assert check_manual_aim(src) == []
+
+    def test_neither_clean(self):
+        src = "function server.tick(dt)\nend"
+        assert check_manual_aim(src) == []
+
+    def test_comment_ignored(self):
+        src = "-- local hit = QueryRaycast(pos, dir, 100)"
+        assert check_manual_aim(src) == []
+
+
+# ---------------------------------------------------------------------------
+# check_makehole_damage
+# ---------------------------------------------------------------------------
+
+class TestMakeholeDamage:
+    def test_makehole_flagged(self):
+        src = "MakeHole(pos, 1.5, false)"
+        findings = check_makehole_damage(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MAKEHOLE-DAMAGE"
+        assert findings[0]["severity"] == "info"
+
+    def test_multiple_makehole_flagged(self):
+        src = "MakeHole(pos, 1.0, false)\nMakeHole(pos2, 2.0, true)"
+        findings = check_makehole_damage(src)
+        assert len(findings) == 2
+
+    def test_no_makehole_clean(self):
+        src = "Shoot(pos, dir, 'bullet', 1, 100, p, 'gun')"
+        assert check_makehole_damage(src) == []
+
+    def test_comment_ignored(self):
+        src = "-- MakeHole(pos, 1.5, false)"
+        assert check_makehole_damage(src) == []
+
+    def test_line_number_correct(self):
+        src = "local x = 1\nMakeHole(pos, 1.0, false)"
+        findings = check_makehole_damage(src)
+        assert findings[0]["line"] == 2
+
+
+# ---------------------------------------------------------------------------
+# check_missing_keybind_hints
+# ---------------------------------------------------------------------------
+
+class TestMissingKeybindHints:
+    def test_two_raw_keys_no_hint_flagged(self):
+        src = (
+            'if InputPressed("r") then reload() end\n'
+            'if InputPressed("f") then flashlight() end\n'
+        )
+        findings = check_missing_keybind_hints(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-KEYBIND-HINTS"
+        assert findings[0]["severity"] == "warn"
+
+    def test_one_raw_key_clean(self):
+        # Only one single-letter key — below threshold
+        src = 'if InputPressed("r") then reload() end\n'
+        assert check_missing_keybind_hints(src) == []
+
+    def test_two_raw_keys_with_hint_clean(self):
+        src = (
+            'if InputPressed("r") then reload() end\n'
+            'if InputPressed("f") then flashlight() end\n'
+            'UiText("Press R to reload, F for flashlight")\n'
+        )
+        assert check_missing_keybind_hints(src) == []
+
+    def test_two_raw_keys_with_lmb_hint_clean(self):
+        src = (
+            'if InputPressed("r") then reload() end\n'
+            'if InputPressed("f") then flashlight() end\n'
+            'UiText("LMB to shoot")\n'
+        )
+        assert check_missing_keybind_hints(src) == []
+
+    def test_three_raw_keys_no_hint_flagged(self):
+        src = (
+            'if InputPressed("r") then end\n'
+            'if InputPressed("f") then end\n'
+            'if InputPressed("g") then end\n'
+        )
+        findings = check_missing_keybind_hints(src)
+        assert len(findings) == 1
+        assert "3" in findings[0]["detail"]
+
+    def test_no_keys_clean(self):
+        src = 'if InputPressed("usetool") then fire() end'
+        assert check_missing_keybind_hints(src) == []

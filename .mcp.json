@@ -1,28 +1,8 @@
 {
   "mcpServers": {
-    "task-coordinator": {
+    "teardown-team": {
       "command": "python",
-      "args": ["C:/Users/trust/teardown-mp-patches/mcp_task_server/server.py"],
-      "type": "stdio"
-    },
-    "file-lock": {
-      "command": "python",
-      "args": ["C:/Users/trust/teardown-mp-patches/mcp_lock_server/server.py"],
-      "type": "stdio"
-    },
-    "mod-registry": {
-      "command": "python",
-      "args": ["C:/Users/trust/teardown-mp-patches/mcp_registry_server/server.py"],
-      "type": "stdio"
-    },
-    "template-engine": {
-      "command": "python",
-      "args": ["C:/Users/trust/teardown-mp-patches/mcp_template_server/server.py"],
-      "type": "stdio"
-    },
-    "change-tracker": {
-      "command": "python",
-      "args": ["C:/Users/trust/teardown-mp-patches/mcp_change_tracker/server.py"],
+      "args": ["C:/Users/trust/teardown-mp-patches/mcp_unified_server/server.py"],
       "type": "stdio"
     }
   }

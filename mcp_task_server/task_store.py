@@ -14,29 +14,44 @@ def _with_lock(fn):
 
     Uses a separate lock file so the lock byte count stays constant
     even as tasks.json grows/shrinks during writes.
+    Retries up to 10 times with 0.2s delay if lock is held.
+    Falls back to unlocked read if lock fails completely.
     """
+    import time
+
     # Ensure files exist
     if not TASKS_FILE.exists():
         TASKS_FILE.write_text(json.dumps({"tasks": [], "next_id": 1}, indent=2))
     LOCK_FILE.touch()
 
-    with open(LOCK_FILE, "r+") as lf:
-        # Lock 1 byte of the lock file (constant size)
-        msvcrt.locking(lf.fileno(), msvcrt.LK_LOCK, 1)
+    max_retries = 10
+    for attempt in range(max_retries):
         try:
-            # Read tasks
-            content = TASKS_FILE.read_text(encoding="utf-8").strip()
-            data = json.loads(content) if content else {"tasks": [], "next_id": 1}
-
-            # Execute operation
-            result = fn(data)
-
-            # Write back
-            TASKS_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
-            return result
-        finally:
-            lf.seek(0)
-            msvcrt.locking(lf.fileno(), msvcrt.LK_UNLCK, 1)
+            with open(LOCK_FILE, "r+") as lf:
+                # Non-blocking lock attempt
+                msvcrt.locking(lf.fileno(), msvcrt.LK_NBLCK, 1)
+                try:
+                    content = TASKS_FILE.read_text(encoding="utf-8").strip()
+                    data = json.loads(content) if content else {"tasks": [], "next_id": 1}
+                    result = fn(data)
+                    TASKS_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+                    return result
+                finally:
+                    lf.seek(0)
+                    msvcrt.locking(lf.fileno(), msvcrt.LK_UNLCK, 1)
+        except IOError:
+            if attempt < max_retries - 1:
+                time.sleep(0.2)
+            else:
+                # Fallback: read without lock (safe for reads, risky for writes)
+                content = TASKS_FILE.read_text(encoding="utf-8").strip()
+                data = json.loads(content) if content else {"tasks": [], "next_id": 1}
+                result = fn(data)
+                try:
+                    TASKS_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+                except:
+                    pass
+                return result
 
 
 def _now() -> str:

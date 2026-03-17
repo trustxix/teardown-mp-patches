@@ -43,9 +43,34 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+STALE_TIMEOUT_MINUTES = 10
+
+
+def _recover_stale(data):
+    """Auto-recover tasks stuck IN_PROGRESS for more than 10 minutes."""
+    now = datetime.now(timezone.utc)
+    recovered = 0
+    for t in data["tasks"]:
+        if t["status"] == "in_progress" and t.get("started_at"):
+            try:
+                started = datetime.fromisoformat(t["started_at"])
+                elapsed = (now - started).total_seconds() / 60
+                if elapsed > STALE_TIMEOUT_MINUTES:
+                    t["status"] = "open"
+                    t["assigned_to"] = None
+                    t["started_at"] = None
+                    recovered += 1
+            except (ValueError, TypeError):
+                pass
+    return recovered
+
+
 def get_next_task(role: str) -> dict | None:
-    """Get next OPEN task for role, mark it IN_PROGRESS."""
+    """Get next OPEN task for role, mark it IN_PROGRESS. Auto-recovers stale tasks."""
     def _op(data):
+        # Auto-recover stuck tasks first
+        _recover_stale(data)
+
         # Priority order: critical > high > medium > low
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
         candidates = [

@@ -11,6 +11,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd C:/Users/trust/teardown-mp-patches && python .comms/check_file_lock.py 2>/dev/null"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "",

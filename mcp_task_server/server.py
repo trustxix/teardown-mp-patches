@@ -251,6 +251,76 @@ def clear_message(role: str, filename: str) -> dict:
 
 
 ##############################################################################
+# TEAM DASHBOARD
+##############################################################################
+
+
+@mcp.tool(description="One-command team overview: all terminals' inbox counts, active tasks, task queue health, lint summary, and killswitch status. The user's 'what's going on' button.")
+def team_dashboard() -> dict:
+    """Full team status in one call."""
+    import glob
+
+    dashboard = {}
+
+    # Inbox counts per terminal
+    inboxes = {}
+    for role in ROLES_MAP:
+        inbox_dir = COMMS_DIR / role / "inbox"
+        if inbox_dir.exists():
+            msgs = list(inbox_dir.glob("*.md"))
+            inboxes[role] = {"count": len(msgs), "urgent": sum(1 for m in msgs if "critical" in m.read_text(encoding="utf-8", errors="replace")[:200].lower())}
+        else:
+            inboxes[role] = {"count": 0, "urgent": 0}
+    dashboard["inboxes"] = inboxes
+
+    # Task queue summary
+    all_tasks = task_store.get_all_tasks()
+    dashboard["tasks"] = {
+        "open": all_tasks["counts"].get("open", 0),
+        "in_progress": all_tasks["counts"].get("in_progress", 0),
+        "done": all_tasks["counts"].get("done", 0),
+        "pending_review": len(all_tasks.get("pending_review", [])),
+        "active": [{"id": t["id"], "title": t["title"], "role": t.get("assigned_to", t["role"])} for t in all_tasks.get("active", [])],
+    }
+
+    # Per-role task counts
+    dashboard["by_role"] = all_tasks.get("by_role", {})
+
+    # Killswitch status
+    dashboard["killswitch"] = KILLSWITCH_FILE.exists()
+
+    # Focus area
+    focus_path = COMMS_DIR / "FOCUS.md"
+    if focus_path.exists():
+        lines = focus_path.read_text(encoding="utf-8").split("\n")
+        for line in lines:
+            if line.startswith("## Focus:"):
+                dashboard["focus"] = line.replace("## Focus:", "").strip()
+                break
+        else:
+            dashboard["focus"] = "Set in .comms/FOCUS.md"
+    else:
+        dashboard["focus"] = "Not set"
+
+    # Quick lint health (just counts, not full run)
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "tools.lint"],
+            capture_output=True, text=True,
+            cwd=str(PROJECT_ROOT), timeout=30,
+        )
+        output = result.stdout + result.stderr
+        fail = output.count("[FAIL]")
+        warn = output.count("[WARN]")
+        info = output.count("[INFO]")
+        dashboard["lint"] = {"FAIL": fail, "WARN": warn, "INFO": info}
+    except Exception:
+        dashboard["lint"] = "unavailable"
+
+    return dashboard
+
+
+##############################################################################
 # KILLSWITCH
 ##############################################################################
 

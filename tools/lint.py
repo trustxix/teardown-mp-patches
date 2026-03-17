@@ -426,7 +426,8 @@ def check_missing_ammo_pickup(source: str) -> list[dict]:
                 "MISSING-AMMO-PICKUP",
                 lineno,
                 "RegisterTool() present but no SetToolAmmoPickupAmount() - "
-                "ammo crates won't refill this tool",
+                "ammo crates won't refill this tool. "
+                "See docs/RESEARCH.md Finding #5",
                 severity="warn",
             )]
     return []
@@ -468,7 +469,8 @@ def check_missing_options_guard(source: str) -> list[dict]:
                 "MISSING-OPTIONS-GUARD",
                 lineno,
                 'InputPressed/Down("usetool") without nearby optionsOpen guard - '
-                "tool fires while options menu is open",
+                "tool fires while options menu is open. "
+                "See ISSUES_AND_FIXES.md Issue #32",
                 severity="warn",
             ))
     return findings
@@ -498,7 +500,8 @@ def check_missing_options_sync(source: str) -> list[dict]:
                 "MISSING-OPTIONS-SYNC",
                 lineno,
                 "optionsOpen used but no server.setOptionsOpen function found - "
-                "options state may not sync across clients",
+                "options state may not sync across clients. "
+                "See ISSUES_AND_FIXES.md Issue #32",
                 severity="warn",
             )]
     return []
@@ -555,7 +558,8 @@ def check_manual_aim(source: str) -> list[dict]:
                 "MANUAL-AIM",
                 lineno,
                 "QueryRaycast() used without GetPlayerAimInfo() - "
-                "use GetPlayerAimInfo(muzzlePos, maxDist, p) for multiplayer-safe aiming",
+                "use GetPlayerAimInfo(muzzlePos, maxDist, p) for multiplayer-safe aiming. "
+                "See docs/RESEARCH.md Finding #1",
                 severity="warn",
             )]
     return []
@@ -582,7 +586,8 @@ def check_makehole_damage(source: str) -> list[dict]:
                 "MAKEHOLE-DAMAGE",
                 lineno,
                 "MakeHole() cannot damage players in v2 - "
-                "use Shoot() for weapons that should damage players",
+                "use Shoot() for weapons that should damage players. "
+                "See docs/RESEARCH.md Finding #2",
                 severity="info",
             ))
     return findings

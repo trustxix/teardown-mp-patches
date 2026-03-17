@@ -115,6 +115,56 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     except Exception:
         lines.append("Missing features: N/A")
 
+    # Recommended reading based on current state
+    lines.append("")
+    lines.append("Recommended reading for this session:")
+    docs_to_read = []
+
+    # Always relevant
+    docs_to_read.append("  CLAUDE.md - rules, tools, workflow (always)")
+
+    # If there are tier-1 errors, they need the issues log for patterns
+    try:
+        if tier1_errors:
+            docs_to_read.append("  ISSUES_AND_FIXES.md - known bug patterns and fixes")
+    except NameError:
+        pass
+
+    # If gun mods need Shoot/AimInfo, they need RESEARCH.md
+    try:
+        if missing_shoot > 0 or missing_aim > 0:
+            docs_to_read.append("  docs/RESEARCH.md - Shoot(), GetPlayerAimInfo(), QueryShot() patterns")
+    except NameError:
+        pass
+
+    # If there are mods with custom entities or complex state, recommend sync patterns
+    try:
+        has_custom_entities = False
+        for mod_dir in mods:
+            for rel_path, source in read_lua_files(mod_dir):
+                if any(kw in source for kw in ["SetFloat(", "ClientCall(", "ServerCall(", "shared.", "VecLerp("]):
+                    has_custom_entities = True
+                    break
+            if has_custom_entities:
+                break
+        if has_custom_entities:
+            docs_to_read.append("  docs/V2_SYNC_PATTERNS.md - registry sync, RPC, interpolation")
+    except Exception:
+        pass
+
+    # If there are game log errors, they may need the API reference
+    try:
+        if log_result and log_result.get("mods"):
+            docs_to_read.append("  C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md - API signatures")
+    except NameError:
+        pass
+
+    # Audit report for planning
+    docs_to_read.append("  docs/AUDIT_REPORT.md - feature matrix (regenerate: python -m tools.audit --output docs/AUDIT_REPORT.md)")
+
+    for d in docs_to_read:
+        lines.append(d)
+
     return "\n".join(lines)
 
 

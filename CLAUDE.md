@@ -1,20 +1,51 @@
 # Teardown MP Mod Patcher
 
-## Project Overview
-Automated pipeline to patch Teardown Workshop mods for v2 multiplayer compatibility. 46 mods patched so far, ~130 remaining.
+## MANDATORY — Do This First Every Session
 
-## Critical Files
-- `docs/RESEARCH.md` — 34 findings from official API/code analysis. READ BEFORE ANY MOD WORK.
-- `docs/ISSUES_AND_FIXES.md` — 32 resolved issues with rules. READ BEFORE ANY MOD WORK.
-- `docs/MASTER_MOD_LIST.md` — current patched mod list (46 mods)
-- `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` — full v2 API (1117 lines, 550+ functions)
+**Before doing ANYTHING else, run:**
+```
+cd C:/Users/trust/teardown-mp-patches && python -m tools.status
+```
+This tells you: mod count, last commit, game log errors, lint failures, and missing features.
+Do NOT skip this. Do NOT start working without it. The output replaces reading multiple doc files.
+
+**After user tests a mod:**
+```
+python -m tools.logparse
+```
+
+**After writing or editing any mod code:**
+```
+python -m tools.lint --mod "ModName"
+```
+
+## Developer Tools — Use These, Not Manual Work
+
+| Command | When to use |
+|---------|-------------|
+| `python -m tools.status` | **EVERY session start** |
+| `python -m tools.lint` | Scan all mods for 17 known bugs |
+| `python -m tools.lint --mod "X"` | After editing a specific mod |
+| `python -m tools.lint --tier 1` | Hard errors only (crashes/silent failures) |
+| `python -m tools.fix --dry-run` | Preview safe auto-fixes across all mods |
+| `python -m tools.fix` | Apply all 6 deterministic auto-fixes |
+| `python -m tools.fix --mod "X" --only ipairs-iterator` | Targeted fix |
+| `python -m tools.audit` | Feature matrix — what each mod has/needs |
+| `python -m tools.audit --output docs/AUDIT_REPORT.md` | Save audit to file |
+| `python -m tools.logparse` | Parse Teardown log.txt for errors by mod |
+| `python -m tools.logparse --mod "X"` | Filter errors to one mod |
+
+**Tests:** `python -m pytest tests/ -q` — 181 tests covering all tools.
 
 ## Where Mods Live
-- **Game reads from:** `C:/Users/trust/Documents/Teardown/mods/` — ALL edits go here
+
+- **ALL edits go here:** `C:/Users/trust/Documents/Teardown/mods/` — game reads from this
+- **NEVER edit:** `C:/Users/trust/teardown-mp-patches/mods/` — patches repo, game ignores it
 - **Workshop originals:** `C:/Program Files (x86)/Steam/steamapps/workshop/content/1167630/`
-- **Patches repo:** `C:/Users/trust/teardown-mp-patches/mods/` — template copies, NOT used by game
+- **Backup:** `C:/Users/trust/Documents/Teardown/mods_BACKUP/`
 
 ## V2 Rewrite Rules (MANDATORY)
+
 1. `#version 2` + `#include "script/include/player.lua"` header
 2. `players = {}` with per-player state via `createPlayerData()`
 3. Server/client split: `server.init()`, `server.tick(dt)`, `client.init()`, `client.tick(dt)`, `client.draw()`
@@ -35,62 +66,23 @@ Automated pipeline to patch Teardown Workshop mods for v2 multiplayer compatibil
 18. Always send aim coordinates WITH ServerCall (never compute aim on server from client action)
 19. `client.draw()` not `draw()` for HUD
 
-## Known Subagent Bugs (agents ALWAYS make these — check every time)
-1. `ipairs()` on `Players()`/`PlayersAdded()`/`PlayersRemoved()` — these are iterators, not tables
-2. `"alttool"` instead of `"rmb"` for right mouse button
-3. Wrong `SetToolEnabled` arg order: correct is `SetToolEnabled("id", true, p)` not `SetToolEnabled("id", p, true)`
+## Known Subagent Bugs (agents ALWAYS make these)
 
-## Team Roles (for multi-terminal setup)
-
-### API Surgeon (Terminal 1)
-- Upgrades existing 46 mods with Shoot/QueryShot/GetPlayerAimInfo/SetToolAmmoPickupAmount
-- Works ONLY on existing mods in `Documents/Teardown/mods/`
-- Never creates new mods, never edits docs
-
-### Mod Converter (Terminal 2)
-- Converts new v1 mods from Workshop to v2 multiplayer
-- Creates NEW mod folders in `Documents/Teardown/mods/`
-- Never touches mods that Terminal 1 is upgrading
-
-### QA & Integration (Terminal 3 / Lead)
-- Reviews output from other terminals
-- Runs safety checks, updates docs
-- Handles bug reports from user testing
-- Applies polish (options menus, keybind remapping)
-- Owns all files in `docs/`
-
-## Developer Tools
-
-### First Thing Every Session
-1. Run: `python -m tools.status` — full project status report
-2. If user mentions testing: `python -m tools.logparse` — parse game log for errors
-3. Only read ISSUES_AND_FIXES.md when hitting a NEW bug
-
-### Available Commands
-| Command | Purpose |
-|---------|---------|
-| `python -m tools.status` | Full project status report |
-| `python -m tools.lint` | Scan all mods for known bugs |
-| `python -m tools.lint --mod "X"` | Scan single mod |
-| `python -m tools.lint --tier 1` | Hard errors only |
-| `python -m tools.fix --dry-run` | Preview auto-fixes |
-| `python -m tools.fix` | Apply all safe auto-fixes |
-| `python -m tools.fix --mod "X" --only ipairs-iterator` | Targeted fix |
-| `python -m tools.audit` | Generate mod feature matrix |
-| `python -m tools.audit --output docs/AUDIT_REPORT.md` | Save audit report |
-| `python -m tools.logparse` | Parse Teardown log for errors |
-| `python -m tools.logparse --mod "X"` | Filter to one mod |
-
-### After User Tests a Mod
-1. Run `python -m tools.logparse` IMMEDIATELY
-2. If errors found, read the specific lines referenced
-3. Fix and have user re-test
-
-### After Writing Any Mod Code
-Run `python -m tools.lint --mod "ModName"` to catch known bugs before testing.
-
-### Subagent Dispatch Template
-When dispatching subagents for ANY Teardown mod work, ALWAYS include these 3 warnings:
+When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 1. `Players()`/`PlayersAdded()`/`PlayersRemoved()` are ITERATORS — NO `ipairs()`
 2. Raw keys (`"rmb"`, `"r"`, etc.) do NOT take player param — use `InputPressed("rmb")` + ServerCall
 3. `SetToolEnabled("toolid", true, p)` — string first, bool second, player third
+4. ALWAYS run `python -m tools.lint --mod "ModName"` after writing any mod code
+
+## Do NOT Use Agents to Write Mod Code
+
+Agents can research, analyze, update docs, run tools. But mod rewrites must be done manually.
+
+## Reference Docs (read only when needed)
+
+- `docs/RESEARCH.md` — 34 API findings from official sources
+- `ISSUES_AND_FIXES.md` — 32 resolved bugs with rules
+- `docs/V2_SYNC_PATTERNS.md` — network sync patterns
+- `docs/AUDIT_REPORT.md` — generated feature matrix
+- `QUICKSTART.md` — condensed quick reference
+- `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` — full v2 API

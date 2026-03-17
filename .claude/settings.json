@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd C:/Users/trust/teardown-mp-patches && python -m tools.status 2>&1 || echo 'tools.status failed - run manually'"
+          }
+        ]
+      }
+    ]
+  }
+}

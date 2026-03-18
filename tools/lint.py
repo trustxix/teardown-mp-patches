@@ -56,13 +56,10 @@ def _count_opens(line: str) -> int:
     count += len(_FOR_RE.findall(line))
     count += len(_WHILE_RE.findall(line))
     count += len(_REPEAT_RE.findall(line))
-
-    do_count = len(_DO_RE.findall(line))
-    do_count -= len(_FOR_RE.findall(line))
-    do_count -= len(_WHILE_RE.findall(line))
-    if do_count > 0:
-        count += do_count
-
+    # Note: standalone `do` is NOT counted. In `for/while ... do`, the
+    # for/while already counts the nesting level. Counting `do` separately
+    # breaks when `for` and `do` span different lines (e.g. multi-line
+    # for loops), causing a permanent depth imbalance.
     return count
 
 
@@ -439,7 +436,7 @@ def check_missing_ammo_pickup(source: str) -> list[dict]:
 
 _USETOOL_INPUT_RE = re.compile(r'Input(?:Pressed|Down)\s*\(\s*"usetool"')
 _NEGATED_USETOOL_RE = re.compile(r'not\s+Input(?:Pressed|Down)\s*\(\s*"usetool"')
-_OPTIONS_OPEN_RE = re.compile(r"\b(?:optionsOpen|optionsopen|settingsOpen)\b")
+_OPTIONS_OPEN_RE = re.compile(r"\b(?:optionsOpen|optionsopen|settingsOpen|showOptions|showSettings)\b")
 
 
 def check_missing_options_guard(source: str) -> list[dict]:
@@ -517,7 +514,40 @@ def check_missing_options_sync(source: str) -> list[dict]:
 # Check T2-6: Handle > 0 comparisons (should use ~= 0)
 # ---------------------------------------------------------------------------
 
-_HANDLE_GT_ZERO_RE = re.compile(r"\w+\s*>\s*0\s+then\b")
+_HANDLE_GT_ZERO_RE = re.compile(r"(\#?\w+)\s*>\s*0\s+then\b")
+
+# Variable names that are clearly NOT entity handles — skip these
+_NON_HANDLE_NAMES = {
+    "dist", "distance", "depth", "count", "size", "amount", "time", "dt",
+    "hp", "health", "damage", "ammo", "mags", "speed", "velocity", "angle",
+    "alpha", "scale", "width", "height", "radius", "length", "weight",
+    "mass", "force", "power", "level", "index", "num", "total", "max",
+    "min", "timer", "cooldown", "delay", "duration", "progress", "ratio",
+    "x", "y", "z", "direction", "strength", "volume", "intensity",
+    "temperature", "frequency", "lifetime",
+    "scroll", "ymovement", "offset",
+}
+# Suffixes that indicate non-handle numeric variables
+_NON_HANDLE_SUFFIXES = (
+    "Timer", "Count", "Speed", "Power", "Strength", "Offset", "Size",
+    "Delay", "Duration", "Amount", "Distance", "Angle", "Scale",
+    "Height", "Width", "Length", "Radius", "Weight", "Mass", "Force",
+    "Level", "Index", "Velocity", "Progress", "Ratio", "Lifetime",
+    "Pos", "Belts", "Clouds", "Binds", "Values",
+)
+
+
+def _is_non_handle_name(var_name: str) -> bool:
+    """Return True if var_name is clearly not an entity handle."""
+    if var_name.startswith("#"):
+        return True  # #table is length, not a handle
+    lower = var_name.lower()
+    if lower in _NON_HANDLE_NAMES:
+        return True
+    for suffix in _NON_HANDLE_SUFFIXES:
+        if lower.endswith(suffix.lower()):
+            return True
+    return False
 
 
 def check_handle_gt_zero(source: str) -> list[dict]:
@@ -525,15 +555,22 @@ def check_handle_gt_zero(source: str) -> list[dict]:
 
     Entity handles in v2 multiplayer can be negative, so `handle > 0` may
     incorrectly treat valid handles as invalid. Use `handle ~= 0` instead.
+    Excludes variables with names that are clearly not handles (dist, count, etc.).
     """
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
         stripped = _strip_comment(raw_line)
-        if _HANDLE_GT_ZERO_RE.search(stripped):
+        m = _HANDLE_GT_ZERO_RE.search(stripped)
+        if m:
+            var_name = m.group(1)
+            if var_name.startswith("#"):
+                continue  # #table > 0 is a length check, not handle
+            if _is_non_handle_name(var_name):
+                continue
             findings.append(_finding(
                 "HANDLE-GT-ZERO",
                 lineno,
-                "handle > 0 comparison - v2 client handles can be negative; use ~= 0 instead",
+                f"{var_name} > 0 comparison - v2 client handles can be negative; use ~= 0 instead",
                 severity="warn",
             ))
     return findings
@@ -583,11 +620,16 @@ _MAKEHOLE_RE = re.compile(r"\bMakeHole\s*\(")
 
 
 def check_makehole_damage(source: str) -> list[dict]:
-    """Info finding if MakeHole is used.
+    """Info finding if MakeHole is used WITHOUT QueryShot/ApplyPlayerDamage.
 
     MakeHole cannot damage players; guns should use Shoot() instead.
-    Many mods use MakeHole legitimately, so this is informational only.
+    If the file already has QueryShot or ApplyPlayerDamage, MakeHole is
+    presumably used for terrain damage alongside the player damage system
+    — suppress to reduce noise.
     """
+    has_player_damage = bool(re.search(r"\b(QueryShot|ApplyPlayerDamage)\s*\(", source))
+    if has_player_damage:
+        return []
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
         stripped = _strip_comment(raw_line)
@@ -604,11 +646,76 @@ def check_makehole_damage(source: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Check T2-9: Missing keybind hints in HUD
+# Check T2-9: Server-side client-only effects (RC4 desync)
+# ---------------------------------------------------------------------------
+
+_BLOCK_COMMENT_RE = re.compile(r'--\[\[.*?\]\](?:--)?', re.DOTALL)
+
+
+def _strip_block_comments(source: str) -> str:
+    """Replace Lua --[[ ... ]] block comments with empty lines to preserve line numbers."""
+    def _replace_with_newlines(match):
+        return '\n' * match.group(0).count('\n')
+    return _BLOCK_COMMENT_RE.sub(_replace_with_newlines, source)
+
+
+_CLIENT_EFFECT_RE = re.compile(
+    r"\b(SpawnParticle|PlaySound|PlayLoop|PointLight)\s*\("
+)
+
+
+def check_server_side_effects(source: str) -> list[dict]:
+    """Warn if PlaySound/SpawnParticle/PlayLoop/PointLight inside server.* functions.
+
+    These APIs are client-only in v2 multiplayer. When called on the server,
+    they either silently fail or only execute for the host player.
+    Use ClientCall() to notify clients to play effects instead.
+    See docs/MP_DESYNC_PATTERNS.md RC4.
+    """
+    findings = []
+    current_func: str | None = None
+    depth = 0
+
+    cleaned = _strip_block_comments(source)
+
+    for lineno, raw_line in enumerate(cleaned.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        func_match = _FUNC_DEF_RE.match(stripped)
+        opens = _count_opens(stripped)
+        ends = _count_ends(stripped)
+
+        if func_match and depth == 0:
+            current_func = func_match.group(1)
+            depth = 1 + (opens - 1) - ends
+        elif depth > 0:
+            depth += opens - ends
+
+        if depth < 0:
+            depth = 0
+
+        m = _CLIENT_EFFECT_RE.search(stripped)
+        if m and current_func is not None and current_func.startswith("server."):
+            findings.append(_finding(
+                "SERVER-EFFECT",
+                lineno,
+                f"{m.group(1)}() is client-only; found inside {current_func!r} — "
+                f"use ClientCall() to play effects on all clients. "
+                f"See docs/MP_DESYNC_PATTERNS.md RC4",
+                severity="warn",
+            ))
+
+        if depth == 0:
+            current_func = None
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check T2-10: Missing keybind hints in HUD
 # ---------------------------------------------------------------------------
 
 _RAW_SINGLE_KEY_RE = re.compile(r'InputPressed\s*\(\s*"([a-z])"')
-_UI_KEYBIND_HINT_RE = re.compile(r'UiText\s*\(.*(?:LMB|RMB|key|bind|press)', re.IGNORECASE)
+_UI_KEYBIND_HINT_RE = re.compile(r'UiText\s*\(.*(?:LMB|RMB|MMB|Fire|Reload|Options|Press|Hold|Click|key|bind)', re.IGNORECASE)
 
 
 def check_missing_interactive(source: str) -> list[dict]:
@@ -671,6 +778,334 @@ def check_missing_keybind_hints(source: str) -> list[dict]:
     )]
 
 
+# ---------------------------------------------------------------------------
+# Check 18: SetPlayerHealth swapped arguments
+# ---------------------------------------------------------------------------
+
+_SET_PLAYER_HEALTH_RE = re.compile(
+    r"SetPlayerHealth\s*\(\s*([^,)]+)\s*,\s*([^,)]+)"
+)
+
+
+def check_set_player_health_order(source: str) -> list[dict]:
+    """Catch SetPlayerHealth(p, 1) — swapped argument order.
+
+    Correct form: SetPlayerHealth(health, player).
+    If the first argument looks like a variable (not a number literal)
+    and the second looks like a number literal, the args are swapped.
+    """
+    findings = []
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        m = _SET_PLAYER_HEALTH_RE.search(stripped)
+        if not m:
+            continue
+        first_arg = m.group(1).strip()
+        second_arg = m.group(2).strip()
+        # First arg is variable (not number), second arg is number literal
+        first_is_number = re.match(r'^-?\d+\.?\d*$', first_arg) is not None
+        second_is_number = re.match(r'^-?\d+\.?\d*$', second_arg) is not None
+        if not first_is_number and second_is_number:
+            findings.append(_finding(
+                "HEALTH-ARG-ORDER",
+                lineno,
+                f"SetPlayerHealth() first arg is {first_arg!r} (variable), second is {second_arg!r} (number); "
+                f"correct order is SetPlayerHealth(health, player) — value first, player last",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check 19: Server-only functions in client code (generalized)
+# ---------------------------------------------------------------------------
+
+_SERVER_ONLY_FUNCS_RE = re.compile(
+    r"\b(Shoot|MakeHole|Explosion|DisablePlayerInput|DisablePlayer|"
+    r"SetPlayerVelocity|SetPlayerWalkingSpeed|SetPlayerHurtSpeedScale|"
+    r"ApplyBodyImpulse|SetBodyVelocity|SpawnFire|Delete)\s*\("
+)
+
+
+_USER_FUNC_DEF_RE = re.compile(r"^\s*function\s+(\w+)\s*\(")
+
+
+def check_server_only_in_client(source: str) -> list[dict]:
+    """Catch server-only functions (Shoot, MakeHole, Explosion, etc.) in client.* functions.
+
+    These functions are server-only in v2 multiplayer. Calling them from
+    client code either silently fails or causes desyncs.
+    Excludes user-defined functions with the same name (e.g. custom Shoot()).
+    See docs/OFFICIAL_DEVELOPER_DOCS.md § Critical Gotchas #5.
+    """
+    # Pre-scan: collect user-defined function names to exclude
+    user_defined = set()
+    for line in source.splitlines():
+        m = _USER_FUNC_DEF_RE.match(_strip_comment(line))
+        if m:
+            user_defined.add(m.group(1))
+
+    findings = []
+    current_func: str | None = None
+    depth = 0
+
+    cleaned = _strip_block_comments(source)
+
+    for lineno, raw_line in enumerate(cleaned.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        func_match = _FUNC_DEF_RE.match(stripped)
+        opens = _count_opens(stripped)
+        ends = _count_ends(stripped)
+
+        if func_match and depth == 0:
+            current_func = func_match.group(1)
+            depth = 1 + (opens - 1) - ends
+        elif depth > 0:
+            depth += opens - ends
+
+        if depth < 0:
+            depth = 0
+
+        m = _SERVER_ONLY_FUNCS_RE.search(stripped)
+        if m and current_func is not None and current_func.startswith("client."):
+            # Skip SetPlayerTransform — already has its own dedicated check
+            if m.group(1) == "SetPlayerTransform":
+                continue
+            # Skip user-defined functions with same name (not the engine API)
+            if m.group(1) in user_defined:
+                continue
+            findings.append(_finding(
+                "CLIENT-SERVER-FUNC",
+                lineno,
+                f"{m.group(1)}() is server-only; found inside {current_func!r} — "
+                f"move to server.* function or use ServerCall(). "
+                f"See docs/OFFICIAL_DEVELOPER_DOCS.md § Critical Gotchas #5",
+                severity="warn",
+            ))
+
+        if depth == 0:
+            current_func = None
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check 20: Per-tick RPC calls (network flooding)
+# ---------------------------------------------------------------------------
+
+_SERVER_CALL_RE = re.compile(r"\b(ServerCall|ClientCall)\s*\(")
+
+_TICK_FUNC_NAMES = {
+    "server.tick", "server.update", "server.tickPlayer",
+    "client.tick", "client.update", "client.tickPlayer",
+}
+
+
+_INPUT_GUARD_RE = re.compile(
+    r"\bInput(?:Pressed|Down|Released)\s*\("
+)
+
+
+def check_per_tick_rpc(source: str) -> list[dict]:
+    """Warn if ServerCall/ClientCall appear inside tick/update without guards.
+
+    RPC calls in tick/update flood the reliable network channel, causing
+    lag spikes and input delay. Use registry sync (SetFloat with sync=true)
+    for continuous state instead.
+
+    Skips RPC calls guarded by:
+    - InputPressed/InputDown/InputReleased within previous 5 lines (event-driven)
+    - State-change patterns (~= was/old/last/prev) within previous 3 lines (transition-only)
+    See docs/OFFICIAL_DEVELOPER_DOCS.md § Critical Gotchas #8.
+    """
+    findings = []
+    current_func: str | None = None
+    depth = 0
+
+    cleaned = _strip_block_comments(source)
+    lines = cleaned.splitlines()
+
+    state_change_re = re.compile(r"~=\s*(was|old|last|prev)\w*", re.IGNORECASE)
+
+    for lineno, raw_line in enumerate(lines, 1):
+        stripped = _strip_comment(raw_line)
+        func_match = _FUNC_DEF_RE.match(stripped)
+        opens = _count_opens(stripped)
+        ends = _count_ends(stripped)
+
+        if func_match and depth == 0:
+            current_func = func_match.group(1)
+            depth = 1 + (opens - 1) - ends
+        elif depth > 0:
+            depth += opens - ends
+
+        if depth < 0:
+            depth = 0
+
+        m = _SERVER_CALL_RE.search(stripped)
+        if m and current_func is not None and current_func in _TICK_FUNC_NAMES:
+            # Check if guarded by InputPressed/InputDown within 8 lines
+            window_start = max(0, lineno - 9)
+            window = lines[window_start:lineno]
+            has_input_guard = any(
+                _INPUT_GUARD_RE.search(_strip_comment(l)) for l in window
+            )
+            # Check if guarded by state-change pattern within 3 lines
+            sc_window = lines[max(0, lineno - 4):lineno]
+            has_state_change_guard = any(
+                state_change_re.search(_strip_comment(l)) for l in sc_window
+            )
+            if not has_input_guard and not has_state_change_guard:
+                findings.append(_finding(
+                    "PER-TICK-RPC",
+                    lineno,
+                    f"{m.group(1)}() inside {current_func!r} without input guard — "
+                    f"RPC every tick floods the network. "
+                    f"Use SetFloat/SetBool with sync=true for continuous state. "
+                    f"See docs/PER_TICK_RPC_FIX_GUIDE.md for fix patterns",
+                    severity="warn",
+                ))
+
+        if depth == 0:
+            current_func = None
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check 21: Missing #version 2 header
+# ---------------------------------------------------------------------------
+
+_VERSION2_RE = re.compile(r"^\s*#version\s+2\b", re.MULTILINE)
+
+
+def check_missing_version2(source: str) -> list[dict]:
+    """Warn if a script has RegisterTool/server./client. but no #version 2 header.
+
+    Without #version 2, scripts are silently disabled in multiplayer sessions.
+    Excludes include/library files that define (not use) v2 functions.
+    See docs/OFFICIAL_DEVELOPER_DOCS.md § V2 Multiplayer Architecture.
+    """
+    if _VERSION2_RE.search(source):
+        return []
+
+    # Skip files that are include/library files (they define functions, not use them)
+    if re.search(r"^\s*function\s+Players\s*\(", source, re.MULTILINE):
+        return []  # This is the player.lua include itself
+
+    # Only flag if the file looks like it's trying to be a v2 mod
+    # Match function calls (with parens) not function definitions
+    has_v2_patterns = bool(re.search(
+        r"\bfunction\s+(server|client)\.\w+\s*\(|"
+        r"\bRegisterTool\s*\(",
+        source
+    ))
+    if not has_v2_patterns:
+        return []
+
+    return [_finding(
+        "MISSING-VERSION2",
+        1,
+        "Script uses v2 patterns (server.*/client.*/RegisterTool) but has no "
+        "'#version 2' header — script will be SILENTLY DISABLED in multiplayer. "
+        "See docs/OFFICIAL_DEVELOPER_DOCS.md § V2 Multiplayer Architecture",
+    )]
+
+
+# ---------------------------------------------------------------------------
+# Check 22: Shoot() missing playerId/toolId (no kill attribution)
+# ---------------------------------------------------------------------------
+
+_ENGINE_SHOOT_RE = re.compile(r"(?<!\.)\bShoot\s*\(")
+
+
+def _count_top_level_commas(s: str) -> int:
+    """Count commas NOT inside nested parentheses."""
+    depth = 0
+    count = 0
+    in_string = False
+    escape = False
+    for ch in s:
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            count += 1
+    return count
+
+
+def check_shoot_missing_attribution(source: str) -> list[dict]:
+    """Flag Shoot() calls with fewer than 7 args (missing playerId/toolId).
+
+    Full signature: Shoot(pos, dir, type, damage, range, playerId, toolId)
+    Without playerId and toolId, kills show as 'unknown' in the kill feed.
+    Skips user-defined Shoot functions.
+    See docs/OFFICIAL_DEVELOPER_DOCS.md § Weapon & Combat API.
+    """
+    # Pre-scan: skip if user defines their own Shoot function
+    user_defined = set()
+    for line in source.splitlines():
+        m = _USER_FUNC_DEF_RE.match(_strip_comment(line))
+        if m:
+            user_defined.add(m.group(1))
+    if "Shoot" in user_defined:
+        return []
+
+    findings = []
+    cleaned = _strip_block_comments(source)
+    lines = cleaned.splitlines()
+
+    for lineno, raw_line in enumerate(lines, 1):
+        stripped = _strip_comment(raw_line)
+        if not _ENGINE_SHOOT_RE.search(stripped):
+            continue
+
+        # Extract args: everything after "Shoot(" up to matching ")"
+        idx = stripped.find("Shoot(")
+        if idx < 0:
+            continue
+        after = stripped[idx + 6:]  # after "Shoot("
+        # Find matching close paren
+        depth = 1
+        end = -1
+        for i, ch in enumerate(after):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    end = i
+                    break
+        if end < 0:
+            continue  # multi-line call, skip
+
+        args_str = after[:end]
+        num_commas = _count_top_level_commas(args_str)
+        # 7 args = 6 commas; fewer means missing params
+        if num_commas < 6:
+            findings.append(_finding(
+                "SHOOT-NO-ATTRIB",
+                lineno,
+                f"Shoot() has {num_commas + 1} args (expected 7) — missing "
+                f"playerId and/or toolId for kill attribution. "
+                f"See docs/OFFICIAL_DEVELOPER_DOCS.md § Weapon & Combat API",
+                severity="info",
+            ))
+
+    return findings
+
+
 # ===========================================================================
 # Aggregation
 # ===========================================================================
@@ -684,6 +1119,8 @@ TIER1_CHECKS = [
     check_mousedx,
     check_set_player_transform_client,
     check_draw_not_client,
+    check_set_player_health_order,
+    check_missing_version2,
 ]
 
 TIER2_CHECKS = [
@@ -696,8 +1133,30 @@ TIER2_CHECKS = [
     check_handle_gt_zero,
     check_manual_aim,
     check_makehole_damage,
+    check_server_side_effects,
     check_missing_keybind_hints,
+    check_server_only_in_client,
+    check_per_tick_rpc,
+    check_shoot_missing_attribution,
 ]
+
+
+_LINT_OK_RE = re.compile(r'--\s*@lint-ok\s+([\w-]+(?:\s*,\s*[\w-]+)*)')
+
+
+def _lint_suppressions(source: str) -> dict[int, set[str]]:
+    """Extract @lint-ok suppression tags per line.
+
+    Usage in Lua: ``-- @lint-ok SERVER-EFFECT`` on same line suppresses that check.
+    Multiple checks: ``-- @lint-ok SERVER-EFFECT, MANUAL-AIM``
+    """
+    suppressions: dict[int, set[str]] = {}
+    for lineno, line in enumerate(source.splitlines(), 1):
+        m = _LINT_OK_RE.search(line)
+        if m:
+            checks = {c.strip().upper() for c in m.group(1).split(",")}
+            suppressions[lineno] = checks
+    return suppressions
 
 
 def lint_source(source: str, filename: str, tier: str = "all") -> list[dict]:
@@ -711,6 +1170,8 @@ def lint_source(source: str, filename: str, tier: str = "all") -> list[dict]:
 
     Returns a list of finding dicts, each with:
       check, line, severity, file, detail
+
+    Supports ``-- @lint-ok CHECK-ID`` comments to suppress specific checks per line.
     """
     checks = []
     if tier in ("all", "1"):
@@ -721,12 +1182,17 @@ def lint_source(source: str, filename: str, tier: str = "all") -> list[dict]:
         # Backward-compat: unknown tier string → run everything
         checks = TIER1_CHECKS + TIER2_CHECKS
 
+    suppressions = _lint_suppressions(source)
+
     results = []
     for check_fn in checks:
         findings = check_fn(source)
         for f in findings:
             f["file"] = filename
-        results.extend(findings)
+            # Filter suppressed findings
+            line_sups = suppressions.get(f["line"], set())
+            if f["check"].upper() not in line_sups:
+                results.append(f)
     return results
 
 
@@ -736,6 +1202,67 @@ def lint_source(source: str, filename: str, tier: str = "all") -> list[dict]:
 
 import click
 from tools.common import discover_mods, read_lua_files
+
+
+def check_info_txt(mod_dir) -> list[dict]:
+    """Check info.txt for required multiplayer fields.
+
+    Returns findings for missing version=2 or missing required fields.
+    """
+    info_path = mod_dir / "info.txt"
+    if not info_path.exists():
+        return [_finding("MISSING-INFO-TXT", 1, "No info.txt found in mod folder", severity="error")]
+
+    try:
+        content = info_path.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return []
+
+    findings = []
+    lines = content.splitlines()
+    has_version2 = False
+    has_name = False
+
+    for lineno, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if re.match(r"version\s*=\s*2\b", stripped):
+            has_version2 = True
+        if re.match(r"name\s*=\s*.+", stripped):
+            has_name = True
+
+    if not has_name:
+        findings.append({
+            "check": "INFO-MISSING-NAME",
+            "line": 1,
+            "severity": "warn",
+            "file": "info.txt",
+            "detail": "info.txt missing 'name = ...' field",
+        })
+
+    if not has_version2:
+        # Check if any lua file uses v2 patterns (to avoid flagging v1 mods)
+        has_v2_lua = False
+        for lua_file in mod_dir.rglob("*.lua"):
+            try:
+                src = lua_file.read_text(encoding="utf-8", errors="replace")
+                if re.search(r"#version\s+2\b", src):
+                    has_v2_lua = True
+                    break
+            except Exception:
+                pass
+
+        if has_v2_lua:
+            findings.append({
+                "check": "INFO-MISSING-VERSION2",
+                "line": 1,
+                "severity": "error",
+                "file": "info.txt",
+                "detail": "Lua scripts have #version 2 but info.txt lacks 'version = 2' — "
+                          "mod will NOT be recognized as multiplayer-compatible. "
+                          "See docs/OFFICIAL_DEVELOPER_DOCS.md § info.txt Format",
+            })
+
+    return findings
 
 
 @click.command("lint")
@@ -754,8 +1281,19 @@ def lint_cli(mod_name, tier, json_out):
 
     for mod_dir in mods:
         mod_results = []
+
+        # Check info.txt (tier 1)
+        if tier in ("all", "1"):
+            info_findings = check_info_txt(mod_dir)
+            mod_results.extend(info_findings)
+            if any(r["severity"] == "error" for r in info_findings):
+                has_errors = True
+
         for rel_path, source in read_lua_files(mod_dir):
             if rel_path == "options.lua":
+                continue
+            # Skip disabled options files and engine include copies
+            if rel_path.startswith("options") or "/include/" in rel_path or "\\include\\" in rel_path:
                 continue
             file_results = lint_source(source, rel_path, tier=tier)
             mod_results.extend(file_results)

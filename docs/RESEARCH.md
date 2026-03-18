@@ -2,16 +2,21 @@
 
 Research findings for improving mod multiplayer compatibility. Consult before making changes to any mod.
 
+> **NOTE:** For the authoritative, comprehensive reference, see **`docs/OFFICIAL_DEVELOPER_DOCS.md`** — it contains the complete official API sourced directly from teardowngame.com and has the highest authority. This RESEARCH.md file contains our project-specific findings, analysis, and migration notes that go beyond the official docs.
+
 ---
 
-## Research Date: 2026-03-17
+## Research Date: 2026-03-17 (updated 2026-03-18 with authority hierarchy)
 
 ### Sources
 - [Official Teardown MP Modding Guide](https://teardowngame.com/modding-mp/index.html)
-- [Teardown Scripting API 2.0.0 (Experimental)](https://teardowngame.com/experimental/api.html)
+- [Teardown Scripting API](https://www.teardowngame.com/modding/api.html)
+- [Teardown Modding Homepage](https://www.teardowngame.com/modding/)
 - [mplib Documentation](https://tuxedolabsorg.github.io/mplib/)
+- [mplib Source Code](https://github.com/tuxedolabsorg/mplib)
 - [Teardown Multiplayer Blog Post](https://blog.voxagon.se/2026/03/13/teardown-multiplayer.html)
-- Official reference mods: `minigun`, `lasergun`, `smokegun` (in Teardown/mods/)
+- Official reference mods: `minigun`, `lasergun` (in Teardown/mods/)
+- Official game mode: `mpclassics` with full mplib integration
 
 ---
 
@@ -33,7 +38,12 @@ local _, startPoint, endPoint, dir = GetPlayerAimInfo(muzzlePos, maxDist, p)
 
 **Impact:** All gun mods have slightly inaccurate aim in multiplayer because we bypass the engine's aim compensation system.
 
-**Action:** Replace manual `GetPlayerEyeTransform` + `QueryRaycast` aim logic with `GetPlayerAimInfo` in all gun mods.
+**Action:** Replace manual `GetPlayerEyeTransform` + `QueryRaycast` aim logic with `GetPlayerAimInfo` in gun mods that use QueryRaycast for **weapon aiming**.
+
+**Triage (2026-03-17):** Of 18 mods flagged MANUAL-AIM by lint, only mods using QueryRaycast for actual weapon aim need migration. Most use QueryRaycast legitimately for non-aim purposes:
+- **Already migrated:** Airstrike_Arsenal, Lava_Gun, Lightning_Gun, 500_Magnum
+- **Real candidates:** HADOUKEN (energy ball direction), M2A1_Flamethrower (flame direction)
+- **Valid non-aim uses (no migration needed):** AC130_Airstrike_MP (plane camera), Acid_Gun (particle physics), Asteroid_Strike (orbital strike), Bee_Gun (projectile launch), C4 (placement), Charge_Shotgun (recoil), High_Tech_Drone (drone camera), Holy_Grenade (bounce physics), Lightsaber (melee arcs), Magic_Bag (object picker), Molotov_Cocktail (thrown projectile physics), Multiple_Grenade_Launcher (grenade physics), Revengeance_Katana (slash arcs), Rods_from_Gods (area-effect orbital targeting), Swap_Button (target selection), Thruster_Tool (physics tool), Vacuum_Cleaner (suction), Welding_Tool (weld target), Winch (attach target)
 
 ---
 
@@ -57,7 +67,7 @@ Shoot(pos, dir, "bullet", damage, range, p, "toolid")
 
 **Impact:** None of our gun mods can kill other players in multiplayer PvP. `MakeHole` only affects voxels, not players.
 
-**Action:** Replace `MakeHole` with `Shoot()` for all bullet/projectile gun mods (AK-47, M4A1, M1 Garand, P90, Desert Eagle, SCAR-20, SG553, .500 Magnum, Nova Shotgun, Hook Shotgun, Dual Berettas, etc.).
+**Action:** ~~Replace `MakeHole` with `Shoot()` for all bullet/projectile gun mods.~~ **DONE (2026-03-17)** — All gun mods now use `Shoot()` or `QueryShot()` + `ApplyPlayerDamage()` for player damage. MakeHole retained alongside for voxel destruction.
 
 ---
 
@@ -85,7 +95,7 @@ end
 
 **Impact:** Beam/continuous weapons (Laser Cutter, Lightning Gun, Lava Gun, etc.) can't damage players at all.
 
-**Action:** Replace `QueryRaycast` with `QueryShot` for all weapons. Add `ApplyPlayerDamage` for player hits.
+**Action:** ~~Replace `QueryRaycast` with `QueryShot` for all weapons.~~ **DONE (2026-03-17)** — All beam/melee weapons now use QueryShot + ApplyPlayerDamage. 28 gun mods have player damage enabled.
 
 ---
 
@@ -126,7 +136,7 @@ end
 
 **Impact:** Players can't replenish custom weapon ammo from crates on multiplayer maps.
 
-**Action:** Add `SetToolAmmoPickupAmount` to `server.init()` for all weapon mods.
+**Action:** ~~Add `SetToolAmmoPickupAmount` to `server.init()` for all weapon mods.~~ **DONE (2026-03-17)** — All 50 mods have AmmoPickup=Y in audit.
 
 ---
 
@@ -976,7 +986,7 @@ The lasergun loads and plays sounds on the SERVER side (not just client). This i
 
 ### Shoot()
 ```lua
-Shoot(origin, direction, type, strength, maxDist, playerId)
+Shoot(origin, direction, type, strength, maxDist, playerId, toolId)
 ```
 - `origin` (TVec) — world position
 - `direction` (TVec) — unit direction vector
@@ -984,10 +994,11 @@ Shoot(origin, direction, type, strength, maxDist, playerId)
 - `strength` (number, optional) — damage scaling, default 1.0
 - `maxDist` (number, optional) — max range, default 100.0
 - `playerId` (number, optional) — instigating player for kill attribution. Can skip for NPC shots.
+- `toolId` (string, optional) — tool ID for kill feed attribution (e.g., `"minigun"`). Confirmed from official minigun source.
 
 **IMPORTANT:** Does NOT play sound. You must `PlaySound` separately.
 
-**NOTE:** The minigun mod uses 7 args: `Shoot(pos, dir, "bullet", 1.0, 100.0, p, "minigun")` — the 7th arg appears to be the tool ID for kill feed, but the script_defs only shows 6 params. The extra arg may be a newer addition or the toolId is passed differently. Need to test.
+**CONFIRMED:** The 7th arg is the tool ID for kill feed — verified from official minigun mod and our 86 working gun mods. The `playerdied` event's `cause` field receives this value. Script_defs may show only 6 params but the engine accepts 7.
 
 ### QueryShot()
 ```lua

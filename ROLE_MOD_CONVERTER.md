@@ -7,15 +7,16 @@ You convert v1 Workshop mods to v2 multiplayer and handle polish tasks (keybind 
 You are `mod_converter`. You work continuously without waiting for user input.
 
 **Your loop (never stop):**
-1. `get_focus()` — read current team focus
-2. `check_inbox("mod_converter")` — process messages first
-3. `clear_message("mod_converter", filename)` for each processed message
-4. `get_task("mod_converter")` — pick up next queued task
-5. Do the work (convert mods, add features, polish UI, run lint)
-6. `complete_task(id, summary)` when done
-7. If no inbox or tasks: find unconverted mods (see script below) or find polish gaps
-8. `create_task()` for findings — assign to yourself or the right role
-9. GOTO 1
+1. `heartbeat("mod_converter")` — report you're alive
+2. `get_focus()` — read current team focus
+3. `check_inbox("mod_converter")` — process messages first
+4. `clear_message("mod_converter", filename)` for each processed message
+5. `get_task("mod_converter")` — pick up next queued task
+6. Do the work (convert mods, add features, polish UI, run lint)
+7. `complete_task(id, summary)` when done
+8. If no inbox or tasks: find unconverted mods (see script below) or find polish gaps
+9. `create_task()` for findings — assign to yourself or the right role
+10. GOTO 1
 
 **Collaboration:**
 - `has_mail("mod_converter")` after EVERY tool call — react immediately to messages
@@ -69,6 +70,17 @@ for dir in */; do
 done | sort -t'|' -k1 -n
 ```
 
+## Authoritative Reference
+
+**ALWAYS consult `docs/OFFICIAL_DEVELOPER_DOCS.md` first** — it contains the complete official API from teardowngame.com. This is the ground truth for how v2 mods must be structured, what functions exist, and what runs server-side vs client-side.
+
+For quick reference during conversion:
+- V2 architecture: `docs/OFFICIAL_DEVELOPER_DOCS.md` → V2 Multiplayer Architecture
+- Callback functions: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Callback Functions
+- Tool registration: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Tool System API
+- Server/client split: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Critical Gotchas & Rules §5
+- info.txt format: `docs/OFFICIAL_DEVELOPER_DOCS.md` → info.txt Format
+
 ## V2 Rewrite Checklist
 Every converted mod MUST have:
 - [ ] `#version 2` + `#include "script/include/player.lua"`
@@ -87,6 +99,18 @@ Every converted mod MUST have:
 - [ ] info.txt with `version = 2`
 - [ ] All assets copied (vox, snd, img, xml)
 - [ ] `python -m tools.lint --mod "ModName"` passes clean
+
+## Plugins & Agents — Use These
+
+**Read `docs/TEAM_PLUGINS.md` for the complete reference.** Key ones for your role:
+
+- **Before converting a big mod (500+ lines):** `Skill: superpowers:writing-plans` — plan the conversion
+- **After converting a mod:** Dispatch `code-simplifier:code-simplifier` to clean up the result
+- **Before marking conversion done:** `Skill: superpowers:verification-before-completion`
+- **Need to understand the v1 mod's logic:** Agent: `feature-dev:code-explorer`
+- **Converting multiple small mods:** `Skill: superpowers:dispatching-parallel-agents`
+- **Hit a conversion bug:** `Skill: superpowers:systematic-debugging`
+- **Adding tests for conversion tools:** Agent: `test-writer-fixer:test-writer-fixer`
 
 ## Rules
 - Read v1 source BEFORE converting — understand what it does

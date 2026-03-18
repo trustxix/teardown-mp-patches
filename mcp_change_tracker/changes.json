@@ -1,1 +1,554 @@
-{"changes": [], "next_id": 1}
+{
+  "changes": [
+    {
+      "id": 1,
+      "role": "qa_lead",
+      "mod": "Lightning_Gun",
+      "type": "feature_add",
+      "description": "Added O-key options menu with 2 toggles: Disable Fires (skips SpawnFire), Disable Debris Clear (skips debris deletion). Added O-key handler in client.tickPlayer. Updated keybind hints to include O - Options. Menu has UiMakeInteractive, server sync, and close button.",
+      "timestamp": "2026-03-17T19:51:57.715626+00:00",
+      "documented": true
+    },
+    {
+      "id": 2,
+      "role": "qa_lead",
+      "mod": "M2A1_Flamethrower",
+      "type": "feature_add",
+      "description": "Added O-key options menu with Unlimited Ammo toggle. Added O-key handler in client.tickPlayer. Updated keybind hints to include O - Options. Menu has UiMakeInteractive, server sync, close button. Unlimited ammo setting skips ammo depletion on server.",
+      "timestamp": "2026-03-17T19:53:09.488833+00:00",
+      "documented": true
+    },
+    {
+      "id": 3,
+      "role": "qa_lead",
+      "mod": "Minigun",
+      "type": "feature_add",
+      "description": "Added full options system: optionsOpen in createPlayerData, server.setOptionsOpen, O-key toggle, usetool guards on server+client, options menu with No Recoil toggle, keybind hints (LMB Fire, Ctrl Reduce Spread, O Options). UiMakeInteractive + server sync + close button.",
+      "timestamp": "2026-03-17T19:54:30.848534+00:00",
+      "documented": true
+    },
+    {
+      "id": 4,
+      "role": "qa_lead",
+      "mod": "Airstrike_Arsenal",
+      "type": "feature_add",
+      "description": "Added OptionsMenu (O key) with No Cooldown toggle, OptionsGuard on usetool and mode cycling, updated keybind hints",
+      "timestamp": "2026-03-17T20:35:41.182520+00:00",
+      "documented": true
+    },
+    {
+      "id": 5,
+      "role": "qa_lead",
+      "mod": "Attack_Drone",
+      "type": "feature_add",
+      "description": "Added OptionsMenu (O key) with Unlimited Ammo toggle, OptionsGuard on usetool (both server+client) and all control toggles",
+      "timestamp": "2026-03-17T20:37:03.316877+00:00",
+      "documented": true
+    },
+    {
+      "id": 6,
+      "role": "docs_keeper",
+      "mod": "project",
+      "type": "doc_update",
+      "description": "Cross-referenced ISSUES_AND_FIXES rules against CLAUDE.md. Added 4 new rules to CLAUDE.md V2 section (rules 21-24: preserve rotation during freeze, ClientCall for state sync, getOptions pattern, optionsOpen server sync). Fixed duplicate numbering in ISSUES_AND_FIXES Key Rules, updated header from '32 issues' to '37 issues', added 2 missing key rules (17-18: freeze rotation, QueryShot for player damage).",
+      "timestamp": "2026-03-17T20:37:05.336714+00:00",
+      "documented": true
+    },
+    {
+      "id": 7,
+      "role": "mod_converter",
+      "mod": "tools/audit.py",
+      "type": "bug_fix",
+      "description": "Fixed _AMMO_DISPLAY_RE regex: \\w+ \u2192 [\\w-]+ to match hyphenated tool IDs (e.g. cresta-chargeshotgun). Was causing false negatives for 5+ mods in the AmmoDisplay audit column.",
+      "timestamp": "2026-03-17T20:38:00.246057+00:00",
+      "documented": true
+    },
+    {
+      "id": 8,
+      "role": "qa_lead",
+      "mod": "ODM_Gear",
+      "type": "feature_add",
+      "description": "Added OptionsMenu (O key) with weapon mode toggle and grapple power display, OptionsGuard on all keybinds (LMB/RMB/Ctrl/Space/Shift/arrows)",
+      "timestamp": "2026-03-17T20:38:13.972391+00:00",
+      "documented": true
+    },
+    {
+      "id": 9,
+      "role": "mod_converter",
+      "mod": "Charge_Shotgun",
+      "type": "polish",
+      "description": "Added keybind hints block in client.draw() showing Hold LMB - Charge, Release - Fire, O - Options.",
+      "timestamp": "2026-03-17T20:39:38.552883+00:00",
+      "documented": true
+    },
+    {
+      "id": 10,
+      "role": "qa_lead",
+      "mod": "tools/audit.py",
+      "type": "tool_update",
+      "description": "Improved OptionsGuard detection (early-return pattern), added @audit-ok suppression for false positives (e.g. -- @audit-ok AimInfo)",
+      "timestamp": "2026-03-17T20:45:54.581290+00:00",
+      "documented": true
+    },
+    {
+      "id": 11,
+      "role": "docs_keeper",
+      "mod": "project",
+      "type": "doc_update",
+      "description": "Updated docs/RESEARCH.md Finding #1: added AimInfo triage results from T18. Documented which of 18 MANUAL-AIM flagged mods truly need migration (only HADOUKEN, M2A1_Flamethrower) vs valid non-aim QueryRaycast uses (14 mods). Updated CLAUDE.md test count 181\u2192251, lint check count 17\u219218. Synced TASK_QUEUE.md with MCP task store (added T16-T21, D1-D3, S3-S4, updated B1 as done).",
+      "timestamp": "2026-03-17T20:46:02.877896+00:00",
+      "documented": true
+    },
+    {
+      "id": 12,
+      "role": "mod_converter",
+      "mod": "Welding_Tool",
+      "type": "feature_add",
+      "description": "Added OptionsMenu UI panel with Teleport Weld and Grab Remove Welds toggles. Added O key toggle in client.tickPlayer() with early-return guard. Updated keybind hints to include O - Options.",
+      "timestamp": "2026-03-17T20:46:29.245299+00:00",
+      "documented": true
+    },
+    {
+      "id": 13,
+      "role": "mod_converter",
+      "mod": "Winch",
+      "type": "feature_add",
+      "description": "Added OptionsMenu UI panel with Speed and Strength +/- controls (reads/writes savegame.mod.winch.speed and savegame.mod.winch.strength). Added O key toggle with early-return guard on LMB/L/P/DEL inputs. Updated keybind hints.",
+      "timestamp": "2026-03-17T20:46:31.102468+00:00",
+      "documented": true
+    },
+    {
+      "id": 14,
+      "role": "mod_converter",
+      "mod": "Magic_Bag",
+      "type": "polish",
+      "description": "Added keybind hints in client.draw(): LMB - Pick Up Object, RMB Hold - Charge Throw, RMB Release - Throw.",
+      "timestamp": "2026-03-17T20:47:50.800417+00:00",
+      "documented": true
+    },
+    {
+      "id": 15,
+      "role": "mod_converter",
+      "mod": "tools/audit.py",
+      "type": "bug_fix",
+      "description": "Improved _options_guard() to detect early-return and block guards before ANY input call (not just usetool). Fixes false negatives for ODM_Gear, Winch, and other mods using lmb/rmb instead of usetool.",
+      "timestamp": "2026-03-17T20:48:32.938970+00:00",
+      "documented": true
+    },
+    {
+      "id": 16,
+      "role": "qa_lead",
+      "mod": "HADOUKEN",
+      "type": "api_migration",
+      "description": "Migrated aim from GetPlayerEyeTransform+forward vector to GetPlayerAimInfo on both server and client for proper crosshair targeting",
+      "timestamp": "2026-03-17T20:48:49.721551+00:00",
+      "documented": true
+    },
+    {
+      "id": 17,
+      "role": "qa_lead",
+      "mod": "M2A1_Flamethrower",
+      "type": "api_migration",
+      "description": "Migrated aim from GetPlayerEyeTransform+forward vector to GetPlayerAimInfo from muzzle position for proper crosshair targeting",
+      "timestamp": "2026-03-17T20:49:55.664409+00:00",
+      "documented": true
+    },
+    {
+      "id": 18,
+      "role": "docs_keeper",
+      "mod": "project",
+      "type": "doc_update",
+      "description": "Fixed 2 dangerous errors in docs/V2_SYNC_PATTERNS.md: (1) Example code used goto/::continue:: which doesn't exist in Lua 5.1 \u2014 replaced with if/then/end pattern. (2) Listed InputPressed(\"rmb\", p) as auto-synced input \u2014 this FAILS SILENTLY per Issue #7. Added warning pointing to CLAUDE.md Rule 10 and the correct client+ServerCall pattern.",
+      "timestamp": "2026-03-17T20:50:00.584827+00:00",
+      "documented": true
+    },
+    {
+      "id": 19,
+      "role": "mod_converter",
+      "mod": "tools/fix.py",
+      "type": "bug_fix",
+      "description": "Added _NON_HANDLE_NAMES exclusion set to fix_handle_gt() so it skips non-handle variables (dist, count, fireCount, etc.). Prevents semantic-breaking changes like dist > 0 \u2192 dist ~= 0 in Fire_Locator. Updated test to assert correct behavior.",
+      "timestamp": "2026-03-17T20:50:06.502641+00:00",
+      "documented": true
+    },
+    {
+      "id": 20,
+      "role": "api_surgeon",
+      "mod": "Charge_Shotgun",
+      "type": "feature_add",
+      "description": "Added OptionsMenu + OptionsGuard: optionsOpen in createPlayerData, server.setOptionsOpen sync, O-key toggle, not data.optionsOpen guard on charge/fire inputs (server+client), UiMakeInteractive options panel with Unlimited Ammo toggle + Close button.",
+      "timestamp": "2026-03-17T20:57:27.553973+00:00",
+      "documented": true
+    },
+    {
+      "id": 21,
+      "role": "api_surgeon",
+      "mod": "Dragonslayer",
+      "type": "feature_add",
+      "description": "Added OptionsMenu + OptionsGuard: optionsOpen in createPlayerData, server.setOptionsOpen sync, O-key toggle, not data.optionsOpen guard on usetool/jump/rmb inputs (server+client), options panel with Unlimited Ammo toggle + Close button.",
+      "timestamp": "2026-03-17T20:57:28.962270+00:00",
+      "documented": true
+    },
+    {
+      "id": 22,
+      "role": "api_surgeon",
+      "mod": "HADOUKEN",
+      "type": "feature_add",
+      "description": "Added OptionsMenu + OptionsGuard + client.draw(): optionsOpen in createPlayerData, server.setOptionsOpen sync, O-key toggle, guards on usetool + rmb (server+client), new client.draw() with options panel.",
+      "timestamp": "2026-03-17T20:57:30.689267+00:00",
+      "documented": true
+    },
+    {
+      "id": 23,
+      "role": "api_surgeon",
+      "mod": "Lightkatana",
+      "type": "feature_add",
+      "description": "Added OptionsMenu + OptionsGuard: optionsOpen in createPlayerData, server.setOptionsOpen sync, O-key toggle, guards on usetool/jump/rmb/hold-stance (server+client), options panel with Unlimited Ammo toggle + Close.",
+      "timestamp": "2026-03-17T20:57:32.211757+00:00",
+      "documented": true
+    },
+    {
+      "id": 24,
+      "role": "api_surgeon",
+      "mod": "Lightsaber",
+      "type": "feature_add",
+      "description": "Added OptionsMenu + OptionsGuard: optionsOpen in createPlayerData, server.setOptionsOpen sync, O-key toggle, guards on usetool pressed/down + rmb + hold-stance (server+client), options panel. Updated keybind hints with O - Options.",
+      "timestamp": "2026-03-17T20:57:33.344775+00:00",
+      "documented": true
+    },
+    {
+      "id": 25,
+      "role": "api_surgeon",
+      "mod": "Asteroid_Strike",
+      "type": "feature_add",
+      "description": "Added OptionsMenu + OptionsGuard: optionsOpen in createPlayerData, server.setOptionsOpen sync, O-key toggle, guards on usetool (server+client), options panel. Updated keybind hints with O - Options.",
+      "timestamp": "2026-03-17T20:57:34.133109+00:00",
+      "documented": true
+    },
+    {
+      "id": 26,
+      "role": "mod_converter",
+      "mod": "docs/AUDIT_REPORT.md",
+      "type": "tool_update",
+      "description": "Regenerated AUDIT_REPORT.md with fixed audit regexes (AmmoDisplay hyphen fix, OptionsGuard early-return detection). Zero X flags across all 50 mods.",
+      "timestamp": "2026-03-17T21:16:38.689060+00:00",
+      "documented": true
+    },
+    {
+      "id": 27,
+      "role": "api_surgeon",
+      "mod": "Dragonslayer",
+      "type": "bug_fix",
+      "description": "Fixed SetPlayerHealth argument order: was SetPlayerHealth(p, 1) which passes player ID as health value. Corrected to SetPlayerHealth(1, p). In multiplayer, the old code would set player 1's health to the wielder's player ID instead of making the wielder invincible.",
+      "timestamp": "2026-03-17T21:17:10.203021+00:00",
+      "documented": true
+    },
+    {
+      "id": 28,
+      "role": "api_surgeon",
+      "mod": "Lightkatana",
+      "type": "bug_fix",
+      "description": "Fixed SetPlayerHealth argument order: was SetPlayerHealth(p, 1) which passes player ID as health value. Corrected to SetPlayerHealth(1, p). Same multiplayer bug as Dragonslayer.",
+      "timestamp": "2026-03-17T21:17:10.327989+00:00",
+      "documented": true
+    },
+    {
+      "id": 29,
+      "role": "api_surgeon",
+      "mod": "Acid_Gun",
+      "type": "api_migration",
+      "description": "Added QueryShot + ApplyPlayerDamage to corrosion loop. Acid particles now damage players within 0.4m radius, throttled to doHole1 rate (~1/sec). Damage: 0.15 * corrosionPower * hitFactor. Removed @audit-ok Shoot suppression.",
+      "timestamp": "2026-03-17T21:28:17.432207+00:00",
+      "documented": true
+    },
+    {
+      "id": 30,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "Added Tier 1 lint rule HEALTH-ARG-ORDER: detects SetPlayerHealth(p, value) swapped argument order. Correct form is SetPlayerHealth(health, player). Catches silent MP bug where wrong player gets wrong health value.",
+      "timestamp": "2026-03-17T21:30:15.742473+00:00",
+      "documented": true
+    },
+    {
+      "id": 31,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "Improved MAKEHOLE-DAMAGE lint rule: now suppresses INFO when QueryShot or ApplyPlayerDamage is present in the same file. Reduces noise from 61 findings to 16 (only 5 mods that genuinely lack player damage). Also added HEALTH-ARG-ORDER Tier 1 rule for SetPlayerHealth swapped arguments.",
+      "timestamp": "2026-03-17T21:33:33.470473+00:00",
+      "documented": true
+    },
+    {
+      "id": 32,
+      "role": "qa_lead",
+      "mod": "Remote_Explosives",
+      "type": "conversion",
+      "description": "Full v2 conversion from workshop 3621598329. Fixed: GetAddedPlayers\u2192PlayersAdded, GetAllPlayers\u2192Players, raw key InputPressed(\"rmb\",p)\u2192isLocal+ServerCall, added createPlayerData, OptionsMenu, OptionsGuard, keybind hints, ammo display",
+      "timestamp": "2026-03-17T21:41:00.250790+00:00",
+      "documented": true
+    },
+    {
+      "id": 33,
+      "role": "qa_lead",
+      "mod": "Tripmine",
+      "type": "polish",
+      "description": "Installed from workshop 3662075963 (already v2). Added ammo display hiding, ammo HUD, keybind hints. Removed empty stubs.",
+      "timestamp": "2026-03-17T21:41:02.109171+00:00",
+      "documented": true
+    },
+    {
+      "id": 34,
+      "role": "qa_lead",
+      "mod": "Rods_from_Gods",
+      "type": "conversion",
+      "description": "Full v2 conversion from workshop 3633035942. Added player.lua include, PlayersAdded/Removed/Players loops, createPlayerData, proper isLocal+ServerCall for raw keys, OptionsMenu, keybind hints, fixed client.draw signature. Uses shared table for cross-player strike visibility.",
+      "timestamp": "2026-03-17T21:44:49.724182+00:00",
+      "documented": true
+    },
+    {
+      "id": 35,
+      "role": "qa_lead",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "Fixed HANDLE-GT-ZERO false positive: #table > 0 (table length) is now excluded since table lengths are always non-negative",
+      "timestamp": "2026-03-17T21:44:51.237100+00:00",
+      "documented": true
+    },
+    {
+      "id": 36,
+      "role": "qa_lead",
+      "mod": "Molotov_Cocktail",
+      "type": "conversion",
+      "description": "Installed from workshop 2424838731 (mostly v2). Fixed: InputPressed(\"lmb\",id)\u2192InputPressed(\"usetool\",id), added SetToolAmmo in PlayersAdded, SetToolAmmoPickupAmount, ammo.display hiding, keybind hints in client.draw",
+      "timestamp": "2026-03-17T21:48:20.194378+00:00",
+      "documented": true
+    },
+    {
+      "id": 37,
+      "role": "api_surgeon",
+      "mod": "M249",
+      "type": "bug_fix",
+      "description": "Fixed Lua compile error: extra `end` in client.draw() after options menu return. The ammo display block had a dangling end with no matching block opener. Removed extra end, fixed indentation.",
+      "timestamp": "2026-03-17T21:54:22.717977+00:00",
+      "documented": true
+    },
+    {
+      "id": 38,
+      "role": "api_surgeon",
+      "mod": "M4A1",
+      "type": "bug_fix",
+      "description": "Fixed Lua compile error: extra `end` in client.draw() after options menu return. Same bug as M249 \u2014 dangling end with no matching block opener. Removed extra end, fixed indentation.",
+      "timestamp": "2026-03-17T21:54:23.800683+00:00",
+      "documented": true
+    },
+    {
+      "id": 39,
+      "role": "api_surgeon",
+      "mod": "TEARDOWN_V2_API_REFERENCE.md",
+      "type": "doc_update",
+      "description": "Fixed wrong argument order for 5 SetPlayer* functions: SetPlayerTransform, SetPlayerTransformWithPitch, SetPlayerVelocity, SetPlayerGroundVelocity, SetPlayerHealth. All changed from (playerId, value) to (value, playerId) matching the actual v2 API pattern where player param is always last.",
+      "timestamp": "2026-03-17T21:54:26.217434+00:00",
+      "documented": true
+    },
+    {
+      "id": 40,
+      "role": "mod_converter",
+      "mod": "Charge_Shotgun",
+      "type": "bug_fix",
+      "description": "Added GetPlayerVehicle(p) ~= 0 check to client.draw() tool guard. HUD no longer renders while driving.",
+      "timestamp": "2026-03-17T21:55:06.308461+00:00",
+      "documented": true
+    },
+    {
+      "id": 41,
+      "role": "mod_converter",
+      "mod": "tests/test_lint.py",
+      "type": "tool_update",
+      "description": "Added 7 tests for HEALTH-ARG-ORDER lint rule (check_set_player_health_order). Covers: swapped args detection, correct order, two variables, two numbers, float literals, comments, line numbers.",
+      "timestamp": "2026-03-17T21:56:22.331403+00:00",
+      "documented": true
+    },
+    {
+      "id": 42,
+      "role": "mod_converter",
+      "mod": "Liquify",
+      "type": "conversion",
+      "description": "Full v2 MP conversion from v1 workshop mod (ID 2782511908, 379 lines). Features: server-authoritative voxel spawning via Spawn/Delete, per-player voxel tracking with cleanup on disconnect, zero-gravity mode with body impulses, options menu with voxel limit slider and draw hand toggle (savegame settings), keybind hints, vehicle guard. Simplified animation system (removed complex finger keyframes for MP compatibility). Lint clean, audit clean.",
+      "timestamp": "2026-03-17T22:00:41.980797+00:00",
+      "documented": true
+    },
+    {
+      "id": 43,
+      "role": "api_surgeon",
+      "mod": "TEARDOWN_V2_API_REFERENCE.md",
+      "type": "doc_update",
+      "description": "Fixed wrong signatures for 4 more critical API functions: ApplyPlayerDamage (added toolId + attackerId params), Shoot (fixed all 7 param names), QueryShot (fixed 5 params + 6 returns including player/hitFactor), GetPlayerAimInfo (fixed from 1 arg to 3 args + correct returns). Total 9 API functions corrected this session.",
+      "timestamp": "2026-03-18T00:06:44.874946+00:00",
+      "documented": false
+    },
+    {
+      "id": 44,
+      "role": "mod_converter",
+      "mod": "MEGAGUN",
+      "type": "conversion",
+      "description": "Full v2 MP conversion from v1 workshop mod (ID 2497213038, 483 lines). Features: 3 ammo types (7.62mm/20mm/Mini nuke), 6-barrel rotation with wind-up/down state machine, per-player ammo management with belt-fed reload, recoil oscillation physics, PvP damage via QueryShot+ApplyPlayerDamage, options menu with unlimited ammo toggle, keybind hints, ammo display HUD. Server handles: projectile damage, state machine, ammo tracking. Client handles: barrel spin visual, tracers, sounds, recoil animation.",
+      "timestamp": "2026-03-18T00:08:35.150721+00:00",
+      "documented": false
+    },
+    {
+      "id": 45,
+      "role": "mod_converter",
+      "mod": "tools/lint.py",
+      "type": "bug_fix",
+      "description": "Added direction, numBelts, reloadTimer, cooldownTimer, recoilStrength, strength, volume, intensity, temperature, frequency to _NON_HANDLE_NAMES. Also synced to fix.py. Updated _UI_KEYBIND_HINT_RE to match Reload/Options/Fire/Hold/Click patterns (was only matching LMB/RMB/key/bind/press).",
+      "timestamp": "2026-03-18T00:08:38.236265+00:00",
+      "documented": false
+    },
+    {
+      "id": 46,
+      "role": "mod_converter",
+      "mod": "CnC_Weather_Machine",
+      "type": "polish",
+      "description": "Installed from workshop (ID 2531655676, already v2 by NLferdiNL). Fixed: added SetToolAmmoPickupAmount, SetString ammo.display, SetToolAmmo in PlayersAdded, tool group number. Fixed options_disabled.lua draw() \u2192 client.draw(). Added HANDLE-GT-ZERO exclusions for weather-specific variables.",
+      "timestamp": "2026-03-18T00:12:45.436143+00:00",
+      "documented": false
+    },
+    {
+      "id": 47,
+      "role": "mod_converter",
+      "mod": "Shape_Collapsor",
+      "type": "polish",
+      "description": "Installed from workshop (ID 2643910768, already v2 by NLferdiNL). Fixed: 5 RAW-KEY-PLAYER bugs in textbox.lua (InputPressed with 0 player param \u2192 removed param), added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display, fixed draw() \u2192 client.draw() in dead options file, used string literal for SetToolEnabled.",
+      "timestamp": "2026-03-18T00:15:05.749301+00:00",
+      "documented": false
+    },
+    {
+      "id": 48,
+      "role": "mod_converter",
+      "mod": "Jackhammer",
+      "type": "polish",
+      "description": "Installed from workshop (ID 3628059485, v2 by Tortoise Work). Fixed: 3 GetAllPlayers()+ipairs bugs \u2192 proper PlayersAdded/PlayersRemoved/Players iterators, added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display, used string literal for SetToolEnabled, added PlayersRemoved cleanup, removed backup directory with old v1 code.",
+      "timestamp": "2026-03-18T00:17:09.073309+00:00",
+      "documented": false
+    },
+    {
+      "id": 49,
+      "role": "mod_converter",
+      "mod": "Ion_Cannon_Beacon",
+      "type": "polish",
+      "description": "Installed from workshop (ID 2511805965, already v2 by NLferdiNL). Fixed: 3 RAW-KEY-PLAYER bugs (InputDown lmb/rmb with player param \u2192 removed param), added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display.",
+      "timestamp": "2026-03-18T00:19:54.313676+00:00",
+      "documented": false
+    },
+    {
+      "id": 50,
+      "role": "mod_converter",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "Refactored HANDLE-GT-ZERO detection: replaced growing _NON_HANDLE_NAMES set with _is_non_handle_name() function that checks exact names + suffix patterns (Timer, Count, Speed, Offset, etc.). Eliminates need to add specific variable names every time a new mod is installed. fix.py now imports from lint.py (single source of truth).",
+      "timestamp": "2026-03-18T00:19:57.877406+00:00",
+      "documented": false
+    },
+    {
+      "id": 51,
+      "role": "mod_converter",
+      "mod": "Object_Possession",
+      "type": "polish",
+      "description": "Installed from workshop (ID 2562082522, already v2 by NLferdiNL). Fixed: 5 RAW-KEY-PLAYER bugs in textbox.lua (InputPressed with 0 player param), draw() \u2192 client.draw() in options_disabled.lua, toolName variable \u2192 string literal in SetToolEnabled, added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display.",
+      "timestamp": "2026-03-18T00:23:11.804333+00:00",
+      "documented": false
+    },
+    {
+      "id": 52,
+      "role": "mod_converter",
+      "mod": "Drivable_Plane",
+      "type": "polish",
+      "description": "Installed from workshop (ID 2649954750, already v2 by NLferdiNL). Fixed: mousedx/mousedy \u2192 camerax/cameray (v2 API change), 5 RAW-KEY-PLAYER bugs in textbox.lua, draw() \u2192 client.draw(), toolName \u2192 string literal, added ammo setup.",
+      "timestamp": "2026-03-18T00:24:46.709708+00:00",
+      "documented": false
+    },
+    {
+      "id": 53,
+      "role": "mod_converter",
+      "mod": "Bomb_Attack",
+      "type": "polish",
+      "description": "Installed from workshop (ID 3656255489, already v2 by Mr.Baby). Fixed: replaced SetToolEnabled(id, true, 0) with proper PlayersAdded loop, added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display.",
+      "timestamp": "2026-03-18T00:26:03.791202+00:00",
+      "documented": false
+    },
+    {
+      "id": 54,
+      "role": "mod_converter",
+      "mod": "Guided_Missile",
+      "type": "bug_fix",
+      "description": "MP DESYNC FIX: Gated client-side missile physics (position updates, steering, effects) with isLocal. Was running for ALL players causing duplicate computation + desync. Also fixed InputValue(\"camerax\", p) \u2192 InputValue(\"camerax\") (no player param needed for camera input).",
+      "timestamp": "2026-03-18T02:51:12.612954+00:00",
+      "documented": false
+    },
+    {
+      "id": 55,
+      "role": "docs_keeper",
+      "mod": "project",
+      "type": "doc_update",
+      "description": "MP Desync Sprint docs complete: created docs/MP_DESYNC_PATTERNS.md (6 root causes with fix patterns), added CLAUDE.md rules 26-30, added ISSUES_AND_FIXES Issue #43, updated key rules (now 25), updated MASTER_MOD_LIST (63 mods, Batches 5-6), added MP_DESYNC_PATTERNS to reference docs table.",
+      "timestamp": "2026-03-18T02:52:07.462433+00:00",
+      "documented": false
+    },
+    {
+      "id": 56,
+      "role": "api_surgeon",
+      "mod": "Attack_Drone",
+      "type": "bug_fix",
+      "description": "MP desync fix: wrapped client projectile loop (ClientProjectileOperations) with IsPlayerLocal(p) guard. Was running QueryRaycast+DrawLine+SpawnParticle for every player's projectiles on every client \u2014 now only runs for local player.",
+      "timestamp": "2026-03-18T02:55:03.771064+00:00",
+      "documented": false
+    },
+    {
+      "id": 57,
+      "role": "api_surgeon",
+      "mod": "Jackhammer",
+      "type": "bug_fix",
+      "description": "Fixed ApplyPlayerDamage(victim, 0.25) \u2192 ApplyPlayerDamage(victim, 0.25, \"jackhammer\", attacker) at line 165. Adds toolId for kill feed attribution and attacker param for kill tracking. Was the only mod in the project missing these params.",
+      "timestamp": "2026-03-18T18:44:54.139108+00:00",
+      "documented": false
+    },
+    {
+      "id": 58,
+      "role": "api_surgeon",
+      "mod": "Shape_Collapsor",
+      "type": "tool_update",
+      "description": "Fixed audit false negative: _AMMO_DISPLAY_RE in tools/audit.py now matches concatenated SetString keys (e.g., \"game.tool.\" .. toolName .. \".ammo.display\"). Shape_Collapsor already had AmmoDisplay but audit couldn't detect it. No mod code changed \u2014 audit regex broadened. 309 tests pass.",
+      "timestamp": "2026-03-18T18:48:16.345883+00:00",
+      "documented": false
+    },
+    {
+      "id": 59,
+      "role": "api_surgeon",
+      "mod": "Airstrike_Arsenal",
+      "type": "bug_fix",
+      "description": "Added playerId (p) and toolId (\"BarrageStrike\") to 5 Shoot() calls in server.executeStrike (lines 159, 169, 179, 196, 206). Airstrike kills now have proper kill feed attribution across all 5 modes (Barrage, Carpet Bomb, Napalm, Cluster, Precision).",
+      "timestamp": "2026-03-18T18:50:38.768549+00:00",
+      "documented": false
+    },
+    {
+      "id": 60,
+      "role": "api_surgeon",
+      "mod": "Bomb_Attack",
+      "type": "bug_fix",
+      "description": "Added playerId (0) and toolId (\"bombattack\") to 2 Shoot() calls in server.tick (lines 101, 121). Bomb Attack kills from bullet mode now show in kill feed.",
+      "timestamp": "2026-03-18T18:50:40.088801+00:00",
+      "documented": false
+    },
+    {
+      "id": 61,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "rule_add",
+      "description": "Added SHOOT-NO-ATTRIB lint rule (Check 22, INFO tier): flags Shoot() calls with fewer than 7 args (missing playerId/toolId for kill attribution). Uses negative lookbehind to skip user-defined qualified methods like server.Shoot(). Includes robust top-level comma counter for nested Vec() args. 309 tests pass, 0 findings (all fixed).",
+      "timestamp": "2026-03-18T18:52:55.324596+00:00",
+      "documented": false
+    }
+  ],
+  "next_id": 62
+}

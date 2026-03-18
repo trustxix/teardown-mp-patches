@@ -2,7 +2,7 @@
 
 All resolved bugs and the rules derived from them. Consult before making changes. Append after fixing new issues.
 
-## Key Rules (condensed from all 32 issues)
+## Key Rules (condensed from all 46 issues)
 
 1. NEVER use `goto` or `::label::` (Lua 5.1 only)
 2. NEVER use raw key names with player parameter - use ServerCall pattern
@@ -19,7 +19,16 @@ All resolved bugs and the rules derived from them. Consult before making changes
 13. Gate tool input with `not data.optionsOpen` on BOTH server AND client
 14. Sync `optionsOpen` to server via `server.setOptionsOpen` ServerCall
 15. ALWAYS call `UiMakeInteractive()` before `UiPush()` in options menus
-15. ALWAYS edit files in `C:/Users/trust/Documents/Teardown/mods/` - NEVER the patches repo
+16. ALWAYS edit files in `C:/Users/trust/Documents/Teardown/mods/` - NEVER the patches repo
+17. When freezing player position (scope/flycam), ALWAYS preserve rotation
+18. Melee/projectile weapons MUST use `QueryShot()` + `ApplyPlayerDamage()` — `MakeHole()` is voxel-only
+19. Never have two mods registering the same tool ID — remove v1 when v2 rewrite exists
+20. `SetPlayerHealth(health, player)` — health FIRST, player SECOND (reverse silently affects wrong player)
+21. Gate client projectile physics with `IsPlayerLocal(p)` — never simulate for remote players
+22. Use registry sync for continuous state, `ServerCall`/`ClientCall` for events only
+23. Throttle `FindShapes()`/`QueryAabb()` to ≤4Hz — never per-tick per-player
+24. `PlaySound()`/`SpawnParticle()` are CLIENT-ONLY — never call on server
+25. `QueryShot()` + `ApplyPlayerDamage()` on SERVER — client uses `QueryRaycast()` for visuals
 
 > **Note:** Issues #1-19 were resolved in earlier sessions. Their rules are captured above. Detailed entries for #1-19 are no longer available but all patterns are encoded in the lint tool (`python -m tools.lint`).
 
@@ -295,3 +304,212 @@ end
 **RULE: Any in-game menu with clickable elements (UiTextButton, UiSlider, etc.) MUST call `UiMakeInteractive()` before any `UiPush()`. Without it, buttons render but don't respond to clicks.**
 
 **Date fixed:** 2026-03-17
+
+---
+
+## Issue #36: 4 melee/projectile mods couldn't damage players in multiplayer
+
+**Symptom:** Dragonslayer, HADOUKEN, Revengeance_Katana, and Scorpion could destroy voxels but never damaged other players in PvP.
+
+**Root cause:** All 4 mods used `MakeHole()` for damage. `MakeHole()` only affects voxels — it cannot damage players. The v2 API requires `QueryShot()` + `ApplyPlayerDamage()` (or `Shoot()`) to register player hits.
+
+**Fix:** Added `QueryShot()` + `ApplyPlayerDamage()` to each mod's attack path:
+- **Dragonslayer:** QueryShot on swing path, radius 1.0
+- **HADOUKEN:** QueryShot on energy ball projectile movement path, radius 0.5
+- **Revengeance_Katana:** QueryShot on both slash arms with per-slash hit tracking
+- **Scorpion:** QueryShot on both punch hit and hook projectile
+
+MakeHole retained alongside QueryShot for voxel destruction.
+
+**RULE: Melee/projectile weapons that need to damage players MUST use `QueryShot()` + `ApplyPlayerDamage()`. `MakeHole()` is voxel-only and cannot hurt players.**
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Issue #37: 3 gun mods missing options menus (Lightning_Gun, M2A1_Flamethrower, Minigun)
+
+**Symptom:** Lightning_Gun, M2A1_Flamethrower, and Minigun had configurable settings but no in-game UI to change them.
+
+**Root cause:** These mods were missed during the earlier options menu rollout (Issues #33-34).
+
+**Fix:** Added O-key options menus following the standard pattern:
+- **Lightning_Gun:** 2 toggles — Disable Fires (skips SpawnFire), Disable Debris Clear (skips debris deletion)
+- **M2A1_Flamethrower:** Unlimited Ammo toggle
+- **Minigun:** No Recoil toggle
+
+All include: `optionsOpen` in `createPlayerData()`, `server.setOptionsOpen()` for server sync, `not data.optionsOpen` guards on usetool (server + client), `UiMakeInteractive()`, close button, `[O] Options` keybind hint.
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Milestone: Zero X Flags — Full Feature Compliance (2026-03-17)
+
+**Achievement:** All 50 mods pass audit with zero X (wrong-pattern) flags. Tier 1 lint: 0 findings across all 50 mods.
+
+**What was resolved to reach this point:**
+- 14 MANUAL-AIM flags triaged: 4 migrated to GetPlayerAimInfo (Airstrike_Arsenal, Lava_Gun, Lightning_Gun, HADOUKEN, M2A1_Flamethrower), 11 suppressed as valid non-aim QueryRaycast uses via `@audit-ok`
+- 1 MISSING-SHOOT flag resolved (Acid_Gun — particle physics, not standard gun pattern)
+- OptionsMenu + OptionsGuard added to 30+ mods across Issues #33-35, #37
+- 2 audit tool bugs fixed (AmmoDisplay regex for hyphenated IDs, OptionsGuard early-return detection)
+
+**Remaining polish (no X flags, all optional):**
+- OptionsMenu for utility mods without savegame settings (Swap_Button, Thruster_Tool, Asteroid_Strike, Magic_Bag)
+- KeybindRemap in 45/50 mods (only 5 have it — low priority)
+- fix.py handle_gt false positive (T23)
+
+---
+
+## Issue #38: .500_Magnum and 500_Magnum tool ID conflict
+
+**Symptom:** Both `.500_Magnum/main.lua` and `500_Magnum/main.lua` register tool ID `"500magnum"`. This causes undefined behavior — the engine may load either mod's tool depending on order, or one may shadow the other.
+
+**Root cause:** `.500_Magnum` is the original v1-style mod (global state, no `players` table, no MP support). `500_Magnum` is the proper v2 rewrite with full MP features. Both coexist in the mods directory.
+
+**Fix:** Remove `.500_Magnum` directory. The v2 `500_Magnum` is the correct version with all features (OptionsMenu, OptionsGuard, AmmoPickup, AimInfo, Shoot, KeybindHints, AmmoDisplay).
+
+**Status:** AWAITING USER APPROVAL — do not delete without confirmation.
+
+**RULE: Never have two mods registering the same tool ID. When a v2 rewrite replaces a v1 mod, remove the v1 directory.**
+
+**Date found:** 2026-03-17
+
+---
+
+## Issue #39: SetPlayerHealth swapped argument order
+
+**Symptom:** `SetPlayerHealth(p, 1)` silently sets the wrong player to the wrong health. In MP, this could heal/kill arbitrary players.
+
+**Root cause:** The correct signature is `SetPlayerHealth(health, player)` — health first, player second. The intuitive `(player, value)` order is wrong. Dragonslayer and Lightkatana both had this bug.
+
+**Fix:** Swapped to `SetPlayerHealth(1, p)`. Added new Tier 1 lint rule `HEALTH-ARG-ORDER` to detect `SetPlayerHealth(p, number)` pattern.
+
+**RULE: `SetPlayerHealth(health, player)` — health value FIRST, player ID SECOND. The reverse silently works but affects the wrong player.**
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Issue #40: Acid_Gun couldn't damage players
+
+**Symptom:** Acid particles destroyed voxels but never damaged other players in multiplayer.
+
+**Root cause:** Acid_Gun used only MakeHole for corrosion damage, which is voxel-only. Originally rejected as "particle physics, not applicable" (T20), but api_surgeon found a viable approach.
+
+**Fix:** Added QueryShot + ApplyPlayerDamage to the corrosion loop. Acid particles now damage players within 0.4m radius, throttled to ~1/sec. Damage: 0.15 * corrosionPower * hitFactor.
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Issue #41: M249 and M4A1 Lua compile errors (extra `end`)
+
+**Symptom:** Game log shows compile errors for M249 and M4A1 mods.
+
+**Root cause:** Extra dangling `end` in client.draw() after the options menu early-return block. No matching block opener.
+
+**Fix:** Removed extra `end`, fixed indentation. Both mods now lint clean.
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Issue #42: V2 API reference had wrong argument order for SetPlayer* functions
+
+**Symptom:** Documentation showed `SetPlayerTransform(playerId, transform)` but actual API is `SetPlayerTransform(transform, playerId)`.
+
+**Root cause:** 5 SetPlayer* functions in TEARDOWN_V2_API_REFERENCE.md had swapped argument order: SetPlayerTransform, SetPlayerTransformWithPitch, SetPlayerVelocity, SetPlayerGroundVelocity, SetPlayerHealth.
+
+**Fix:** Corrected all 5 function signatures. The v2 API consistently puts player param last.
+
+**RULE: In v2 API, player param is ALWAYS the last argument for SetPlayer* functions (e.g., `SetPlayerHealth(health, player)`, `SetPlayerTransform(transform, player)`).**
+
+**Date fixed:** 2026-03-17
+
+---
+
+## Issue #43: Multiplayer desync and performance — 6 root causes
+
+**Symptom:** User testing in multiplayer revealed massive desync — projectiles flying in wrong directions, actions only working for host, lag spikes with multiple players.
+
+**Root causes identified (6 patterns across 30+ mods):**
+1. Client-side projectile physics running for ALL players (should be local only)
+2. Per-tick ServerCall/ClientCall with position data (should use registry sync)
+3. FindShapes/QueryAabb every frame per player (should throttle to ≤4Hz)
+4. Server-side PlaySound/SpawnParticle (wasted CPU, effects are client-only)
+5. Raw key InputPressed in server code (fails silently for non-host players)
+6. Client-side QueryShot for damage (should be server-side for authoritative hit detection)
+
+**Fix:** Full audit of all 63 mods against all 6 patterns. See `docs/MP_DESYNC_PATTERNS.md` for detailed fix patterns and code examples.
+
+**Already fixed (before sprint):** Ion_Cannon_Beacon (full rewrite), Laser_Cutter, Object_Possession, Airstrike_Arsenal, Remote_Explosives, 14 mods with dual projectile guards.
+
+**Sprint results (2026-03-18):**
+- API Surgeon: Attack_Drone isLocal guard on client projectile loop (RC1). 14 hitscan guns audited — 6 had server-side SpawnParticle removed (RC4): 500_Magnum, AK-47, AWP, Desert_Eagle, Dual_Berettas, Dual_Miniguns. 8 already clean.
+- Mod Converter: 16 melee/utility/special mods audited. 1 fix: Guided_Missile client physics gated with isLocal (RC1) + camerax player param removed. 15 already clean.
+- QA Lead: Fixed Ion_Cannon_Beacon (full rewrite), Laser_Cutter, Object_Possession before sprint.
+
+**RULES:**
+- Gate client projectile physics with `IsPlayerLocal(p)` (CLAUDE.md Rule 26)
+- Use registry sync for continuous state, RPC for events only (Rule 27)
+- Throttle FindShapes/QueryAabb to ≤4Hz (Rule 28)
+- PlaySound/SpawnParticle are client-only (Rule 29)
+- QueryShot + ApplyPlayerDamage must run on server (Rule 30)
+
+**Date found:** 2026-03-18
+
+---
+
+## Issue #44: QueryAabb per-tick in 3 mods (RC3)
+
+**Symptom:** FPS drops with multiple players using Vacuum_Cleaner, Black_Hole, or HADOUKEN.
+
+**Root cause:** `QueryAabbBodies`/`QueryAabbShapes` called every frame in `server.tickPlayer` for physics push effects. O(n*m) per player per tick.
+
+**Fix:** Added 0.25s throttle timer (≤4Hz) with cached results. Forces applied every frame from cache. `IsHandleValid()` guard on cached handles prevents stale-handle crashes.
+
+**RULE: #28 — Throttle FindShapes/QueryAabb to ≤4Hz. Cache results, apply forces from cache, guard with IsHandleValid().**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #45: Server-side PlaySound/SpawnParticle in AC130_Airstrike_MP (RC4)
+
+**Symptom:** Wasted CPU on server, effects only visible to host player.
+
+**Root cause:** `server.handleProjectileHit` called `PlaySound`/`SpawnParticle` directly (9+1 calls). `server.updateProjectile` had water collision effects on server.
+
+**Fix:** Added `hitPos`/`hitDir` to shared projectile table for client impact detection. Added `client.handleImpactEffects()` — detects projectile deactivation, plays correct sounds+particles per ammo type. Server handles only authoritative effects (MakeHole, Explosion, SpawnFire).
+
+**RULE: #29 — PlaySound/SpawnParticle are CLIENT-ONLY. Use shared state or ClientCall to trigger effects from server events.**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #46: gun_v2_generator.py produced non-compliant code
+
+**Symptom:** Generated code had no player damage, wrong aim pattern, duplicate ammo decrement.
+
+**Root cause:** Manual `QueryRaycast` aim (not `GetPlayerAimInfo`), no `QueryShot`+`ApplyPlayerDamage` (no player damage), duplicate ammo decrement on client+server, missing default keybind hints, `InputPressed("r", p)` on server for reload.
+
+**Fix:** Replaced `GetAimPos` with `GetPlayerAimInfo`, added `QueryShot`+`ApplyPlayerDamage` to `ProjectileOperations`, removed client ammo decrement, added default keybind hints, reload via ServerCall, added OptionsMenu/OptionsGuard/AmmoPickup.
+
+**RULES: #11 (GetPlayerAimInfo), #13/#30 (QueryShot on server), #8/#9 (server/client split), #10 (no raw keys with player param)**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Milestone: Zero Warnings — All Tiers Clean (2026-03-18)
+
+**Achievement:** 102 mods installed. 0 FAIL, 0 WARN across all lint tiers (25 checks). 0 X flags in audit. 86 gun mods fully compliant. 309 tests passing.
+
+**What was resolved to reach this point (from 65→102 mods, 88 warnings→0):**
+- PER-TICK-RPC sprint: 85 warnings triaged. QA Lead improved lint (state-change guard detection, 8-line window, user-defined func exclusion) → eliminated 50 false positives. API Surgeon (T40) converted real per-tick ServerCall/ClientCall to registry sync in 7 mods. Mod Converter (T41) applied @lint-ok suppressions on verified false positives.
+- CLIENT-SERVER-FUNC: 3 warnings eliminated by QA Lead lint fix (user-defined Shoot() functions excluded).
+- SERVER-EFFECT: lint boundary detection fixed (Asteroid_Strike false positives eliminated). Rods_from_Gods + Molotov @lint-ok suppressed (spawned entity scripts / server-only projectile positions).
+- RMW weapon pack: 39 mods converted (2 rocket launchers + 5 hitscan exemplars + 32 mass batch). All lint clean, all audit compliant.
+- New docs: OFFICIAL_DEVELOPER_DOCS.md (ground truth API), PER_TICK_RPC_FIX_GUIDE.md, MPLIB_INTERNALS.md, TEAM_PLUGINS.md

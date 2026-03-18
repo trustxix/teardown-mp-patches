@@ -95,16 +95,20 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
 
         for mod_dir in mods:
             combined: dict[str, bool] = {}
+            all_suppressions: set[str] = set()
             for rel_path, source in read_lua_files(mod_dir):
                 features = detect_features(source)
                 for k, v in features.items():
-                    combined[k] = combined.get(k, False) or v
+                    if k == "suppressions":
+                        all_suppressions |= v
+                    else:
+                        combined[k] = combined.get(k, False) or v
 
             if combined.get("is_gun_mod"):
                 gun_count += 1
-                if not combined.get("has_shoot"):
+                if not combined.get("has_shoot") and "shoot" not in all_suppressions:
                     missing_shoot += 1
-                if not combined.get("has_aim_info"):
+                if not combined.get("has_aim_info") and "aiminfo" not in all_suppressions:
                     missing_aim += 1
             if not combined.get("has_ammo_pickup"):
                 missing_pickup += 1
@@ -136,6 +140,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
 
     # Always relevant
     docs_to_read.append("  CLAUDE.md - rules, tools, workflow (always)")
+    docs_to_read.append("  docs/OFFICIAL_DEVELOPER_DOCS.md - GROUND TRUTH from teardowngame.com (API, MP architecture, gotchas)")
 
     # If there are tier-1 errors, they need the issues log for patterns
     try:

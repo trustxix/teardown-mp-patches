@@ -111,17 +111,16 @@ Place sync writes in `server.update()` (after physics) for position/rotation, an
 function server.update(dt)
     for p in Players() do
         local data = players[p]
-        if not data then goto continue end
+        if data then
+            -- Physics step (authoritative)
+            updatePhysics(data, dt)
 
-        -- Physics step (authoritative)
-        updatePhysics(data, dt)
-
-        -- Sync to clients
-        SetFloat("mymod."..p..".px", data.pos[1], true)
-        SetFloat("mymod."..p..".py", data.pos[2], true)
-        SetFloat("mymod."..p..".pz", data.pos[3], true)
-        SetBool("mymod."..p..".firing", data.firing, true)
-        ::continue::
+            -- Sync to clients
+            SetFloat("mymod."..p..".px", data.pos[1], true)
+            SetFloat("mymod."..p..".py", data.pos[2], true)
+            SetFloat("mymod."..p..".pz", data.pos[3], true)
+            SetBool("mymod."..p..".firing", data.firing, true)
+        end
     end
 end
 ```
@@ -188,7 +187,7 @@ end
 These do NOT need manual sync:
 - Player position/rotation (`GetPlayerTransform(p)`, `GetPlayerPos(p)`)
 - Player eye transform (`GetPlayerEyeTransform(p)`)
-- Player input (`InputDown("usetool", p)`, `InputPressed("rmb", p)`)
+- Player virtual input (`InputDown("usetool", p)`) — **WARNING:** raw keys like `"rmb"` with player param FAIL SILENTLY (see CLAUDE.md Rule 10). Use `InputPressed("rmb")` on client with `isLocal` check + ServerCall instead.
 - Tool body transforms (`GetToolBody(p)`)
 - Environment destruction (`MakeHole`, `Explosion` results)
 - Player velocity (`GetPlayerVelocity(p)`)

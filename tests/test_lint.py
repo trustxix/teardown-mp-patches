@@ -20,7 +20,14 @@ from tools.lint import (
     check_handle_gt_zero,
     check_manual_aim,
     check_makehole_damage,
+    check_server_side_effects,
     check_missing_keybind_hints,
+    check_set_player_health_order,
+    # New checks
+    check_server_only_in_client,
+    check_per_tick_rpc,
+    check_missing_version2,
+    check_info_txt,
     lint_source,
 )
 
@@ -558,7 +565,7 @@ class TestLintSource:
         assert "DRAW-NOT-CLIENT" in check_ids
 
     def test_finding_structure(self):
-        src = "for i, p in ipairs(Players()) do end"
+        src = "#version 2\nfor i, p in ipairs(Players()) do end"
         findings = lint_source(src, "foo.lua")
         assert len(findings) == 1
         f = findings[0]
@@ -567,6 +574,26 @@ class TestLintSource:
         assert f["file"] == "foo.lua"
         assert isinstance(f["line"], int)
         assert isinstance(f["detail"], str)
+
+    def test_lint_ok_suppresses_finding(self):
+        src = "for i, p in ipairs(Players()) do end -- @lint-ok IPAIRS-ITERATOR"
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_does_not_suppress_other_checks(self):
+        src = 'for i, p in ipairs(Players()) do end -- @lint-ok RAW-KEY-PLAYER'
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_multiple_checks(self):
+        src = 'for i, p in ipairs(Players()) do end -- @lint-ok IPAIRS-ITERATOR, DRAW-NOT-CLIENT'
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_case_insensitive(self):
+        src = "for i, p in ipairs(Players()) do end -- @lint-ok ipairs-iterator"
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
 
 
 # ===========================================================================
@@ -794,12 +821,15 @@ class TestHandleGtZero:
         assert check_handle_gt_zero(src) == []
 
     def test_number_comparison_clean(self):
-        # Non-handle comparisons — but the heuristic may still catch them
-        # The check is a heuristic so we just test the basic case
+        # Non-handle variable names are excluded from the check
         src = "if count > 0 then\nend"
         findings = check_handle_gt_zero(src)
-        # Heuristic: this will flag — that's expected behavior
-        assert len(findings) == 1
+        assert len(findings) == 0
+
+    def test_dist_excluded(self):
+        # dist from UiWorldToPixel is not a handle
+        src = "if dist > 0 then\nend"
+        assert check_handle_gt_zero(src) == []
 
     def test_comment_ignored(self):
         src = "-- if handle > 0 then"
@@ -875,6 +905,132 @@ class TestMakeholeDamage:
 
 
 # ---------------------------------------------------------------------------
+# check_server_side_effects
+# ---------------------------------------------------------------------------
+
+class TestServerSideEffects:
+    def test_playsound_in_server_flagged(self):
+        src = (
+            "function server.handleHit(pos)\n"
+            '    PlaySound(LoadSound("boom.ogg"), pos, 1.0)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "SERVER-EFFECT"
+        assert "PlaySound" in findings[0]["detail"]
+        assert "server.handleHit" in findings[0]["detail"]
+
+    def test_spawnparticle_in_server_flagged(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    SpawnParticle("smoke", pos, vel, 1.0, 0.5)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert "SpawnParticle" in findings[0]["detail"]
+
+    def test_pointlight_in_server_flagged(self):
+        src = (
+            "function server.updateProjectile(p)\n"
+            "    PointLight(p.pos, 1, 1, 1, 2)\n"
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert "PointLight" in findings[0]["detail"]
+
+    def test_playloop_in_server_flagged(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    PlayLoop(engineSound, pos, 0.5)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert "PlayLoop" in findings[0]["detail"]
+
+    def test_playsound_in_client_clean(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    PlaySound(LoadSound("boom.ogg"), pos, 1.0)\n'
+            "end"
+        )
+        assert check_server_side_effects(src) == []
+
+    def test_spawnparticle_in_client_clean(self):
+        src = (
+            "function client.draw()\n"
+            '    SpawnParticle("smoke", pos, vel, 1.0)\n'
+            "end"
+        )
+        assert check_server_side_effects(src) == []
+
+    def test_effects_in_helper_function_clean(self):
+        src = (
+            "function SpawnFireParticles(pos, dir)\n"
+            '    SpawnParticle(pos, dir, 1.0)\n'
+            "end"
+        )
+        assert check_server_side_effects(src) == []
+
+    def test_effects_at_top_level_clean(self):
+        src = 'PlaySound(LoadSound("click.ogg"), pos, 0.5)'
+        assert check_server_side_effects(src) == []
+
+    def test_block_comment_excluded(self):
+        src = (
+            "function server.tick(dt)\n"
+            "    --[[\n"
+            '    SpawnParticle("smoke", pos, vel, 1.0)\n'
+            "    ]]--\n"
+            "end"
+        )
+        assert check_server_side_effects(src) == []
+
+    def test_line_comment_excluded(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    -- SpawnParticle("smoke", pos, vel, 1.0)\n'
+            "end"
+        )
+        assert check_server_side_effects(src) == []
+
+    def test_multiple_findings(self):
+        src = (
+            "function server.handleHit(pos)\n"
+            '    PlaySound(LoadSound("boom.ogg"), pos, 1.0)\n'
+            '    SpawnParticle("smoke", pos, Vec(0,1,0), 1.5)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 2
+
+    def test_mixed_server_client(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    PlaySound(snd, pos, 1.0)\n'
+            "end\n"
+            "function client.tick(dt)\n"
+            '    PlaySound(snd, pos, 1.0)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert "server.tick" in findings[0]["detail"]
+
+    def test_severity_is_warn(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    PlaySound(snd, pos, 1.0)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert findings[0]["severity"] == "warn"
+
+
+# ---------------------------------------------------------------------------
 # check_missing_keybind_hints
 # ---------------------------------------------------------------------------
 
@@ -923,3 +1079,378 @@ class TestMissingKeybindHints:
     def test_no_keys_clean(self):
         src = 'if InputPressed("usetool") then fire() end'
         assert check_missing_keybind_hints(src) == []
+
+
+# ===========================================================================
+# check_set_player_health_order
+# ===========================================================================
+
+class TestSetPlayerHealthOrder:
+    def test_swapped_args_flagged(self):
+        """SetPlayerHealth(p, 1) — variable first, number second — is wrong."""
+        src = 'SetPlayerHealth(p, 1)'
+        findings = check_set_player_health_order(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "HEALTH-ARG-ORDER"
+
+    def test_correct_order_clean(self):
+        """SetPlayerHealth(1, p) — number first, variable second — is correct."""
+        src = 'SetPlayerHealth(1, p)'
+        assert check_set_player_health_order(src) == []
+
+    def test_two_variables_clean(self):
+        """SetPlayerHealth(health, player) — two variables — not flagged."""
+        src = 'SetPlayerHealth(health, player)'
+        assert check_set_player_health_order(src) == []
+
+    def test_two_numbers_clean(self):
+        """SetPlayerHealth(1, 0) — two numbers — not flagged (first is number)."""
+        src = 'SetPlayerHealth(1, 0)'
+        assert check_set_player_health_order(src) == []
+
+    def test_float_second_arg_flagged(self):
+        """SetPlayerHealth(player, 0.5) — float literal second arg."""
+        src = 'SetPlayerHealth(player, 0.5)'
+        findings = check_set_player_health_order(src)
+        assert len(findings) == 1
+
+    def test_in_comment_ignored(self):
+        """Commented-out code should not trigger."""
+        src = '-- SetPlayerHealth(p, 1)'
+        assert check_set_player_health_order(src) == []
+
+    def test_line_number_correct(self):
+        src = 'local x = 1\nSetPlayerHealth(p, 1)\nlocal y = 2'
+        findings = check_set_player_health_order(src)
+        assert findings[0]["line"] == 2
+
+
+# ===========================================================================
+# check_server_only_in_client
+# ===========================================================================
+
+class TestServerOnlyInClient:
+    def test_shoot_in_client_flagged(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    Shoot(pos, dir, "bullet", 1, 100, p, "gun")\n'
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "CLIENT-SERVER-FUNC"
+        assert "Shoot" in findings[0]["detail"]
+        assert "client.tick" in findings[0]["detail"]
+
+    def test_makehole_in_client_flagged(self):
+        src = (
+            "function client.tickPlayer(p, dt)\n"
+            "    MakeHole(pos, 1.5)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "MakeHole" in findings[0]["detail"]
+
+    def test_explosion_in_client_flagged(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    Explosion(pos, 5)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "Explosion" in findings[0]["detail"]
+
+    def test_disable_player_input_in_client_flagged(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    DisablePlayerInput(p)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "DisablePlayerInput" in findings[0]["detail"]
+
+    def test_shoot_in_server_clean(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    Shoot(pos, dir, "bullet", 1, 100, p, "gun")\n'
+            "end"
+        )
+        assert check_server_only_in_client(src) == []
+
+    def test_shoot_in_helper_clean(self):
+        src = (
+            "function doShoot(pos, dir, p)\n"
+            '    Shoot(pos, dir, "bullet", 1, 100, p, "gun")\n'
+            "end"
+        )
+        assert check_server_only_in_client(src) == []
+
+    def test_shoot_at_top_level_clean(self):
+        src = 'Shoot(pos, dir, "bullet", 1, 100, p, "gun")'
+        assert check_server_only_in_client(src) == []
+
+    def test_multiple_findings(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    Shoot(pos, dir, "bullet", 1, 100, p, "gun")\n'
+            "    MakeHole(pos, 1.5)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 2
+
+    def test_comment_ignored(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    -- Shoot(pos, dir, "bullet", 1, 100, p, "gun")\n'
+            "end"
+        )
+        assert check_server_only_in_client(src) == []
+
+    def test_severity_is_warn(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    Shoot(pos, dir, "bullet", 1, 100, p, "gun")\n'
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert findings[0]["severity"] == "warn"
+
+    def test_set_body_velocity_in_client_flagged(self):
+        src = (
+            "function client.tickPlayer(p, dt)\n"
+            "    SetBodyVelocity(body, vel)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "SetBodyVelocity" in findings[0]["detail"]
+
+    def test_spawn_fire_in_client_flagged(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    SpawnFire(pos)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "SpawnFire" in findings[0]["detail"]
+
+
+# ===========================================================================
+# check_per_tick_rpc
+# ===========================================================================
+
+class TestPerTickRpc:
+    def test_servercall_in_server_tick_flagged(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    ServerCall("server.doThing")\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "PER-TICK-RPC"
+        assert "ServerCall" in findings[0]["detail"]
+
+    def test_clientcall_in_server_tick_flagged(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    ClientCall(0, "client.updatePos", x, y, z)\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert len(findings) == 1
+        assert "ClientCall" in findings[0]["detail"]
+
+    def test_servercall_in_client_tick_flagged(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    ServerCall("server.syncPos", x, y, z)\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert len(findings) == 1
+
+    def test_servercall_in_update_flagged(self):
+        src = (
+            "function server.update(dt)\n"
+            '    ServerCall("server.doThing")\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert len(findings) == 1
+
+    def test_servercall_in_tickplayer_flagged(self):
+        src = (
+            "function server.tickPlayer(p, dt)\n"
+            '    ClientCall(p, "client.sync", x)\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert len(findings) == 1
+
+    def test_servercall_in_init_clean(self):
+        src = (
+            "function server.init()\n"
+            '    ServerCall("server.setup")\n'
+            "end"
+        )
+        assert check_per_tick_rpc(src) == []
+
+    def test_servercall_in_helper_clean(self):
+        src = (
+            "function onFire(p, x, y, z)\n"
+            '    ServerCall("server.fire", p, x, y, z)\n'
+            "end"
+        )
+        assert check_per_tick_rpc(src) == []
+
+    def test_servercall_at_top_level_clean(self):
+        src = 'ServerCall("server.doThing")'
+        assert check_per_tick_rpc(src) == []
+
+    def test_comment_ignored(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    -- ServerCall("server.doThing")\n'
+            "end"
+        )
+        assert check_per_tick_rpc(src) == []
+
+    def test_severity_is_warn(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    ServerCall("server.sync")\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert findings[0]["severity"] == "warn"
+
+
+# ===========================================================================
+# check_missing_version2
+# ===========================================================================
+
+class TestMissingVersion2:
+    def test_v2_patterns_without_header_flagged(self):
+        src = (
+            "function server.init()\n"
+            '    RegisterTool("gun", "Gun", "MOD/vox/gun.vox")\n'
+            "end"
+        )
+        findings = check_missing_version2(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-VERSION2"
+        assert findings[0]["severity"] == "error"
+        assert findings[0]["line"] == 1
+
+    def test_with_header_clean(self):
+        src = (
+            "#version 2\n"
+            "function server.init()\n"
+            '    RegisterTool("gun", "Gun", "MOD/vox/gun.vox")\n'
+            "end"
+        )
+        assert check_missing_version2(src) == []
+
+    def test_no_v2_patterns_clean(self):
+        src = (
+            "function init()\n"
+            "    local x = 1\n"
+            "end"
+        )
+        assert check_missing_version2(src) == []
+
+    def test_players_in_server_func_without_header_flagged(self):
+        src = (
+            "function server.tick(dt)\n"
+            "    for p in Players() do end\n"
+            "end"
+        )
+        findings = check_missing_version2(src)
+        assert len(findings) == 1
+
+    def test_client_without_header_flagged(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    local x = 1\n"
+            "end"
+        )
+        findings = check_missing_version2(src)
+        assert len(findings) == 1
+
+    def test_header_with_whitespace_clean(self):
+        src = (
+            "  #version 2\n"
+            "function server.init()\nend"
+        )
+        assert check_missing_version2(src) == []
+
+    def test_include_file_defining_players_clean(self):
+        """player.lua include defines Players() — should not be flagged."""
+        src = (
+            "function Players()\n"
+            "    return iter(GetAllPlayers())\n"
+            "end"
+        )
+        assert check_missing_version2(src) == []
+
+
+# ===========================================================================
+# check_info_txt
+# ===========================================================================
+
+class TestCheckInfoTxt:
+    def test_missing_version2_with_v2_lua(self, tmp_path):
+        """info.txt without version=2 when lua has #version 2."""
+        mod_dir = tmp_path / "test_mod"
+        mod_dir.mkdir()
+        (mod_dir / "info.txt").write_text("name = Test Mod\nauthor = Me\n")
+        (mod_dir / "main.lua").write_text("#version 2\nfunction server.init()\nend\n")
+        findings = check_info_txt(mod_dir)
+        checks = [f["check"] for f in findings]
+        assert "INFO-MISSING-VERSION2" in checks
+        # Should be error severity
+        version_finding = [f for f in findings if f["check"] == "INFO-MISSING-VERSION2"][0]
+        assert version_finding["severity"] == "error"
+
+    def test_with_version2_clean(self, tmp_path):
+        """info.txt with version=2 should be clean."""
+        mod_dir = tmp_path / "test_mod"
+        mod_dir.mkdir()
+        (mod_dir / "info.txt").write_text("name = Test Mod\nversion = 2\n")
+        (mod_dir / "main.lua").write_text("#version 2\nfunction server.init()\nend\n")
+        findings = check_info_txt(mod_dir)
+        checks = [f["check"] for f in findings]
+        assert "INFO-MISSING-VERSION2" not in checks
+
+    def test_missing_name_warned(self, tmp_path):
+        """info.txt without name field should warn."""
+        mod_dir = tmp_path / "test_mod"
+        mod_dir.mkdir()
+        (mod_dir / "info.txt").write_text("version = 2\nauthor = Me\n")
+        findings = check_info_txt(mod_dir)
+        checks = [f["check"] for f in findings]
+        assert "INFO-MISSING-NAME" in checks
+
+    def test_no_info_txt_errors(self, tmp_path):
+        """Missing info.txt should error."""
+        mod_dir = tmp_path / "test_mod"
+        mod_dir.mkdir()
+        findings = check_info_txt(mod_dir)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-INFO-TXT"
+
+    def test_v1_mod_without_version2_clean(self, tmp_path):
+        """v1 mod (no #version 2 in lua) should NOT flag missing version=2 in info.txt."""
+        mod_dir = tmp_path / "test_mod"
+        mod_dir.mkdir()
+        (mod_dir / "info.txt").write_text("name = Test Mod\nauthor = Me\n")
+        (mod_dir / "main.lua").write_text("function init()\nend\n")
+        findings = check_info_txt(mod_dir)
+        checks = [f["check"] for f in findings]
+        assert "INFO-MISSING-VERSION2" not in checks

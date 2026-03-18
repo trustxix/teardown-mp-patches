@@ -102,7 +102,7 @@ def get_lint_summary() -> dict:
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
-            timeout=60,
+            timeout=180,
         )
         output = result.stdout + result.stderr
         # Parse counts from output
@@ -122,7 +122,7 @@ def get_lint_summary() -> dict:
             "raw_summary": "\n".join(lines[-20:]),  # Last 20 lines as summary
         }
     except subprocess.TimeoutExpired:
-        return {"success": False, "error": "Lint timed out after 60s"}
+        return {"success": False, "error": "Lint timed out after 180s"}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -136,7 +136,7 @@ def get_audit_summary() -> dict:
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
-            timeout=60,
+            timeout=180,
         )
         output = result.stdout + result.stderr
         return {
@@ -144,7 +144,7 @@ def get_audit_summary() -> dict:
             "report": output.strip(),
         }
     except subprocess.TimeoutExpired:
-        return {"success": False, "error": "Audit timed out after 60s"}
+        return {"success": False, "error": "Audit timed out after 180s"}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -318,6 +318,116 @@ def team_dashboard() -> dict:
         dashboard["lint"] = "unavailable"
 
     return dashboard
+
+
+##############################################################################
+# AUTO-TASK GENERATION FROM LINT
+##############################################################################
+
+
+@mcp.tool(description="Generate tasks from current lint findings. Groups warnings by mod, creates one task per mod. QA Lead runs this to fill the queue.")
+def generate_tasks_from_lint(role: str = "api_surgeon", priority: str = "medium") -> dict:
+    """Run lint, parse findings, create tasks for each mod with warnings. Skips mods that already have open tasks."""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "tools.lint", "--json-output"],
+            capture_output=True, text=True,
+            cwd=str(PROJECT_ROOT), timeout=60,
+        )
+        all_results = __import__("json").loads(result.stdout)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    # Get existing open tasks to avoid duplicates
+    existing = task_store.get_all_tasks()
+    existing_mods = set()
+    for t in existing.get("tasks", []):
+        if t.get("status") in ("open", "in_progress"):
+            for m in t.get("mods", []):
+                existing_mods.add(m)
+
+    created = []
+    skipped = []
+    for mod_name, findings in all_results.items():
+        warns = [f for f in findings if f.get("severity") in ("error", "warn")]
+        if not warns:
+            continue
+        if mod_name in existing_mods:
+            skipped.append(mod_name)
+            continue
+
+        # Group by check type
+        by_check = {}
+        for f in warns:
+            check = f.get("check", "UNKNOWN")
+            by_check.setdefault(check, []).append(f)
+
+        check_summary = ", ".join(f"{c}: {len(fs)}" for c, fs in by_check.items())
+        desc = f"Fix {len(warns)} lint warning(s) in {mod_name}: {check_summary}. Run `python -m tools.lint --mod \"{mod_name}\"` for details."
+
+        # Add fix guide reference for PER-TICK-RPC
+        if "PER-TICK-RPC" in by_check:
+            desc += " Read docs/PER_TICK_RPC_FIX_GUIDE.md for fix patterns."
+
+        task_id = task_store.create_task(
+            title=f"LINT-FIX: {mod_name} ({len(warns)} warnings)",
+            role=role,
+            priority=priority,
+            description=desc,
+            mods=[mod_name],
+        )
+        created.append({"task_id": task_id, "mod": mod_name, "warnings": len(warns)})
+
+    return {
+        "success": True,
+        "created": len(created),
+        "skipped": len(skipped),
+        "tasks": created,
+        "skipped_mods": skipped,
+        "message": f"Created {len(created)} tasks, skipped {len(skipped)} (already have open tasks)."
+    }
+
+
+##############################################################################
+# TERMINAL HEARTBEAT
+##############################################################################
+
+_heartbeats: dict[str, str] = {}
+
+
+@mcp.tool(description="Report that you are alive and working. Call this every few minutes so the dashboard can track terminal health.")
+def heartbeat(role: str, status: str = "working") -> dict:
+    """Record a heartbeat. Status: 'working', 'idle', 'blocked'."""
+    from datetime import datetime, timezone
+    if role not in ROLES_MAP:
+        return {"error": f"Invalid role. Must be one of: {', '.join(sorted(ROLES_MAP))}"}
+    ts = datetime.now(timezone.utc).isoformat()
+    _heartbeats[role] = ts
+    # Write to file so dashboard can read it
+    hb_file = COMMS_DIR / "heartbeats.json"
+    try:
+        import json
+        data = {}
+        if hb_file.exists():
+            data = json.loads(hb_file.read_text(encoding="utf-8"))
+        data[role] = {"timestamp": ts, "status": status}
+        hb_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+    return {"recorded": True, "role": role, "timestamp": ts}
+
+
+@mcp.tool(description="Get heartbeat status for all terminals. Shows when each was last seen.")
+def get_heartbeats() -> dict:
+    """Returns last-seen timestamps for all terminals."""
+    import json
+    hb_file = COMMS_DIR / "heartbeats.json"
+    if not hb_file.exists():
+        return {r: {"status": "unknown", "last_seen": "never"} for r in ROLES_MAP}
+    try:
+        return json.loads(hb_file.read_text(encoding="utf-8"))
+    except Exception:
+        return {r: {"status": "unknown", "last_seen": "never"} for r in ROLES_MAP}
 
 
 ##############################################################################

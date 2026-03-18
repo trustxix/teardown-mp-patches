@@ -1,7 +1,7 @@
 # Team Collaboration Protocol
 
 ## Core Principle
-All 3 terminals work on the SAME focus area simultaneously, each contributing from their expertise. QA Lead picks the focus area, the team brainstorms the approach, then everyone executes in parallel.
+All 4 terminals work on the SAME focus area simultaneously, each contributing from their expertise. QA Lead picks the focus area, the team brainstorms the approach, then everyone executes in parallel.
 
 ## Focus Areas
 QA Lead maintains a file `.comms/FOCUS.md` that declares the current team focus. ALL terminals read this before starting work. When the focus changes, QA Lead broadcasts.
@@ -11,7 +11,7 @@ QA Lead maintains a file `.comms/FOCUS.md` that declares the current team focus.
 ```
 1. QA Lead sets FOCUS.md (e.g., "Options menu polish for gun mods")
 2. QA Lead broadcasts a brainstorm request to both inboxes
-3. All 3 terminals contribute ideas/analysis to QA Lead's inbox
+3. All 4 terminals contribute ideas/analysis to QA Lead's inbox
 4. QA Lead reads all input, makes decisions, creates tasks
 5. QA Lead sends tasks to each terminal's inbox (same focus area, different mods/aspects)
 6. All 3 work in parallel on the same focus area

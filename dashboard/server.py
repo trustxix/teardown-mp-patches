@@ -5,8 +5,8 @@ Opens: http://localhost:8420
 """
 
 import json
-import glob
 import os
+import re
 import subprocess
 import sys
 import time
@@ -26,12 +26,12 @@ CHANGES_FILE = PROJECT / "mcp_change_tracker" / "changes.json"
 
 # Cache lint results (expensive to run)
 _lint_cache = {"data": None, "time": 0}
-LINT_CACHE_SECONDS = 30
+LINT_CACHE_SECONDS = 60
 
 
 def get_inboxes():
+    """Get inbox/outbox counts for each role."""
     roles = ["qa_lead", "api_surgeon", "mod_converter", "docs_keeper"]
-    # Also detect dynamic roles
     if COMMS.exists():
         for d in COMMS.iterdir():
             if d.is_dir() and (d / "inbox").is_dir() and d.name not in roles and d.name != "__pycache__":
@@ -45,44 +45,49 @@ def get_inboxes():
         urgent = 0
         for m in msgs:
             try:
-                h = m.read_text(encoding="utf-8", errors="replace")[:300]
+                h = m.read_text(encoding="utf-8", errors="replace")[:500]
                 if "priority: critical" in h or "priority: high" in h:
                     urgent += 1
-            except:
+            except Exception:
                 pass
         result[role] = {"inbox": len(msgs), "outbox": len(sent), "urgent": urgent}
     return result
 
 
 def get_tasks():
+    """Get task queue state."""
     if not TASKS_FILE.exists():
-        return {"active": [], "open": [], "counts": {}, "by_role": {}}
-    data = json.loads(TASKS_FILE.read_text(encoding="utf-8"))
-    tasks = data.get("tasks", [])
+        return {"open": [], "in_progress": [], "done_count": 0, "pending_review": 0, "total": 0, "by_role": {}}
+    try:
+        data = json.loads(TASKS_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {"open": [], "in_progress": [], "done_count": 0, "pending_review": 0, "total": 0, "by_role": {}}
 
-    open_t = [t for t in tasks if t["status"] == "open"]
-    progress = [t for t in tasks if t["status"] == "in_progress"]
-    done = [t for t in tasks if t["status"] == "done"]
+    tasks = data.get("tasks", [])
+    open_t = [t for t in tasks if t.get("status") == "open"]
+    progress = [t for t in tasks if t.get("status") == "in_progress"]
+    done = [t for t in tasks if t.get("status") == "done"]
     pending_review = [t for t in tasks if t.get("review_status") == "pending"]
 
     by_role = {}
     for t in tasks:
-        r = t["role"]
+        r = t.get("role", "unknown")
         by_role.setdefault(r, {"open": 0, "in_progress": 0, "done": 0})
-        by_role[r][t["status"]] = by_role[r].get(t["status"], 0) + 1
+        status = t.get("status", "open")
+        if status in by_role[r]:
+            by_role[r][status] += 1
 
-    # Count archived too
     archived_count = 0
     if ARCHIVE_FILE.exists():
         try:
             arch = json.loads(ARCHIVE_FILE.read_text(encoding="utf-8"))
             archived_count = len(arch.get("archived", []))
-        except:
+        except (json.JSONDecodeError, OSError):
             pass
 
     return {
-        "open": [{"id": t["id"], "title": t["title"], "role": t["role"], "priority": t.get("priority", "medium")} for t in open_t],
-        "in_progress": [{"id": t["id"], "title": t["title"], "role": t.get("assigned_to", t["role"]), "started": t.get("started_at", "")} for t in progress],
+        "open": [{"id": t.get("id", "?"), "title": t.get("title", "?"), "role": t.get("role", "?"), "priority": t.get("priority", "medium")} for t in open_t],
+        "in_progress": [{"id": t.get("id", "?"), "title": t.get("title", "?"), "role": t.get("assigned_to", t.get("role", "?")), "started": t.get("started_at", "")} for t in progress],
         "done_count": len(done) + archived_count,
         "pending_review": len(pending_review),
         "total": len(tasks) + archived_count,
@@ -91,68 +96,110 @@ def get_tasks():
 
 
 def get_lint():
+    """Run lint and parse results. Cached for LINT_CACHE_SECONDS."""
     now = time.time()
     if _lint_cache["data"] and (now - _lint_cache["time"]) < LINT_CACHE_SECONDS:
         return _lint_cache["data"]
 
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "tools.lint"],
+            [sys.executable, "-m", "tools.lint", "--json-output"],
             capture_output=True, text=True,
-            cwd=str(PROJECT), timeout=30,
+            cwd=str(PROJECT), timeout=60,
         )
-        output = result.stdout + result.stderr
-        fail = output.count("[FAIL]")
-        warn = output.count("[WARN]")
-        info = output.count("[INFO]")
+        if result.returncode not in (0, 1):
+            return {"error": f"lint exited {result.returncode}", "FAIL": 0, "WARN": 0, "INFO": 0, "by_check": {}, "mods_scanned": 0, "mods_clean": 0}
 
-        # Get summary line
-        summary = ""
-        for line in output.strip().split("\n"):
-            if "mods scanned" in line:
-                summary = line.strip()
+        all_results = json.loads(result.stdout)
+        fail = 0
+        warn = 0
+        info = 0
+        by_check = {}
+        mods_with_findings = 0
 
-        data = {"FAIL": fail, "WARN": warn, "INFO": info, "summary": summary}
+        for mod_name, findings in all_results.items():
+            if findings:
+                mods_with_findings += 1
+            for f in findings:
+                sev = f.get("severity", "info")
+                check = f.get("check", "UNKNOWN")
+                if sev == "error":
+                    fail += 1
+                elif sev == "warn":
+                    warn += 1
+                else:
+                    info += 1
+                by_check[check] = by_check.get(check, 0) + 1
+
+        data = {
+            "FAIL": fail,
+            "WARN": warn,
+            "INFO": info,
+            "by_check": by_check,
+            "mods_scanned": len(all_results),
+            "mods_clean": len(all_results) - mods_with_findings,
+        }
         _lint_cache["data"] = data
         _lint_cache["time"] = now
         return data
-    except:
-        return {"FAIL": "?", "WARN": "?", "INFO": "?", "summary": "lint unavailable"}
+    except subprocess.TimeoutExpired:
+        return {"error": "lint timed out", "FAIL": 0, "WARN": 0, "INFO": 0, "by_check": {}, "mods_scanned": 0, "mods_clean": 0}
+    except Exception as e:
+        return {"error": str(e), "FAIL": "?", "WARN": "?", "INFO": "?", "by_check": {}, "mods_scanned": 0, "mods_clean": 0}
 
 
 def get_focus():
+    """Read current team focus from FOCUS.md."""
     fp = COMMS / "FOCUS.md"
-    if fp.exists():
+    if not fp.exists():
+        return "Not set"
+    try:
         content = fp.read_text(encoding="utf-8", errors="replace")
         for line in content.split("\n"):
             if line.startswith("## Focus:"):
                 return line.replace("## Focus:", "").strip()
+    except Exception:
+        pass
     return "Not set"
 
 
 def get_mod_stats():
+    """Count mods using the same method as discover_mods (info.txt check)."""
     if not MODS_DIR.exists():
-        return {"total": 0, "with_options": 0, "with_hints": 0}
+        return {"total": 0, "with_v2": 0, "with_options": 0, "with_hints": 0}
 
     total = 0
+    with_v2 = 0
     with_options = 0
     with_hints = 0
 
     for mod_dir in MODS_DIR.iterdir():
+        if not mod_dir.is_dir() or not (mod_dir / "info.txt").exists():
+            continue
+        total += 1
+
+        # Check info.txt for version = 2
+        try:
+            info_content = (mod_dir / "info.txt").read_text(encoding="utf-8", errors="replace")
+            if re.search(r"version\s*=\s*2", info_content):
+                with_v2 += 1
+        except Exception:
+            pass
+
+        # Check main.lua for features
         main = mod_dir / "main.lua"
         if not main.exists():
             continue
-        total += 1
         try:
             src = main.read_text(encoding="utf-8", errors="replace")
             if "optionsOpen" in src or "optionsopen" in src or "settingsOpen" in src:
                 with_options += 1
             if "UiText(" in src and ("Fire" in src or "Reload" in src or "Options" in src):
                 with_hints += 1
-        except:
+        except Exception:
             pass
 
-    return {"total": total, "with_options": with_options, "with_hints": with_hints}
+    return {"total": total, "with_v2": with_v2, "with_options": with_options, "with_hints": with_hints}
 
 
 def get_killswitch():
@@ -160,6 +207,7 @@ def get_killswitch():
 
 
 def get_changes():
+    """Get recent changes from change tracker."""
     if not CHANGES_FILE.exists():
         return {"total": 0, "undocumented": 0, "recent": []}
     try:
@@ -167,25 +215,53 @@ def get_changes():
         changes = data.get("changes", [])
         undoc = [c for c in changes if not c.get("documented", False)]
         recent = sorted(changes, key=lambda c: c.get("timestamp", ""), reverse=True)[:5]
-        return {"total": len(changes), "undocumented": len(undoc), "recent": recent}
-    except:
+        return {
+            "total": len(changes),
+            "undocumented": len(undoc),
+            "recent": [
+                {
+                    "mod": c.get("mod", "?"),
+                    "type": c.get("type", "?"),
+                    "description": c.get("description", "")[:120],
+                    "role": c.get("role", "?"),
+                    "timestamp": c.get("timestamp", "")[:16],
+                }
+                for c in recent
+            ],
+        }
+    except (json.JSONDecodeError, OSError):
         return {"total": 0, "undocumented": 0, "recent": []}
 
 
-def get_servers():
-    mcp_json = PROJECT / ".mcp.json"
-    if not mcp_json.exists():
-        return []
+def get_docs():
+    """Check which key docs exist and their sizes."""
+    docs = [
+        ("OFFICIAL_DEVELOPER_DOCS.md", "docs/OFFICIAL_DEVELOPER_DOCS.md"),
+        ("MPLIB_INTERNALS.md", "docs/MPLIB_INTERNALS.md"),
+        ("PER_TICK_RPC_FIX_GUIDE.md", "docs/PER_TICK_RPC_FIX_GUIDE.md"),
+        ("RESEARCH.md", "docs/RESEARCH.md"),
+        ("V2_SYNC_PATTERNS.md", "docs/V2_SYNC_PATTERNS.md"),
+        ("MP_DESYNC_PATTERNS.md", "docs/MP_DESYNC_PATTERNS.md"),
+        ("ISSUES_AND_FIXES.md", "ISSUES_AND_FIXES.md"),
+    ]
+    result = []
+    for name, rel_path in docs:
+        full = PROJECT / rel_path
+        exists = full.exists()
+        size = full.stat().st_size if exists else 0
+        result.append({"name": name, "exists": exists, "size": size})
+    return result
+
+
+def get_heartbeats():
+    """Read terminal heartbeats."""
+    hb_file = COMMS / "heartbeats.json"
+    if not hb_file.exists():
+        return {}
     try:
-        data = json.loads(mcp_json.read_text(encoding="utf-8"))
-        servers = []
-        for name, config in data.get("mcpServers", {}).items():
-            script = config.get("args", [""])[0] if config.get("args") else ""
-            exists = Path(script).exists() if script else False
-            servers.append({"name": name, "script": os.path.basename(script), "exists": exists})
-        return servers
-    except:
-        return []
+        return json.loads(hb_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
 
 
 def build_api_response():
@@ -198,13 +274,12 @@ def build_api_response():
         "lint": get_lint(),
         "mods": get_mod_stats(),
         "changes": get_changes(),
-        "servers": get_servers(),
+        "docs": get_docs(),
+        "heartbeats": get_heartbeats(),
     }
 
 
 DASHBOARD_HTML_FILE = Path(__file__).parent / "index.html"
-
-
 
 
 class DashboardHandler(SimpleHTTPRequestHandler):
@@ -228,7 +303,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.end_headers()
 
     def log_message(self, format, *args):
-        pass  # Suppress request logging
+        pass
 
 
 def main():
@@ -237,7 +312,6 @@ def main():
     print(f"Dashboard running at http://localhost:{port}")
     print("Press Ctrl+C to stop")
 
-    # Open in browser
     def open_browser():
         time.sleep(1)
         webbrowser.open(f"http://localhost:{port}")

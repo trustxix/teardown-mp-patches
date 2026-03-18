@@ -161,14 +161,22 @@ def fix_draw_func(source: str) -> str:
 # Matches: <word> > 0 then  (entity handle check pattern)
 _HANDLE_GT_RE = re.compile(r"(\w+)\s*>\s*0\s+then")
 
+# Import non-handle detection from lint.py
+from tools.lint import _is_non_handle_name
+
 
 def fix_handle_gt(source: str) -> str:
     """Fix entity handle comparison: ``handle > 0 then`` → ``handle ~= 0 then``.
 
     In Teardown v2, client-side entity handles can be negative, so ``> 0``
     incorrectly treats valid negative handles as nil/invalid.
+    Skips variables that are clearly not entity handles (dist, count, etc.).
     """
-    return _HANDLE_GT_RE.sub(r"\1 ~= 0 then", source)
+    def _replace(m):
+        if _is_non_handle_name(m.group(1)):
+            return m.group(0)
+        return m.group(1) + " ~= 0 then"
+    return _HANDLE_GT_RE.sub(_replace, source)
 
 
 # ---------------------------------------------------------------------------

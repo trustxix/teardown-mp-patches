@@ -174,13 +174,16 @@ def test_fix_handle_gt_various_names():
 
 
 def test_fix_handle_gt_does_not_affect_numeric_comparisons():
-    """Pure numeric comparisons like ``count > 0 then`` will be rewritten —
-    this is intentional (the fixer is conservative for handles; callers should
-    review). Document this known behaviour rather than assert it won't happen."""
+    """Non-handle variables like count, dist, fireCount should be left alone."""
     src = 'if count > 0 then\n'
-    # The fixer WILL change this; that's a known trade-off.
     fixed = fix_handle_gt(src)
-    assert '~= 0 then' in fixed
+    assert fixed == src  # unchanged — count is not a handle
+
+    src2 = 'if dist > 0 then\n'
+    assert fix_handle_gt(src2) == src2
+
+    src3 = 'if fireCount > 0 then\n'
+    assert fix_handle_gt(src3) == src3
 
 
 # ---------------------------------------------------------------------------

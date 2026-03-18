@@ -95,8 +95,8 @@
 | Scorpion | Y | Y | Y | Y | Y | Y |  | Y | Y |
 | SG553 | Y | Y | Y | Y | Y | Y |  | Y | Y |
 | Shape_Collapsor |  |  | Y | Y | Y | Y |  | Y | Y |
-| Swap_Button |  |  | Y |  |  | Y |  | Y |  |
-| Thruster_Tool |  |  | Y |  |  | Y |  | Y |  |
+| Swap_Button |  |  | Y | Y | Y | Y |  | Y |  |
+| Thruster_Tool |  |  | Y | Y | Y | Y |  | Y |  |
 | Tripmine | Y | Y | Y | Y | Y | Y |  | Y | Y |
 | Vacuum_Cleaner |  |  | Y | Y | Y | Y |  | Y |  |
 | Welding_Tool |  |  | Y | Y | Y | Y |  | Y |  |

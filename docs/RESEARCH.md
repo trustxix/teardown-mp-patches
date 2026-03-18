@@ -136,7 +136,7 @@ end
 
 **Impact:** Players can't replenish custom weapon ammo from crates on multiplayer maps.
 
-**Action:** ~~Add `SetToolAmmoPickupAmount` to `server.init()` for all weapon mods.~~ **DONE (2026-03-17)** — All 50 mods have AmmoPickup=Y in audit.
+**Action:** ~~Add `SetToolAmmoPickupAmount` to `server.init()` for all weapon mods.~~ **DONE (2026-03-17)** — All 101 mods have AmmoPickup=Y in audit.
 
 ---
 

@@ -6,16 +6,16 @@
 
 | Status | Count |
 |--------|-------|
-| **Fully Patched (v2 rewrite)** | 102 |
-| **Unpatched tool mods** | 83 |
+| **Fully Patched (v2 rewrite)** | 101 |
+| **Unpatched tool mods** | 84 |
 | **Total tool mods in workshop** | 185 |
 | **Total workshop items (incl. maps)** | 243 |
 
-> Counts updated 2026-03-18. Batch 7: 39 RMW mods (102 total installed). Mass conversion in progress.
+> Counts updated 2026-03-18. .500_Magnum (v1) removed — tool ID conflict with 500_Magnum (v2) resolved. 101 mods installed.
 
 ## Fully Patched Mods (Batch 1 — 35 mods)
 
-- .500 Magnum (2401591426) — **v1 CONFLICT: shares tool ID "500magnum" with Batch 3 v2 rewrite. Pending removal.**
+- ~~.500 Magnum (2401591426)~~ — **REMOVED (2026-03-18): v1 tool ID conflict with Batch 3 v2 rewrite (Issue #38)**
 - [MP] AC130 Airstrike WIP (3667283920)
 - AK-47 (2401590749)
 - AWP (2401577826)

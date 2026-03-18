@@ -29,6 +29,7 @@ All resolved bugs and the rules derived from them. Consult before making changes
 23. Throttle `FindShapes()`/`QueryAabb()` to ≤4Hz — never per-tick per-player
 24. `PlaySound()`/`SpawnParticle()` are CLIENT-ONLY — never call on server
 25. `QueryShot()` + `ApplyPlayerDamage()` on SERVER — client uses `QueryRaycast()` for visuals
+26. Always guard `ApplyPlayerDamage()` with `player ~= 0` after `QueryShot()` — player 0 = host
 
 > **Note:** Issues #1-19 were resolved in earlier sessions. Their rules are captured above. Detailed entries for #1-19 are no longer available but all patterns are encoded in the lint tool (`python -m tools.lint`).
 
@@ -498,6 +499,30 @@ All include: `optionsOpen` in `createPlayerData()`, `server.setOptionsOpen()` fo
 **Fix:** Replaced `GetAimPos` with `GetPlayerAimInfo`, added `QueryShot`+`ApplyPlayerDamage` to `ProjectileOperations`, removed client ammo decrement, added default keybind hints, reload via ServerCall, added OptionsMenu/OptionsGuard/AmmoPickup.
 
 **RULES: #11 (GetPlayerAimInfo), #13/#30 (QueryShot on server), #8/#9 (server/client split), #10 (no raw keys with player param)**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #47: QueryShot player=0 causes phantom host damage
+
+**Symptom:** Tripmine beam hitting debris/terrain caused the host player to take damage from anywhere on the map, even when no player was near the beam.
+
+**Root cause:** `QueryShot()` returns `player=0` when it hits a non-player object (shape, terrain, debris). On the server, player ID 0 maps to the host. Calling `ApplyPlayerDamage(0, damage, ...)` therefore silently damages the host regardless of position.
+
+**Fix:** Guard all `ApplyPlayerDamage` calls with `player ~= 0` check:
+```lua
+local hit, dist, shape, player, hitFactor, normal = QueryShot(pos, dir, len, radius, p)
+if hit and player ~= 0 then
+    ApplyPlayerDamage(player, damage, "toolid", p)
+end
+```
+
+**Applied to:** Tripmine
+
+**Investigation (API Surgeon):** The 5-param form `QueryShot(pos, dir, dist, radius, attacker_p)` — used by all weapon mods — excludes the attacker and returns `nil` for non-player hits. The `if player then` guard is safe. The 3-param form `QueryShot(origin, dir, dist)` — used only by Tripmine — has no attacker exclusion and can return `player=0`. Only the 3-param form was vulnerable.
+
+**RULE: The 5-param `QueryShot(pos, dir, dist, radius, p)` returns nil for no-player-hit — `if player then` is safe. The 3-param form may return 0 — use `player ~= 0`. When in doubt, `player ~= 0` is always the safer guard (0 is truthy in Lua).**
 
 **Date fixed:** 2026-03-18
 

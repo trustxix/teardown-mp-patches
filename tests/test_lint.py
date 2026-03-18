@@ -28,6 +28,7 @@ from tools.lint import (
     check_per_tick_rpc,
     check_missing_version2,
     check_info_txt,
+    check_shoot_missing_attribution,
     lint_source,
 )
 
@@ -1454,3 +1455,58 @@ class TestCheckInfoTxt:
         findings = check_info_txt(mod_dir)
         checks = [f["check"] for f in findings]
         assert "INFO-MISSING-VERSION2" not in checks
+
+
+# ---------------------------------------------------------------------------
+# SHOOT-NO-ATTRIB (Check 22)
+# ---------------------------------------------------------------------------
+
+class TestShootMissingAttribution:
+    def test_full_7_param_clean(self):
+        src = 'Shoot(pos, dir, "bullet", 1, 100, p, "gun")'
+        assert check_shoot_missing_attribution(src) == []
+
+    def test_missing_player_and_toolid_flagged(self):
+        src = 'Shoot(r, Vec(0, -1, 0), "rocket", 4, 5000)'
+        findings = check_shoot_missing_attribution(src)
+        assert len(findings) == 1
+        assert "SHOOT-NO-ATTRIB" in findings[0]["check"]
+
+    def test_missing_toolid_only_flagged(self):
+        src = 'Shoot(pos, dir, "bullet", 1, 100, p)'
+        findings = check_shoot_missing_attribution(src)
+        assert len(findings) == 1
+
+    def test_nested_vec_args_counted_correctly(self):
+        src = 'Shoot(VecAdd(pos, Vec(1,2,3)), Vec(0,-1,0), "rocket", 4, 5000, p, "gun")'
+        assert check_shoot_missing_attribution(src) == []
+
+    def test_user_defined_shoot_skipped(self):
+        src = (
+            "function Shoot(p, data)\n"
+            "    -- custom shoot\n"
+            "end\n"
+            "Shoot(p, data)\n"
+        )
+        assert check_shoot_missing_attribution(src) == []
+
+    def test_qualified_method_skipped(self):
+        src = 'server.Shoot(playerId)'
+        assert check_shoot_missing_attribution(src) == []
+
+    def test_commented_out_ignored(self):
+        src = '-- Shoot(pos, dir, "bullet", 1, 100)'
+        assert check_shoot_missing_attribution(src) == []
+
+    def test_severity_is_info(self):
+        src = 'Shoot(r, Vec(0,-1,0), "rocket", 4, 5000)'
+        findings = check_shoot_missing_attribution(src)
+        assert findings[0]["severity"] == "info"
+
+    def test_multiple_calls_multiple_findings(self):
+        src = (
+            'Shoot(r1, Vec(0,-1,0), "rocket", 4, 5000)\n'
+            'Shoot(r2, Vec(0,-1,0), "bullet", 1, 5000)\n'
+        )
+        findings = check_shoot_missing_attribution(src)
+        assert len(findings) == 2

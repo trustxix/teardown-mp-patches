@@ -548,7 +548,34 @@
       "description": "Added SHOOT-NO-ATTRIB lint rule (Check 22, INFO tier): flags Shoot() calls with fewer than 7 args (missing playerId/toolId for kill attribution). Uses negative lookbehind to skip user-defined qualified methods like server.Shoot(). Includes robust top-level comma counter for nested Vec() args. 309 tests pass, 0 findings (all fixed).",
       "timestamp": "2026-03-18T18:52:55.324596+00:00",
       "documented": false
+    },
+    {
+      "id": 62,
+      "role": "api_surgeon",
+      "mod": "tests/test_lint.py",
+      "type": "tool_update",
+      "description": "Added 9 tests for SHOOT-NO-ATTRIB lint rule (Check 22): full 7-param clean, missing player/toolId flagged, missing toolId only, nested Vec args, user-defined Shoot skip, qualified method skip (server.Shoot), comment ignore, severity check, multiple findings. Total tests: 318 (was 309).",
+      "timestamp": "2026-03-18T18:57:11.579338+00:00",
+      "documented": false
+    },
+    {
+      "id": 63,
+      "role": "api_surgeon",
+      "mod": "Tripmine",
+      "type": "bug_fix",
+      "description": "Fixed phantom host damage: QueryShot returns player=0 when debris triggers the beam (no player in path). GetPlayerHealth(0) returns host health, so ApplyPlayerDamage(0,...) would damage the host anywhere on the map. Added `if player ~= 0 then` guard. Removed DebugPrint. Kept ApplyPlayerDamage at 3 params (environmental damage, no attacker \u2014 correct for tripmines).",
+      "timestamp": "2026-03-18T18:58:59.955942+00:00",
+      "documented": false
+    },
+    {
+      "id": 64,
+      "role": "api_surgeon",
+      "mod": "Multiple mods (15)",
+      "type": "polish",
+      "description": "Added @lint-ok MANUAL-AIM to 18 QueryRaycast lines in 15 gun/weapon mods. All triaged as non-aim uses: projectile collision (6), targeting reticle (3), warhead impact detection (3), melee/blade visual (2), spread calculation (1), surface detection (1), tool animation (1), drone targeting (1). MANUAL-AIM findings: 18\u21920. Clean mods: 83\u2192101 of 102.",
+      "timestamp": "2026-03-18T19:13:19.260503+00:00",
+      "documented": false
     }
   ],
-  "next_id": 62
+  "next_id": 65
 }

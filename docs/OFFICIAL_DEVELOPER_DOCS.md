@@ -302,10 +302,14 @@ QueryShot(position, direction, length, radius, playerId)
     -- DETECTS PLAYERS (unlike QueryRaycast)
     -- length: number max distance
     -- radius: number hit radius
-    -- playerId: attacker (for self-hit exclusion)
+    -- playerId: attacker (for self-hit exclusion — excludes this player from detection)
     -- Returns: hit, dist, shape, player, hitFactor, normal
+    --   player = nil when no player hit (5-param form)
     -- NOTE: API page shows (pos, dir, [maxDist]) but official lasergun
     --   uses this extended signature
+    -- IMPORTANT: Always use the 5-param form for weapons. The 3-param form
+    --   QueryShot(pos, dir, maxDist) has no attacker exclusion and may
+    --   return player=0 for non-player hits (see Issue #47)
 ```
 
 ### ApplyPlayerDamage (beam/melee damage — server only)

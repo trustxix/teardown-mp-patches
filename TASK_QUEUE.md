@@ -146,6 +146,7 @@ Still uses v1 structure. Needs full rewrite before features can be added.
 - **T45** (mod_converter) Tripmine: Add OptionsMenu, OptionsGuard — **DONE**
 - **Self-assigned** (mod_converter) Magic_Bag, Swap_Button, Thruster_Tool: Add OptionsMenu+OptionsGuard — **DONE** (0 audit gaps remaining)
 - **Self-assigned** (mod_converter) @lint-ok suppressions for 14 utility/vehicle mods — **DONE** (19 intentional findings suppressed, 52→33, 83/101 clean)
+- **T49** (api_surgeon) @lint-ok MANUAL-AIM for 18 weapon/projectile mods — **DONE** (MANUAL-AIM 18→0, 101/101 clean)
 - **T46** (api_surgeon) Shape_Collapsor: Add AmmoDisplay — **DONE** (already present, audit regex fixed)
 - **T47** (api_surgeon) Shoot() kill attribution — **DONE** (Airstrike_Arsenal 5 calls + Bomb_Attack 2 calls: added playerId+toolId)
 - **T48** (api_surgeon) Tripmine: Guard QueryShot player=0 phantom damage — **DONE** (Issue #47)

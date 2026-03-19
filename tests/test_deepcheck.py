@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 
-from tools.deepcheck import check_assets, AssetFinding
+from tools.deepcheck import check_assets, check_id_xref, AssetFinding, Finding
 
 FIXTURES = Path(__file__).parent / "fixtures" / "deepcheck"
 
@@ -53,3 +53,49 @@ class TestAssetValidator:
         findings = check_assets(mod_dir)
         fails = [f for f in findings if f.status == "FAIL"]
         assert len(fails) == 0
+
+
+# ===========================================================================
+# check_id_xref
+# ===========================================================================
+
+class TestIdCrossRef:
+    def test_mismatched_ids_flagged(self):
+        mod_dir = FIXTURES / "id_mismatch"
+        findings = check_id_xref(mod_dir)
+        fails = [f for f in findings if f.status == "FAIL"]
+        # RegisterTool("mygun") vs SetToolEnabled("MyGun"), SetToolAmmo("my_gun"), GetPlayerTool("MYGUN")
+        assert len(fails) >= 2
+
+    def test_consistent_ids_pass(self):
+        mod_dir = FIXTURES / "complete_gun"
+        findings = check_id_xref(mod_dir)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert len(fails) == 0
+
+    def test_missing_set_tool_ammo_warned(self, tmp_path):
+        mod = tmp_path / "no_ammo"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = NoAmmo\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.init()\n'
+            '    RegisterTool("gun", "Gun", "MOD/vox/g.vox", 5)\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    for p in PlayersAdded() do\n'
+            '        SetToolEnabled("gun", true, p)\n'
+            '    end\n'
+            'end\n'
+        )
+        findings = check_id_xref(mod)
+        warns = [f for f in findings if f.status == "WARN" and "SetToolAmmo" in f.detail]
+        assert len(warns) == 1
+
+    def test_no_register_tool_returns_empty(self, tmp_path):
+        mod = tmp_path / "env_mod"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = Env\nversion = 2")
+        (mod / "main.lua").write_text('#version 2\nfunction server.init()\nend\n')
+        findings = check_id_xref(mod)
+        assert findings == []

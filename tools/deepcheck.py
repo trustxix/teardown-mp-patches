@@ -121,3 +121,75 @@ def check_assets(mod_dir: Path) -> list[AssetFinding]:
                 ))
 
     return findings
+
+
+# ---------------------------------------------------------------------------
+# 1.5 ID Cross-Reference Validator
+# ---------------------------------------------------------------------------
+
+_REGISTER_TOOL_ID_RE = re.compile(r'RegisterTool\s*\(\s*"([^"]+)"')
+_SET_TOOL_ENABLED_ID_RE = re.compile(r'SetToolEnabled\s*\(\s*"([^"]+)"')
+_SET_TOOL_AMMO_ID_RE = re.compile(r'SetToolAmmo\s*\(\s*"([^"]+)"')
+_GET_PLAYER_TOOL_ID_RE = re.compile(r'GetPlayerTool\s*\([^)]*\)\s*==\s*"([^"]+)"')
+_AMMO_DISPLAY_ID_RE = re.compile(r'SetString\s*\(\s*"game\.tool\.([^.]+)\.ammo\.display"')
+
+
+def check_id_xref(mod_dir: Path) -> list[Finding]:
+    """Verify tool IDs are consistent across Register/Enable/Ammo/HUD."""
+    findings: list[Finding] = []
+    all_source = ""
+    for _, source in read_lua_files(mod_dir):
+        all_source += source + "\n"
+
+    registered_ids = _REGISTER_TOOL_ID_RE.findall(all_source)
+    if not registered_ids:
+        return []
+
+    enabled_ids = _SET_TOOL_ENABLED_ID_RE.findall(all_source)
+    ammo_ids = _SET_TOOL_AMMO_ID_RE.findall(all_source)
+    hud_ids = _GET_PLAYER_TOOL_ID_RE.findall(all_source)
+
+    for tool_id in registered_ids:
+        # Check SetToolEnabled
+        if tool_id not in enabled_ids:
+            case_matches = [eid for eid in enabled_ids if eid.lower() == tool_id.lower()]
+            if case_matches:
+                findings.append(Finding(
+                    validator="ID-XREF", status="FAIL",
+                    detail=f'Case mismatch: RegisterTool("{tool_id}") vs SetToolEnabled("{case_matches[0]}")',
+                ))
+            elif not enabled_ids:
+                findings.append(Finding(
+                    validator="ID-XREF", status="WARN",
+                    detail=f'No SetToolEnabled found for "{tool_id}" — tool may not appear for joining players',
+                ))
+            else:
+                findings.append(Finding(
+                    validator="ID-XREF", status="FAIL",
+                    detail=f'SetToolEnabled uses "{enabled_ids[0]}" but RegisterTool uses "{tool_id}"',
+                ))
+
+        # Check SetToolAmmo
+        if tool_id not in ammo_ids:
+            case_matches = [aid for aid in ammo_ids if aid.lower() == tool_id.lower()]
+            if case_matches:
+                findings.append(Finding(
+                    validator="ID-XREF", status="FAIL",
+                    detail=f'Case mismatch: RegisterTool("{tool_id}") vs SetToolAmmo("{case_matches[0]}")',
+                ))
+            else:
+                findings.append(Finding(
+                    validator="ID-XREF", status="WARN",
+                    detail=f'No SetToolAmmo found for "{tool_id}" — tool may not appear in toolbar',
+                ))
+
+        # Check GetPlayerTool in HUD
+        if hud_ids and tool_id not in hud_ids:
+            case_matches = [hid for hid in hud_ids if hid.lower() == tool_id.lower()]
+            if case_matches:
+                findings.append(Finding(
+                    validator="ID-XREF", status="FAIL",
+                    detail=f'Case mismatch: RegisterTool("{tool_id}") vs GetPlayerTool check "{case_matches[0]}"',
+                ))
+
+    return findings

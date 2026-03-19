@@ -14,6 +14,14 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from mcp.server import FastMCP
 from mcp_task_server import task_store
+from mcp_task_server.server import (
+    heartbeat as _heartbeat,
+    get_heartbeats as _get_heartbeats,
+    check_terminal_health as _check_health,
+    auto_commit as _auto_commit,
+    generate_tasks_from_lint as _gen_tasks_lint,
+    team_log as _team_log,
+)
 
 mcp = FastMCP(
     name="teardown-team",
@@ -394,6 +402,67 @@ def refresh_mod_registry() -> dict:
 def get_mod_registry_diff(mod_name: str) -> dict | str:
     """Get changes for a specific mod since last scan."""
     return _gmd(mod_name)
+
+
+# ── TASK SERVER TOOLS (delegated) ─────────────────────
+
+@mcp.tool()
+def heartbeat(role: str, status: str = "working") -> dict:
+    """Report alive status for terminal health tracking."""
+    return _heartbeat(role, status)
+
+
+@mcp.tool()
+def get_heartbeats() -> dict:
+    """Get heartbeat status for all terminals."""
+    return _get_heartbeats()
+
+
+@mcp.tool()
+def check_terminal_health() -> dict:
+    """Check health of all terminals. Returns stale/dead terminals and orphaned tasks."""
+    return _check_health()
+
+
+@mcp.tool()
+def auto_commit(message: str | None = None) -> dict:
+    """Auto-commit project state. QA Lead only. Uses git add -u (safe)."""
+    return _auto_commit(message)
+
+
+@mcp.tool()
+def generate_tasks_from_lint(role: str = "api_surgeon", priority: str = "medium") -> dict:
+    """Generate tasks from lint findings. Groups by mod, skips mods with existing tasks."""
+    return _gen_tasks_lint(role, priority)
+
+
+@mcp.tool()
+def team_log(role: str, event: str, detail: str) -> dict:
+    """Append structured entry to team.log."""
+    return _team_log(role, event, detail)
+
+
+# ── HANDOFF TOOLS ─────────────────────────────────────
+
+@mcp.tool()
+def save_handoff(role: str, current_task_id: str, notes: str) -> dict:
+    """Save handoff note for graceful context overflow recovery."""
+    handoff = COMMS_DIR / role / "handoff.md"
+    handoff.parent.mkdir(parents=True, exist_ok=True)
+    content = f"---\ntask_id: {current_task_id}\nsaved_at: {datetime.now(timezone.utc).isoformat()}\n---\n\n{notes}"
+    handoff.write_text(content, encoding="utf-8")
+    return {"success": True, "path": str(handoff)}
+
+
+@mcp.tool()
+def check_handoff(role: str) -> dict | str:
+    """Check for handoff note from a previous session. Deletes it after reading."""
+    handoff = COMMS_DIR / role / "handoff.md"
+    if not handoff.exists():
+        return "No handoff note found."
+    content = handoff.read_text(encoding="utf-8", errors="replace")
+    handoff.unlink()
+    return {"found": True, "content": content}
 
 
 if __name__ == "__main__":

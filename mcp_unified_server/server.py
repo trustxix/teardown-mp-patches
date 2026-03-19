@@ -442,6 +442,17 @@ def team_log(role: str, event: str, detail: str) -> dict:
     return _team_log(role, event, detail)
 
 
+# ── METRICS ───────────────────────────────────────────
+
+from mcp_task_server import metrics as _metrics
+
+
+@mcp.tool()
+def get_metrics() -> dict:
+    """Get team performance metrics (throughput, avg task time, by role)."""
+    return _metrics.compute()
+
+
 # ── HANDOFF TOOLS ─────────────────────────────────────
 
 @mcp.tool()

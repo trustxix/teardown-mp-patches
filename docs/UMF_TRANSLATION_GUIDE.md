@@ -6,6 +6,8 @@
 > **Analyzed mods:** Omni Gun (2994616319), Blight Gun (3004952393), BHL-X42 (2721596235), Magnets (2783125614)
 >
 > **Created:** 2026-03-19 by API Surgeon
+>
+> **Results:** 14 UMF mods converted via bypass strategy (#162-#177). 5 UMF mods deferred (too complex). Guide proved viable for all attempted conversions.
 
 ---
 

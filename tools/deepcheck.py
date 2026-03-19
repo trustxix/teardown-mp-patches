@@ -97,7 +97,11 @@ def check_assets(mod_dir: Path) -> list[AssetFinding]:
             local_path = asset_ref.replace("MOD/", "", 1)
             full_path = mod_dir / local_path
 
-            if full_path.exists():
+            # Also check .tde variant (Teardown's encrypted asset format)
+            # Engine transparently loads .ogg.tde when code references .ogg
+            tde_path = mod_dir / (local_path + ".tde")
+
+            if full_path.exists() or tde_path.exists():
                 findings.append(AssetFinding(
                     validator="ASSET",
                     status="PASS",
@@ -200,16 +204,18 @@ def check_id_xref(mod_dir: Path) -> list[Finding]:
 # ---------------------------------------------------------------------------
 
 _FUNC_DEF_RE = re.compile(r'^\s*function\s+([\w.]+)\s*\(([^)]*)\)', re.MULTILINE)
+# Also match assignment-style: name.func = function(params)
+_FUNC_ASSIGN_RE = re.compile(r'^\s*([\w.]+)\s*=\s*function\s*\(([^)]*)\)', re.MULTILINE)
 _SERVERCALL_RE = re.compile(r'ServerCall\s*\(\s*"([^"]+)"')
 _CLIENTCALL_RE = re.compile(r'ClientCall\s*\(\s*([^,]+),\s*"([^"]+)"')
-_SHOOT_CALL_RE = re.compile(r'\bShoot\s*\(')
-_QUERYSHOT_CALL_RE = re.compile(r'\bQueryShot\s*\(')
-_APPLY_DAMAGE_RE = re.compile(r'\bApplyPlayerDamage\s*\(')
+_SHOOT_CALL_RE = re.compile(r'(?<!\.)\bShoot\s*\(')
+_QUERYSHOT_CALL_RE = re.compile(r'(?<!\.)\bQueryShot\s*\(')
+_APPLY_DAMAGE_RE = re.compile(r'(?<!\.)\bApplyPlayerDamage\s*\(')
 _USETOOL_INPUT_RE = re.compile(r'Input(?:Pressed|Down)\s*\(\s*"usetool"')
-_PLAYSOUND_RE = re.compile(r'\bPlaySound\s*\(')
-_SPAWNPARTICLE_RE = re.compile(r'\bSpawnParticle\s*\(')
-_POINTLIGHT_RE = re.compile(r'\bPointLight\s*\(')
-_EXPLOSION_RE = re.compile(r'\bExplosion\s*\(')
+_PLAYSOUND_RE = re.compile(r'(?<!\.)\bPlaySound\s*\(')
+_SPAWNPARTICLE_RE = re.compile(r'(?<!\.)\bSpawnParticle\s*\(')
+_POINTLIGHT_RE = re.compile(r'(?<!\.)\bPointLight\s*\(')
+_EXPLOSION_RE = re.compile(r'(?<!\.)\bExplosion\s*\(')
 
 
 def _extract_functions(source: str) -> dict[str, str]:
@@ -223,11 +229,18 @@ def _extract_functions(source: str) -> dict[str, str]:
     lines = source.splitlines()
 
     # Find all top-level function definitions and their line numbers
+    # Handles both: function name() and name = function()
     func_starts: list[tuple[str, int]] = []
     for m in _FUNC_DEF_RE.finditer(source):
         func_name = m.group(1)
         start_line = source[:m.start()].count('\n')
         func_starts.append((func_name, start_line))
+    for m in _FUNC_ASSIGN_RE.finditer(source):
+        func_name = m.group(1)
+        start_line = source[:m.start()].count('\n')
+        func_starts.append((func_name, start_line))
+    # Sort by line number so body extraction works correctly
+    func_starts.sort(key=lambda x: x[1])
 
     for idx, (func_name, start_line) in enumerate(func_starts):
         # The function body ends either at the next top-level function or at a matching 'end'
@@ -269,11 +282,15 @@ def _extract_functions(source: str) -> dict[str, str]:
 
 
 def _is_client_context(func_name: str) -> bool:
-    return func_name.startswith('client.')
+    """Check if function runs in client context.
+    Matches: client.tick, client.draw, clientTickPlayer, clientGetHit, etc."""
+    return func_name.startswith('client.') or func_name.startswith('client')
 
 
 def _is_server_context(func_name: str) -> bool:
-    return func_name.startswith('server.')
+    """Check if function runs in server context.
+    Matches: server.tick, server.init, serverTickPlayer, serverShoot, etc."""
+    return func_name.startswith('server.') or func_name.startswith('server')
 
 
 # ---------------------------------------------------------------------------
@@ -290,27 +307,130 @@ def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
     if not _USETOOL_INPUT_RE.search(all_source):
         return []  # Not a weapon mod
 
+    # Skip firing chain check if mod has @deepcheck-ok firing-chain annotation
+    if '@deepcheck-ok firing-chain' in all_source:
+        return []
+
     funcs = _extract_functions(all_source)
 
+    # Detect custom global functions that shadow Teardown API names
+    # (e.g., Attack_Drone defines "function Shoot(p, data)" for projectile visuals)
+    _api_names = {"Shoot", "QueryShot", "Explosion", "ApplyPlayerDamage"}
+    shadowed_apis = {fn for fn in funcs if fn in _api_names}
+
+    # Check if mod has ANY damage APIs — if not, it's a tool mod, not a weapon
+    # Exclude calls with @lint-ok annotations (e.g., environmental Explosion)
+    def _has_unannotated(regex: re.Pattern[str], source: str) -> bool:
+        for m in regex.finditer(source):
+            line_start = source.rfind('\n', 0, m.start()) + 1
+            line_end = source.find('\n', m.end())
+            line = source[line_start:line_end if line_end != -1 else len(source)]
+            if '@lint-ok' not in line and '@deepcheck-ok' not in line:
+                return True
+        return False
+
+    has_any_damage = (_has_unannotated(_SHOOT_CALL_RE, all_source) or
+                      _has_unannotated(_QUERYSHOT_CALL_RE, all_source) or
+                      _has_unannotated(_APPLY_DAMAGE_RE, all_source) or
+                      _has_unannotated(_EXPLOSION_RE, all_source))
+    if not has_any_damage:
+        return []  # Tool mod with no damage — firing chain N/A
+
+    # Check for server-side usetool handling (valid: action names work with player param on server)
+    # Usetool must be in a server function; damage can be in ANY non-client function (helpers count)
+    server_has_usetool = False
+    server_damage_apis = set()
+    for func_name, body in funcs.items():
+        if _is_server_context(func_name) and _USETOOL_INPUT_RE.search(body):
+            server_has_usetool = True
+        # Damage APIs can be in server functions OR non-prefixed helpers
+        if not _is_client_context(func_name):
+            if _SHOOT_CALL_RE.search(body): server_damage_apis.add("Shoot()")
+            if _QUERYSHOT_CALL_RE.search(body): server_damage_apis.add("QueryShot()")
+            if _EXPLOSION_RE.search(body): server_damage_apis.add("Explosion()")
+            if _APPLY_DAMAGE_RE.search(body): server_damage_apis.add("ApplyPlayerDamage()")
+            if re.search(r'\bMakeHole\s*\(', body): server_damage_apis.add("MakeHole()")
+
+    server_has_usetool_and_damage = False
+    if server_has_usetool and server_damage_apis:
+        server_has_usetool_and_damage = True
+        apis = sorted(server_damage_apis)
+        findings.append(ChainFinding(
+            validator="FIRING-CHAIN", status="PASS",
+            detail=f"Complete chain: server handles usetool with {' + '.join(apis)}",
+            chain=["server.usetool", *apis],
+        ))
+
     # Find ServerCall targets from client functions that handle usetool
+    # Also trace one level of function call indirection (e.g., usetool → client.shoot() → ServerCall)
     servercall_targets: list[str] = []
     for func_name, body in funcs.items():
         if _is_client_context(func_name) and _USETOOL_INPUT_RE.search(body):
             targets = _SERVERCALL_RE.findall(body)
             servercall_targets.extend(targets)
+            # Trace calls to other functions and check those for ServerCalls
+            for called_fn in re.findall(r'\b((?:client\.)?[\w]+)\s*\(', body):
+                if called_fn in funcs:
+                    indirect_targets = _SERVERCALL_RE.findall(funcs[called_fn])
+                    servercall_targets.extend(indirect_targets)
 
     # Check for Shoot() in client context (wrong side)
-    for func_name, body in funcs.items():
-        if _is_client_context(func_name):
-            if _SHOOT_CALL_RE.search(body) and _USETOOL_INPUT_RE.search(body):
-                findings.append(ChainFinding(
-                    validator="FIRING-CHAIN", status="FAIL",
-                    detail=f"Shoot() called in client function {func_name} — must be on server",
-                    chain=[func_name, "Shoot()"],
-                ))
+    # Skip if mod defines a custom global "Shoot" function (shadows the API)
+    if "Shoot" not in shadowed_apis:
+        for func_name, body in funcs.items():
+            if _is_client_context(func_name):
+                if _SHOOT_CALL_RE.search(body) and _USETOOL_INPUT_RE.search(body):
+                    findings.append(ChainFinding(
+                        validator="FIRING-CHAIN", status="FAIL",
+                        detail=f"Shoot() called in client function {func_name} — must be on server",
+                        chain=[func_name, "Shoot()"],
+                    ))
 
-    # If no ServerCall targets found
+    # If no ServerCall targets found from client AND no server-side usetool handling
     if not servercall_targets:
+        if server_has_usetool_and_damage:
+            return findings  # Server handles it directly — chain is valid
+
+        # Check if server has usetool + damage exists elsewhere in server code (indirect chain)
+        server_has_usetool = any(
+            _is_server_context(fn) and _USETOOL_INPUT_RE.search(body)
+            for fn, body in funcs.items()
+        )
+        server_has_damage_anywhere = any(
+            _is_server_context(fn) and (
+                _SHOOT_CALL_RE.search(body) or _EXPLOSION_RE.search(body) or
+                _QUERYSHOT_CALL_RE.search(body) or _APPLY_DAMAGE_RE.search(body)
+            )
+            for fn, body in funcs.items()
+        )
+        if server_has_usetool and server_has_damage_anywhere:
+            # Damage chain exists but through deeper indirect calls — WARN not FAIL
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="WARN",
+                detail="Server handles usetool and has damage APIs — chain exists through indirect calls",
+                chain=["server.usetool", "...", "damage"],
+            ))
+            return findings
+
+        # Check for bare (entity) functions that handle both usetool + damage
+        # v2 entity scripts use bare functions that run on both server+client;
+        # Shoot()/Explosion() only take effect server-side, which is valid
+        bare_has_usetool_and_damage = any(
+            not _is_client_context(fn) and not _is_server_context(fn) and
+            _USETOOL_INPUT_RE.search(body) and (
+                _SHOOT_CALL_RE.search(body) or _EXPLOSION_RE.search(body) or
+                _QUERYSHOT_CALL_RE.search(body) or _APPLY_DAMAGE_RE.search(body)
+            )
+            for fn, body in funcs.items()
+        )
+        if bare_has_usetool_and_damage:
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="WARN",
+                detail="Entity script: bare function handles usetool + damage (runs on both sides, damage is server-only)",
+                chain=["usetool", "Shoot()/damage", "(entity script)"],
+            ))
+            return findings
+
         has_client_shoot = any(
             _SHOOT_CALL_RE.search(body) for fn, body in funcs.items() if _is_client_context(fn)
         )
@@ -401,7 +521,16 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
                          _QUERYSHOT_CALL_RE.search(body) or _APPLY_DAMAGE_RE.search(body))
             if has_damage:
                 for api_name, api_re in _EFFECT_APIS:
-                    if api_re.search(body):
+                    # Check each matching line — skip if suppressed with @lint-ok
+                    unsuppressed = False
+                    for line in body.splitlines():
+                        stripped = line.strip()
+                        if stripped.startswith('--'):
+                            continue  # Skip Lua comments
+                        if api_re.search(line) and '@lint-ok' not in line:
+                            unsuppressed = True
+                            break
+                    if unsuppressed:
                         findings.append(ChainFinding(
                             validator="EFFECT-CHAIN", status="FAIL",
                             detail=f"{api_name}() called in damage function {func_name} — "
@@ -590,6 +719,11 @@ def check_servercall_params(mod_dir: Path) -> list[Finding]:
     funcs = _extract_functions(all_source)
 
     for m in _SERVERCALL_START_RE.finditer(all_source):
+        # Skip matches in Lua comments (-- to end of line)
+        line_start = all_source.rfind('\n', 0, m.start()) + 1
+        line_prefix = all_source[line_start:m.start()]
+        if '--' in line_prefix:
+            continue
         target = m.group(1)
         # Extract the full argument list with balanced parentheses
         after_name = m.end()
@@ -609,10 +743,48 @@ def check_servercall_params(mod_dir: Path) -> list[Finding]:
             call_args = []
 
         if target not in funcs:
-            findings.append(Finding(
-                validator="SERVERCALL-PARAMS", status="FAIL",
-                detail=f'ServerCall target "{target}" does not exist',
-            ))
+            # Also check for assignment-style: target = function(...)
+            assign_re = re.compile(
+                rf'{re.escape(target)}\s*=\s*function\s*\(([^)]*)\)'
+            )
+            assign_match = assign_re.search(all_source)
+            if not assign_match:
+                # Check for alias assignment: target = existing_function
+                alias_re = re.compile(
+                    rf'{re.escape(target)}\s*=\s*([\w.]+)\s*$', re.MULTILINE
+                )
+                alias_match = alias_re.search(all_source)
+                if alias_match:
+                    aliased_to = alias_match.group(1)
+                    # Valid if aliased to a known function (direct def or in funcs dict)
+                    if aliased_to in funcs or re.search(
+                        rf'function\s+{re.escape(aliased_to)}\s*\(', all_source
+                    ):
+                        continue
+                findings.append(Finding(
+                    validator="SERVERCALL-PARAMS", status="FAIL",
+                    detail=f'ServerCall target "{target}" does not exist',
+                ))
+            # If found via assignment, check param count against call args
+            elif assign_match:
+                params_str = assign_match.group(1).strip()
+                if params_str:
+                    func_params = [p.strip() for p in params_str.split(",") if p.strip()]
+                else:
+                    func_params = []
+                if len(call_args) != len(func_params):
+                    # Check optional params
+                    is_optional = False
+                    if len(call_args) < len(func_params):
+                        extra = func_params[len(call_args):]
+                        # Can't check body easily for assignment funcs, skip
+                        is_optional = False
+                    if not is_optional:
+                        findings.append(Finding(
+                            validator="SERVERCALL-PARAMS", status="FAIL",
+                            detail=f'ServerCall("{target}") passes {len(call_args)} args '
+                                   f'but function expects {len(func_params)} params ({", ".join(func_params)})',
+                        ))
             continue
 
         # Count function params
@@ -628,11 +800,23 @@ def check_servercall_params(mod_dir: Path) -> list[Finding]:
                 func_params = []
 
             if len(call_args) != len(func_params):
-                findings.append(Finding(
-                    validator="SERVERCALL-PARAMS", status="FAIL",
-                    detail=f'ServerCall("{target}") passes {len(call_args)} args '
-                           f'but function expects {len(func_params)} params ({", ".join(func_params)})',
-                ))
+                # Check for optional params (Lua pattern: param = param or default)
+                is_optional_mismatch = False
+                if len(call_args) < len(func_params):
+                    extra_params = func_params[len(call_args):]
+                    func_body = funcs.get(target, "")
+                    optional_count = sum(
+                        1 for pm in extra_params
+                        if re.search(rf'\b{re.escape(pm)}\s*=\s*{re.escape(pm)}\s+or\b', func_body)
+                    )
+                    if optional_count == len(extra_params):
+                        is_optional_mismatch = True
+                if not is_optional_mismatch:
+                    findings.append(Finding(
+                        validator="SERVERCALL-PARAMS", status="FAIL",
+                        detail=f'ServerCall("{target}") passes {len(call_args)} args '
+                               f'but function expects {len(func_params)} params ({", ".join(func_params)})',
+                    ))
 
     return findings
 

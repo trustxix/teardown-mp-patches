@@ -99,7 +99,7 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 - `-- @lint-ok-file RULE-NAME` — suppress a rule for the entire file (place at top of file)
 - `-- @audit-ok` — suppress audit false positives (e.g., tools using QueryShot instead of Shoot)
 
-**Tests:** `python -m pytest tests/ -q` — 458 tests covering all tools.
+**Tests:** `python -m pytest tests/ -q` — 523 tests covering all tools.
 
 ## Where Mods Live
 
@@ -196,7 +196,7 @@ The tools automatically tell you which docs to read:
 | `docs/UMF_TRANSLATION_GUIDE.md` | UMF framework API → v2 equivalents. Registry layer, tool patterns, input, UI, server/client split, 15-point conversion checklist. **Read before converting any UMF-blocked mod.** | High |
 | `docs/TEAM_PLUGINS.md` | All available plugins, agents, and skills with when-to-use decision table. **Every terminal should read this.** | High |
 | `docs/AUDIT_REPORT.md` | Generated feature matrix — which mods have/lack each feature. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` | Generated |
-| `ISSUES_AND_FIXES.md` | 58 resolved bugs with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
+| `ISSUES_AND_FIXES.md` | 40 resolved bugs (#20-#59) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
 | `MASTER_MOD_LIST.md` | All patched mods by batch with workshop IDs. Update after converting new mods. | Project |
 | `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` | Full v2 API (550+ functions). For exact function signatures. | Reference |
 

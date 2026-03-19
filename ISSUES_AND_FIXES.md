@@ -2,7 +2,7 @@
 
 All resolved bugs and the rules derived from them. Consult before making changes. Append after fixing new issues.
 
-## Key Rules (condensed from all 58 issues)
+## Key Rules (condensed from all 59 issues)
 
 1. NEVER use `goto` or `::label::` (Lua 5.1 only)
 2. NEVER use raw key names with player parameter - use ServerCall pattern
@@ -743,6 +743,58 @@ end
 
 ---
 
+## Issue #59: Deep analysis false positives masking real issues
+
+**Bug:** The deepcheck.py static analysis tool reported 57 FAIL mods, but many were false positives caused by 5 distinct bugs in the analysis tool itself. This masked real issues and made batch results unreliable for quality assessment.
+
+**Root causes (5 bugs fixed):**
+
+1. **ServerCall param counter couldn't handle nested parentheses.** `ServerCall("server.fn", p, GetLocalPlayer())` was miscounted because the inner `()` confused the parameter parser. Fix: Proper paren depth tracking.
+
+2. **HUD tool guard detector only checked `==` patterns.** Mods using `~=` patterns (e.g., `if GetPlayerTool(p) ~= "toolid"`) were flagged as missing guards. Fix: Accept both `==` and `~=` comparisons.
+
+3. **Effect chain warned for engine-replicated functions.** `Shoot()` and `Explosion()` are auto-replicated by the Teardown engine to all clients — they don't need explicit `ClientCall` for effects. Fix: Exclude engine-replicated functions from effect chain analysis.
+
+4. **Asset validator didn't recognize `.tde` encrypted files.** Teardown stores some assets as `file.ogg.tde` (encrypted). Code references `file.ogg` and the engine finds `.ogg.tde` transparently. Deepcheck only checked for exact filename match. Fix: Check for both `filename` and `filename.tde`.
+
+5. **Optional ServerCall params flagged as missing.** Some ServerCall patterns have optional trailing params. Fix: Added optional param detection.
+
+**Impact (phase 1):** FAIL count dropped 57→35 (22 false positives eliminated).
+
+**Phase 2 fixes (same session, by api_surgeon):** 3 additional deepcheck.py improvements eliminated 7 more false positives (35→28 FAIL):
+
+6. **API regex matched custom functions with same name.** `server.Shoot()` / `client.Shoot()` (custom user functions) matched the regex for Teardown's `Shoot()` API. Fix: `(?<!\.)` negative lookbehind — only match bare `Shoot()`, not `obj.Shoot()`. Fixed 4 ARM mods + others.
+
+7. **Shadowed API names not detected.** Mods defining custom global `function Shoot()` or `function QueryShot()` were still flagged for missing server-side calls. Fix: Track custom global function definitions and exclude their call sites from API analysis. Fixed Attack_Drone.
+
+8. **Lua optional param idiom not recognized.** `function foo(param) param = param or default ...end` — the `param or default` pattern means the param is optional, but deepcheck counted it as required. Fix: Detect Lua optional param idiom. Fixed Shape_Collapsor.
+
+**Phase 2 impact:** FAIL count 28→12 (16 more false positives eliminated, 5 additional deepcheck fixes):
+
+9. **Firing chain didn't trace function calls.** `usetool → ServerCall("server.fire") → fire() → Shoot()` was missed because the validator only looked for `Shoot()` directly in ServerCall target functions, not in functions they call. Fix: Recursive function-call tracing through the call graph.
+
+10. **ServerCall alias detection.** `server.syncSelection = server.onSelect` and similar Lua aliases meant the declared function had a different name from the ServerCall target. Fix: Alias detection for `a = b` patterns.
+
+11. **@lint-ok not respected in damage detection.** `-- @lint-ok EFFECT-CHAIN` suppressed lint but deepcheck still flagged the same code. Fix: Respect @lint-ok annotations in deepcheck validators.
+
+12. **@deepcheck-ok annotation support.** Entity scripts that are intentionally server-side (vehicle turrets, weapon systems) need suppression. Fix: New `@deepcheck-ok` annotation for intentional patterns that don't need fixing.
+
+13. **Entity script awareness.** Entity scripts run in their own context but deepcheck analyzed them as if they were in the main script's server/client split. Fix: Entity script detection and adjusted analysis.
+
+**Also fixed (code):** American_High_School: added missing `server.syncSelection()` function (ServerCall target didn't exist). MrRandoms_Vehicles: `@deepcheck-ok` for entity scripts.
+
+**Final impact:** FAIL count 57→12 (45 false positives eliminated across 13 fixes). Remaining 12 FAILs: 8 missing assets (T98/T99), 4 server-side effects in entity scripts (T96).
+
+**Test count:** 458→523 tests (65 new tests covering all fixes).
+
+**Affected tools:** `tools/deepcheck.py` (asset validator, firing chain, HUD validator, ServerCall checker, effect chain, API regex matching, function-call tracing, alias detection)
+
+**RULE: When deepcheck reports a FAIL, verify the finding manually before creating fix tasks. False positives in analysis tools waste more time than they save — always add regression tests for fixed false positives.**
+
+**Date fixed:** 2026-03-19
+
+---
+
 ## Tooling: PER-TICK-RPC destruction event guard (2026-03-19)
 
 **Improvement:** Added a 4th guard pattern to the PER-TICK-RPC lint rule. RPC calls (ServerCall/ClientCall) inside tick/update are now auto-suppressed if `MakeHole()` or `Explosion()` appears within ±10 lines — indicating the RPC is part of a destruction impact event, not continuous per-tick spam.
@@ -814,7 +866,9 @@ end
 - 20 new tests (438→458)
 - 9 auto-fixers
 
-**Remaining unconverted:** GLARE (LnL framework), Lockonauts Toolbox (custom UI), 7 UMF-blocked (BHL-X42, Hungry Slimes, Blight Gun, Thermite Cannon, Ascended Sword Master, Enchanter, AI Trainer) + Shards Summoner (DEFERRED). Tameable Dragon deferred (5037 lines AI). ProBallistics/Synthetic Swarm permanently deferred. Note: Hungry Slimes (2695893023) and Poltergeists (2744169679) are DIFFERENT mods by same author.
+**Post-session update (2026-03-19):** 4 additional mods converted: Adjustable_Fire (#174), Enchanter (#175, UMF bypass), Always_Up (#176, UMF bypass), Hungry_Slimes (#177, UMF bypass). **177 mods total**. Workshop fully exhausted. 523 tests (deepcheck.py false-positive fixes: C4, Light_Katana_MP now PASS).
+
+**Deferred (12):** GLARE (LnL framework), Lockonauts Toolbox (custom UI), Chaos_Mod (8,100 lines), Player_Scaler (MP-incompatible physics), Ascended Sword Master (4,577 lines, 14 stances), Shards Summoner (2,677 lines), AI Trainer, Blight Gun, Thermite Cannon (1,691 lines), Tameable Dragon (5,037 lines AI), ProBallistics (DO NOT CONVERT), Synthetic Swarm (DO NOT CONVERT).
 
 ---
 

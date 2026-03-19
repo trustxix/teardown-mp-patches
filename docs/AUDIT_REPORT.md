@@ -1,6 +1,7 @@
 | Mod | Shoot | AimInfo | AmmoPickup | OptionsMenu | OptionsGuard | KeybindHints | KeybindRemap | AmmoDisplay | IsGun |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 500_Magnum | Y | Y | Y | Y | Y | Y |  | Y | Y |
+| __test_harness |  |  |  |  |  |  |  |  |  |
 | AC130_Airstrike_MP | Y |  | Y | Y | Y | Y |  | Y | Y |
 | Acid_Gun | Y |  | Y | Y | Y | Y | Y | Y | Y |
 | Adjustable_Fire |  |  |  |  |  | Y |  |  |  |
@@ -56,7 +57,7 @@
 | Gasoline_Flamethrower |  |  | Y | Y | Y | Y |  | Y |  |
 | Guided_Missile | Y |  | Y | Y | Y | Y | Y | Y | Y |
 | Gwel_Mall |  |  |  |  |  | Y |  |  |  |
-| GYM_Ragdoll |  |  | Y |  | Y | Y |  | Y |  |
+| GYM_Ragdoll |  |  | Y | Y | Y | Y |  | Y |  |
 | HADOUKEN | Y | Y | Y | Y | Y | Y |  | Y | Y |
 | Haul_Truck_MP |  |  |  |  |  |  |  |  |  |
 | Hide_and_Seek |  |  |  |  |  | Y |  |  |  |

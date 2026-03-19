@@ -12,7 +12,7 @@
 > - https://github.com/tuxedolabsorg/mplib (MIT, v1.0.0, March 13 2026)
 > - https://tuxedolabsorg.github.io/mplib/
 >
-> **Last updated:** 2026-03-18
+> **Last updated:** 2026-03-19
 
 ---
 
@@ -832,7 +832,7 @@ C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/mpclassics/
 
 ## API Signature Notes
 
-> The official API page (api.html) sometimes shows **simplified or differently-ordered signatures** compared to what actually works. The main sections above now use the **actual working signatures** verified from official reference mods (minigun/lasergun) and our 159 working mods. The table below documents the discrepancies for reference.
+> The official API page (api.html) sometimes shows **simplified or differently-ordered signatures** compared to what actually works. The main sections above now use the **actual working signatures** verified from official reference mods (minigun/lasergun) and our 177 working mods. The table below documents the discrepancies for reference.
 
 **API page vs actual signatures (main sections above already use the correct versions):**
 

@@ -372,17 +372,22 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
 
     funcs = _extract_functions(all_source)
 
-    # Check for effect APIs called in server functions (wrong side)
+    # Check for effect APIs in server functions that ALSO do damage (wrong side)
+    # Only flag damage-related server functions — utility functions may legitimately
+    # use PlaySound for UI feedback that lint.py's server_side_effects check handles
     for func_name, body in funcs.items():
         if _is_server_context(func_name):
-            for api_name, api_re in _EFFECT_APIS:
-                if api_re.search(body):
-                    findings.append(ChainFinding(
-                        validator="EFFECT-CHAIN", status="FAIL",
-                        detail=f"{api_name}() called in server function {func_name} — "
-                               f"effects must be on client (other players won't see/hear them)",
-                        chain=[func_name, f"{api_name}()"],
-                    ))
+            has_damage = (_SHOOT_CALL_RE.search(body) or _EXPLOSION_RE.search(body) or
+                         _QUERYSHOT_CALL_RE.search(body) or _APPLY_DAMAGE_RE.search(body))
+            if has_damage:
+                for api_name, api_re in _EFFECT_APIS:
+                    if api_re.search(body):
+                        findings.append(ChainFinding(
+                            validator="EFFECT-CHAIN", status="FAIL",
+                            detail=f"{api_name}() called in damage function {func_name} — "
+                                   f"effects must be on client (other players won't see/hear them)",
+                            chain=[func_name, f"{api_name}()"],
+                        ))
 
     # Find ClientCall targets from server functions that have damage
     clientcall_targets: list[tuple[str, str]] = []  # (target_player, func_name)

@@ -1,5 +1,9 @@
 from pathlib import Path
-from tools.common import LIVE_MODS_DIR, LOG_PATH, RAW_KEYS, PLAYER_INPUTS, discover_mods, read_lua_files
+from tools.common import (
+    LIVE_MODS_DIR, LOG_PATH, RAW_KEYS, PLAYER_INPUTS, discover_mods, read_lua_files,
+    TEARDOWN_DATA_DIR, SAVEGAME_PATH, OPTIONS_PATH, TEARDOWN_EXE_PATHS,
+    TEST_LOCK_PATH, TEST_CONFIG_PATH, TEST_RESULTS_DIR, TEST_HARNESS_DIR,
+)
 
 
 def test_live_mods_dir_is_documents():
@@ -58,6 +62,34 @@ def test_discover_mods_single(tmp_path):
 def test_discover_mods_empty(tmp_path):
     mods = discover_mods(tmp_path / "nonexistent")
     assert mods == []
+
+
+def test_teardown_data_dir():
+    assert TEARDOWN_DATA_DIR.name == "Teardown"
+    assert "AppData" in str(TEARDOWN_DATA_DIR)
+
+
+def test_savegame_path():
+    assert SAVEGAME_PATH.name == "savegame.xml"
+    assert SAVEGAME_PATH.parent == TEARDOWN_DATA_DIR
+
+
+def test_options_path():
+    assert OPTIONS_PATH.name == "options.xml"
+    assert OPTIONS_PATH.parent == TEARDOWN_DATA_DIR
+
+
+def test_teardown_exe_paths_is_list():
+    assert isinstance(TEARDOWN_EXE_PATHS, list)
+    assert len(TEARDOWN_EXE_PATHS) > 0
+    assert all(str(p).endswith("teardown.exe") for p in TEARDOWN_EXE_PATHS)
+
+
+def test_test_infrastructure_paths():
+    assert TEST_LOCK_PATH.name == ".test_lock"
+    assert TEST_CONFIG_PATH.name == "test_config.json"
+    assert TEST_RESULTS_DIR.name == "test_results"
+    assert TEST_HARNESS_DIR.name == "__test_harness"
 
 
 def test_read_lua_files(tmp_path):

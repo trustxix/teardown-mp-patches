@@ -1,0 +1,2 @@
+name = Missing Asset Test
+version = 2

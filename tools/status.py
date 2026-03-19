@@ -122,6 +122,34 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     except Exception:
         lines.append("Missing features: N/A")
 
+    # Deep analysis test results
+    try:
+        from tools.common import TEST_RESULTS_DIR
+        if TEST_RESULTS_DIR.exists():
+            tested = set()
+            failed = []
+            for mod_result_dir in sorted(TEST_RESULTS_DIR.iterdir()):
+                if mod_result_dir.is_dir():
+                    tested.add(mod_result_dir.name)
+                    # Read most recent report
+                    runs = sorted(mod_result_dir.iterdir())
+                    if runs:
+                        report_file = runs[-1] / "report.txt"
+                        if report_file.exists():
+                            text = report_file.read_text(encoding="utf-8", errors="replace")
+                            if "RESULT: FAIL" in text:
+                                failed.append(mod_result_dir.name)
+            if tested:
+                untested = len(mods) - len(tested)
+                if failed:
+                    lines.append(f"Deep analysis:    {len(tested)} tested, {len(failed)} FAIL, {untested} untested")
+                    for m in failed[:3]:
+                        lines.append(f"  - {m}: FAIL (run: python -m tools.test --mod \"{m}\" --static)")
+                else:
+                    lines.append(f"Deep analysis:    {len(tested)} tested, 0 FAIL, {untested} untested [OK]")
+    except Exception:
+        pass
+
     # Task queue
     try:
         queue_path = Path(__file__).parent.parent / "TASK_QUEUE.md"

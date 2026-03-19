@@ -28,6 +28,26 @@ PLAYER_INPUTS = frozenset([
 ])
 
 
+# Teardown application data
+TEARDOWN_DATA_DIR = Path.home() / "AppData" / "Local" / "Teardown"
+SAVEGAME_PATH = TEARDOWN_DATA_DIR / "savegame.xml"
+OPTIONS_PATH = TEARDOWN_DATA_DIR / "options.xml"
+
+# Common Teardown install locations (checked in order)
+TEARDOWN_EXE_PATHS = [
+    Path("C:/Program Files (x86)/Steam/steamapps/common/Teardown/teardown.exe"),
+    Path("C:/Program Files/Steam/steamapps/common/Teardown/teardown.exe"),
+    Path("D:/Steam/steamapps/common/Teardown/teardown.exe"),
+    Path("D:/SteamLibrary/steamapps/common/Teardown/teardown.exe"),
+]
+
+# Test infrastructure
+TEST_LOCK_PATH = Path(__file__).parent / ".test_lock"
+TEST_CONFIG_PATH = Path(__file__).parent / "test_config.json"
+TEST_RESULTS_DIR = Path(__file__).parent / "test_results"
+TEST_HARNESS_DIR = LIVE_MODS_DIR / "__test_harness"
+
+
 def discover_mods(mods_dir: Path = LIVE_MODS_DIR, mod_name: str | None = None) -> list[Path]:
     """Find mod directories. Each must have info.txt to be considered a mod."""
     if not mods_dir.exists():

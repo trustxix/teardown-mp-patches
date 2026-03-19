@@ -1,0 +1,4 @@
+<scene version="2" shadowVolume="50 20 50">
+    <environment template="sunset"/>
+    <spawnpoint pos="0 1.5 0" rot="0 0 0"/>
+</scene>

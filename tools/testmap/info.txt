@@ -1,0 +1,4 @@
+name = Test Harness
+author = Teardown MP Patcher
+description = Automated testing environment — do not delete
+version = 2

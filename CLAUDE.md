@@ -63,6 +63,7 @@ python -m tools.logparse
 **After writing or editing any mod code:**
 ```
 python -m tools.lint --mod "ModName"
+python -m tools.test --mod "ModName" --static
 ```
 
 ## Developer Tools — Use These, Not Manual Work
@@ -80,6 +81,10 @@ python -m tools.lint --mod "ModName"
 | `python -m tools.audit --output docs/AUDIT_REPORT.md` | Save audit to file |
 | `python -m tools.logparse` | Parse Teardown log.txt for errors by mod |
 | `python -m tools.logparse --mod "X"` | Filter errors to one mod |
+| `python -m tools.test --mod "X" --static` | **Deep semantic analysis** — traces firing/effect/HUD chains, validates assets, cross-refs IDs |
+| `python -m tools.test --mod "X"` | Full autonomous test (static + game launch when configured) |
+| `python -m tools.test --batch all --static` | Deep analysis on ALL mods |
+| `python -m tools.test --setup` | First-time setup (find Teardown exe, install test harness) |
 | `python tools/gun_v2_generator.py` | Generate complete v2 main.lua for standard gun mods (batch) |
 
 **Lint suppression annotations** (add to mod Lua files when findings are false positives):

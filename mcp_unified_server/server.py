@@ -6,7 +6,6 @@ this runs everything in 1 process per terminal (4 total).
 
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -23,21 +22,10 @@ mcp = FastMCP(
 
 COMMS_DIR = PROJECT_ROOT / ".comms"
 VALID_ROLES = {"api_surgeon", "mod_converter", "qa_lead", "docs_keeper"}
-_locks: dict[str, dict] = {}
 
 
 def _ts():
     return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-
-
-def _norm(fp):
-    return fp.replace("\\", "/").lower()
-
-
-def _expire_locks():
-    now = time.time()
-    for fp in [k for k, v in _locks.items() if now - v["locked_at"] > 300]:
-        del _locks[fp]
 
 
 # ── TASK TOOLS ─────────────────────────────────────────
@@ -241,37 +229,27 @@ def spawn_terminal(role_name: str, display_name: str, role_file_content: str) ->
         return {"success": False, "error": str(e)}
 
 
-# ── FILE LOCK ──────────────────────────────────────────
+# ── FILE LOCK (shared across terminals via file) ─────
+
+from mcp_task_server import lock_store
+
 
 @mcp.tool()
 def lock_file(role: str, filepath: str) -> dict:
-    """Acquire exclusive lock on a file."""
-    _expire_locks()
-    key = _norm(filepath)
-    if key in _locks:
-        h = _locks[key]
-        if h["role"] == role:
-            h["locked_at"] = time.time()
-            return {"success": True, "refreshed": True}
-        return {"success": False, "held_by": h["role"]}
-    _locks[key] = {"role": role, "locked_at": time.time()}
-    return {"success": True}
+    """Acquire exclusive lock on a file (shared across all terminals)."""
+    return lock_store.acquire(role, filepath)
 
 
 @mcp.tool()
 def unlock_file(role: str, filepath: str) -> dict:
     """Release a file lock."""
-    key = _norm(filepath)
-    if key in _locks and _locks[key]["role"] == role:
-        del _locks[key]
-    return {"success": True}
+    return lock_store.release(role, filepath)
 
 
 @mcp.tool()
 def list_locks() -> list[dict]:
     """List all active file locks."""
-    _expire_locks()
-    return [{"filepath": fp, "role": i["role"], "age": int(time.time() - i["locked_at"])} for fp, i in _locks.items()]
+    return lock_store.list_all()
 
 
 @mcp.tool()
@@ -279,8 +257,7 @@ def force_unlock(role: str, filepath: str) -> dict:
     """Force-unlock a file. QA Lead only."""
     if role != "qa_lead":
         return {"success": False, "message": "Only qa_lead can force unlock"}
-    _locks.pop(_norm(filepath), None)
-    return {"success": True}
+    return lock_store.force_release(filepath)
 
 
 # ── CHANGE TRACKER ─────────────────────────────────────

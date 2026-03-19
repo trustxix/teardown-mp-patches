@@ -21,7 +21,7 @@ mcp = FastMCP(
 )
 
 COMMS_DIR = PROJECT_ROOT / ".comms"
-VALID_ROLES = {"api_surgeon", "mod_converter", "qa_lead", "docs_keeper"}
+VALID_ROLES = {"api_surgeon", "mod_converter", "qa_lead", "docs_keeper", "maintainer"}
 
 
 def _ts():

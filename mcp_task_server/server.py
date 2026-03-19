@@ -29,7 +29,7 @@ mcp = FastMCP(
 @mcp.tool(description="Get the next open task for a role. Marks it IN_PROGRESS and broadcasts to all terminals that you're starting it. Returns null if no tasks available.")
 def get_task(role: str) -> dict | str:
     """Get next task for role and broadcast that you're starting it."""
-    valid_roles = {"api_surgeon", "mod_converter", "qa_lead", "docs_keeper"}
+    valid_roles = {"api_surgeon", "mod_converter", "qa_lead", "docs_keeper", "maintainer"}
     if role not in valid_roles:
         return f"Invalid role '{role}'. Must be one of: {', '.join(sorted(valid_roles))}"
     task = task_store.get_next_task(role)
@@ -39,6 +39,7 @@ def get_task(role: str) -> dict | str:
     mods_str = ", ".join(task.get("mods", [])[:5]) or "general"
     msg = f"STARTING: [{task['id']}] {task['title']} — mods: {mods_str}"
     broadcast(role, "info", "low", msg)
+    team_log(role, "task_start", f"[{task['id']}] {task['title']}")
     return task
 
 
@@ -60,6 +61,7 @@ def complete_task(task_id: str, summary: str) -> dict:
         if role:
             msg = f"FINISHED: [{task_id}] {title}\n{summary}"
             broadcast(role, "info", "low", msg)
+            team_log(role, "task_done", f"[{task_id}] {title} — {summary[:120]}")
         return {"success": True, "task_id": task_id, "message": "Task completed and team notified."}
     return {"success": False, "message": f"Task '{task_id}' not found"}
 
@@ -154,7 +156,7 @@ def get_audit_summary() -> dict:
 ##############################################################################
 
 COMMS_DIR = PROJECT_ROOT / ".comms"
-ROLES_MAP = {"api_surgeon": "api_surgeon", "mod_converter": "mod_converter", "qa_lead": "qa_lead", "docs_keeper": "docs_keeper"}
+ROLES_MAP = {"api_surgeon": "api_surgeon", "mod_converter": "mod_converter", "qa_lead": "qa_lead", "docs_keeper": "docs_keeper", "maintainer": "maintainer"}
 
 
 def _timestamp() -> str:
@@ -441,6 +443,7 @@ KILLSWITCH_FILE = COMMS_DIR / "STOP"
 def killswitch() -> dict:
     """QA Lead activates this when the user says 'stop'. Broadcasts to all terminals."""
     KILLSWITCH_FILE.write_text("STOP — Finish your current task, then halt. Wait for further instructions.", encoding="utf-8")
+    team_log("system", "killswitch", "ACTIVATED — all terminals halting")
     # Broadcast to all inboxes
     for role in ROLES_MAP:
         msg = "---\nfrom: qa_lead\nto: " + role + "\ntype: info\npriority: critical\n---\n\nSTOP ORDER: Finish your current task, then HALT. Do not pick up new tasks. Do not check the queue. Wait for further instructions from the user."
@@ -463,6 +466,7 @@ def clear_killswitch() -> dict:
     """Removes the STOP file and broadcasts RESUME to all terminals."""
     if KILLSWITCH_FILE.exists():
         KILLSWITCH_FILE.unlink()
+    team_log("system", "killswitch", "CLEARED — terminals resuming")
     for role in ROLES_MAP:
         msg = "---\nfrom: qa_lead\nto: " + role + "\ntype: info\npriority: critical\n---\n\nRESUME ORDER: Killswitch cleared. Resume your autonomous work loop."
         inbox = COMMS_DIR / role / "inbox"
@@ -470,6 +474,162 @@ def clear_killswitch() -> dict:
         ts = _timestamp()
         (inbox / f"{ts}_qa_lead_resume.md").write_text(msg, encoding="utf-8")
     return {"success": True, "message": "Killswitch cleared. RESUME broadcast sent to all terminals."}
+
+
+##############################################################################
+# TERMINAL HEALTH MONITORING
+##############################################################################
+
+
+STALE_TERMINAL_MINUTES = 5  # Alert if no heartbeat for this long
+
+
+@mcp.tool(description="Check health of all terminals. Returns which are alive, stale (no heartbeat for 5+ min), or dead (never seen). QA Lead should call this each loop iteration and act on stale terminals.")
+def check_terminal_health() -> dict:
+    """Returns health status for each terminal with recommended actions."""
+    import json
+    from datetime import datetime, timezone
+
+    hb_file = COMMS_DIR / "heartbeats.json"
+    now = datetime.now(timezone.utc)
+    results = {}
+
+    heartbeats = {}
+    if hb_file.exists():
+        try:
+            heartbeats = json.loads(hb_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    stale_roles = []
+    for role in ROLES_MAP:
+        hb = heartbeats.get(role)
+        if not hb or not hb.get("timestamp"):
+            results[role] = {"status": "dead", "last_seen": "never", "action": "spawn or restart"}
+            stale_roles.append(role)
+            continue
+
+        try:
+            last = datetime.fromisoformat(hb["timestamp"])
+            elapsed_min = (now - last).total_seconds() / 60
+        except (ValueError, TypeError):
+            results[role] = {"status": "dead", "last_seen": "parse_error", "action": "restart"}
+            stale_roles.append(role)
+            continue
+
+        if elapsed_min < STALE_TERMINAL_MINUTES:
+            results[role] = {
+                "status": "alive",
+                "last_seen": f"{elapsed_min:.1f}m ago",
+                "terminal_status": hb.get("status", "unknown"),
+            }
+        else:
+            results[role] = {
+                "status": "stale",
+                "last_seen": f"{elapsed_min:.1f}m ago",
+                "terminal_status": hb.get("status", "unknown"),
+                "action": "check terminal window — may have crashed or stalled",
+            }
+            stale_roles.append(role)
+
+    # Check for tasks assigned to stale terminals
+    orphaned_tasks = []
+    if stale_roles:
+        all_tasks = task_store.get_all_tasks()
+        for t in all_tasks.get("active", []):
+            assigned = t.get("assigned_to") or t.get("role")
+            if assigned in stale_roles:
+                orphaned_tasks.append({"id": t["id"], "title": t["title"], "role": assigned})
+
+    return {
+        "terminals": results,
+        "stale_count": len(stale_roles),
+        "stale_roles": stale_roles,
+        "orphaned_tasks": orphaned_tasks,
+        "recommendation": (
+            f"ALERT: {len(stale_roles)} terminal(s) stale — {', '.join(stale_roles)}. "
+            f"{'Reassign ' + str(len(orphaned_tasks)) + ' orphaned tasks.' if orphaned_tasks else 'No orphaned tasks.'}"
+        ) if stale_roles else "All terminals healthy.",
+    }
+
+
+##############################################################################
+# AUTO-COMMIT
+##############################################################################
+
+
+@mcp.tool(description="Auto-commit current state with a summary message. Use after completing a batch of tasks or before killswitch halt. QA Lead only.")
+def auto_commit(message: str | None = None) -> dict:
+    """Commit all changes with an auto-generated or custom message."""
+    try:
+        # Check for changes
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True,
+            cwd=str(PROJECT_ROOT), timeout=30,
+        )
+        if not status.stdout.strip():
+            return {"success": True, "message": "Nothing to commit — working tree clean."}
+
+        changed_files = len(status.stdout.strip().split("\n"))
+
+        # Stage all tracked changes (not untracked files to avoid secrets)
+        subprocess.run(
+            ["git", "add", "-u"],
+            capture_output=True, text=True,
+            cwd=str(PROJECT_ROOT), timeout=30,
+        )
+
+        # Also stage known safe untracked directories
+        for safe_dir in ["docs/", "tests/", ".comms/"]:
+            subprocess.run(
+                ["git", "add", safe_dir],
+                capture_output=True, text=True,
+                cwd=str(PROJECT_ROOT), timeout=10,
+            )
+
+        # Commit
+        commit_msg = message or f"[auto-save] {changed_files} files changed"
+        result = subprocess.run(
+            ["git", "commit", "-m", commit_msg],
+            capture_output=True, text=True,
+            cwd=str(PROJECT_ROOT), timeout=30,
+        )
+        if result.returncode == 0:
+            # Extract short hash
+            hash_result = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],
+                capture_output=True, text=True,
+                cwd=str(PROJECT_ROOT), timeout=10,
+            )
+            short_hash = hash_result.stdout.strip()
+            team_log("qa_lead", "auto_commit", f"Committed {short_hash}: {commit_msg}")
+            return {"success": True, "hash": short_hash, "message": commit_msg, "files_changed": changed_files}
+        else:
+            return {"success": False, "error": result.stderr.strip()}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+##############################################################################
+# STRUCTURED TEAM LOG
+##############################################################################
+
+TEAM_LOG_FILE = PROJECT_ROOT / "team.log"
+
+
+@mcp.tool(description="Append a structured entry to team.log for post-mortems and debugging. All terminals should log significant events.")
+def team_log(role: str, event: str, detail: str) -> dict:
+    """Log a structured event. event: task_start, task_done, error, alert, auto_commit, health_check, etc."""
+    from datetime import datetime, timezone
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    entry = f"[{ts}] [{role}] [{event}] {detail}\n"
+    try:
+        with open(TEAM_LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(entry)
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 ##############################################################################

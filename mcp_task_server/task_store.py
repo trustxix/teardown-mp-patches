@@ -58,11 +58,20 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-STALE_TIMEOUT_MINUTES = 10
+STALE_TIMEOUT_BY_PRIORITY = {
+    "critical": 5,
+    "high": 15,
+    "medium": 30,
+    "low": 45,
+}
+STALE_TIMEOUT_DEFAULT = 30
 
 
 def _recover_stale(data):
-    """Auto-recover tasks stuck IN_PROGRESS for more than 10 minutes."""
+    """Auto-recover tasks stuck IN_PROGRESS based on priority-specific timeouts.
+
+    critical: 5min, high: 15min, medium: 30min, low: 45min.
+    """
     now = datetime.now(timezone.utc)
     recovered = 0
     for t in data["tasks"]:
@@ -70,7 +79,10 @@ def _recover_stale(data):
             try:
                 started = datetime.fromisoformat(t["started_at"])
                 elapsed = (now - started).total_seconds() / 60
-                if elapsed > STALE_TIMEOUT_MINUTES:
+                timeout = STALE_TIMEOUT_BY_PRIORITY.get(
+                    t.get("priority", "medium"), STALE_TIMEOUT_DEFAULT
+                )
+                if elapsed > timeout:
                     t["status"] = "open"
                     t["assigned_to"] = None
                     t["started_at"] = None
@@ -88,9 +100,13 @@ def get_next_task(role: str) -> dict | None:
 
         # Priority order: critical > high > medium > low
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        # Maintainer picks up tasks for all 3 specialist roles it replaces
+        match_roles = {role}
+        if role == "maintainer":
+            match_roles |= {"api_surgeon", "mod_converter", "docs_keeper"}
         candidates = [
             t for t in data["tasks"]
-            if t["role"] == role and t["status"] == "open"
+            if t["role"] in match_roles and t["status"] == "open"
         ]
         candidates.sort(key=lambda t: priority_order.get(t.get("priority", "medium"), 2))
         if not candidates:

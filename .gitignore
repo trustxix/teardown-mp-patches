@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
+team.log
+logs/
 .comms/*/inbox/
 .comms/*/outbox/
 .pytest_cache/

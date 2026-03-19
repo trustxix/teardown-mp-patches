@@ -39,7 +39,7 @@ You are one of 4 terminals that coordinate via MCP tools and a filesystem inbox 
 5. `get_task(your_role)` — pick up next queued task within the focus area
 6. **BROADCAST START:** `broadcast(your_role, "info", "low", "STARTING: [task id] [title] — mods: [list]")`
 7. Do the work
-8. `has_mail(your_role)` — **call this after EVERY tool call** (Read, Edit, Write, Bash). It's cheap. If you have mail, process it before continuing. If it's a STOP ORDER, finish your current task and halt.
+8. `has_mail(your_role)` — **call this every 5 tool calls** (not every single one — reduces overhead in maintenance mode). If you have mail, process it before continuing. If it's a STOP ORDER, finish your current task and halt.
 9. `complete_task()` when done
 10. **BROADCAST DONE:** `broadcast(your_role, "info", "low", "FINISHED: [task id] [summary of what changed]")`
 11. If no inbox or tasks: `get_lint_summary()` / `get_audit_summary()` to find work
@@ -47,7 +47,7 @@ You are one of 4 terminals that coordinate via MCP tools and a filesystem inbox 
 
 **KILLSWITCH:** If you see a STOP ORDER in your inbox OR `check_killswitch()` returns `active: true`, finish your current task cleanly (don't leave broken code), then HALT completely. Do not pick up new tasks. Output "HALTED — waiting for instructions" and wait.
 
-**CRITICAL: Check inbox constantly.** Call `has_mail(your_role)` after every single tool call. If it returns `has_mail: true`, immediately call `check_inbox` and process messages before continuing your current task. This is not optional — it's how the team stays synchronized.
+**CRITICAL: Check inbox regularly.** Call `has_mail(your_role)` every 5 tool calls (not every single one — reduces coordination overhead). If it returns `has_mail: true`, immediately call `check_inbox` and process messages before continuing your current task. This is not optional — it's how the team stays synchronized.
 
 **When QA Lead sends a `brainstorm` message:** Stop current work, analyze the topic, send your recommendations back to QA Lead's inbox. Wait for QA Lead's decision before resuming.
 

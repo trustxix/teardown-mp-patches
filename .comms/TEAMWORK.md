@@ -34,7 +34,7 @@ When QA Lead sends a `brainstorm` type message:
 **Check your inbox:**
 - BEFORE starting any new task
 - AFTER completing any task
-- AFTER every 3-4 tool calls during a long task (quick `has_mail` check)
+- AFTER every 5 tool calls during a long task (quick `has_mail` check) — not every single call
 - When you notice files changed by another terminal
 
 **React immediately to:**

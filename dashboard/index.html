@@ -193,6 +193,7 @@ a:hover { text-decoration: underline; }
 </div>
 
 <div id="error-banner" class="error-banner"></div>
+<div id="stale-banner" class="error-banner" style="background:#d2992222;border-color:#d2992233;color:#d29922;"></div>
 
 <div class="focus-row">
     <span class="lbl">Focus</span>
@@ -244,6 +245,10 @@ a:hover { text-decoration: underline; }
 <div class="section-title">Active & Open Tasks</div>
 <div id="task-items"><div class="empty-state">Loading...</div></div>
 
+<!-- Team Log -->
+<div class="section-title">Team Log (last 10 events)</div>
+<div id="team-log" class="lint-card"><div class="empty-state">No log entries yet</div></div>
+
 <div class="footer" id="footer">Auto-refreshes every 5s</div>
 
 <script>
@@ -252,6 +257,7 @@ const ROLES = {
     api_surgeon: {name:"API Surgeon", icon:"\u{1FA78}"},
     mod_converter: {name:"Mod Converter", icon:"\u{1F527}"},
     docs_keeper: {name:"Docs Keeper", icon:"\u{1F4DA}"},
+    maintainer: {name:"Maintainer", icon:"\u{1F6E0}"},
 };
 
 let lastError = null;
@@ -311,6 +317,27 @@ function update(d) {
 
     const changes = d.changes || {};
     document.getElementById("s-changes").textContent = changes.total || 0;
+
+    // Stale terminal detection
+    const staleBanner = document.getElementById("stale-banner");
+    const staleRoles = [];
+    const hbData = d.heartbeats || {};
+    for (const [role, hb] of Object.entries(hbData)) {
+        if (hb && hb.timestamp) {
+            const ago = (Date.now() - new Date(hb.timestamp).getTime()) / 1000;
+            if (ago > 300) staleRoles.push(role); // 5 min
+        }
+    }
+    // Also flag roles with no heartbeat at all
+    for (const role of Object.keys(d.inboxes || {})) {
+        if (!hbData[role] && !staleRoles.includes(role)) staleRoles.push(role);
+    }
+    if (staleRoles.length > 0) {
+        staleBanner.textContent = "\u26A0 Stale terminals: " + staleRoles.join(", ") + " \u2014 no heartbeat for 5+ minutes. Check terminal windows.";
+        staleBanner.style.display = "block";
+    } else {
+        staleBanner.style.display = "none";
+    }
 
     // Terminals
     const termEl = document.getElementById("terminals");
@@ -415,6 +442,25 @@ function update(d) {
                 '</div>';
             taskEl.appendChild(item);
         }
+    }
+
+    // Team Log
+    const logEl = document.getElementById("team-log");
+    const logEntries = d.team_log || [];
+    if (logEntries.length === 0) {
+        logEl.innerHTML = '<div class="empty-state">No log entries yet</div>';
+    } else {
+        logEl.innerHTML = logEntries.slice().reverse().map(entry => {
+            const e = esc(entry);
+            const colored = e
+                .replace(/\[error\]/i, '<span class="red">[error]</span>')
+                .replace(/\[alert\]/i, '<span class="yellow">[alert]</span>')
+                .replace(/\[killswitch\]/i, '<span class="red">[killswitch]</span>')
+                .replace(/\[auto_commit\]/i, '<span class="green">[auto_commit]</span>')
+                .replace(/\[task_done\]/i, '<span class="green">[task_done]</span>')
+                .replace(/\[task_start\]/i, '<span class="blue">[task_start]</span>');
+            return '<div style="font-size:11px;font-family:monospace;padding:2px 0;border-bottom:1px solid #21262d;">' + colored + '</div>';
+        }).join("");
     }
 
     // Footer

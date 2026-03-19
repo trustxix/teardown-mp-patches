@@ -264,6 +264,18 @@ def get_heartbeats():
         return {}
 
 
+def get_team_log():
+    """Get last 10 entries from team.log."""
+    log_file = PROJECT / "team.log"
+    if not log_file.exists():
+        return []
+    try:
+        lines = log_file.read_text(encoding="utf-8", errors="replace").strip().split("\n")
+        return lines[-10:]  # Last 10 entries
+    except Exception:
+        return []
+
+
 def build_api_response():
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -276,6 +288,7 @@ def build_api_response():
         "changes": get_changes(),
         "docs": get_docs(),
         "heartbeats": get_heartbeats(),
+        "team_log": get_team_log(),
     }
 
 

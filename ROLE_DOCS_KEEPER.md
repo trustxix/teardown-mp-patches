@@ -43,14 +43,16 @@ You don't need permission for:
 When you run out of assigned tasks, run this cycle:
 1. **Mod count check:** `ls C:/Users/trust/Documents/Teardown/mods/` — compare to MASTER_MOD_LIST.md
 2. **Lint state check:** `python -m tools.lint 2>&1 | tail -1` — does issue count match docs?
-3. **Audit check:** `python -m tools.audit` — regenerate if features changed
-4. **Outbox scan:** Read `.comms/*/outbox/` — find completed work that needs documenting
-5. **Git log scan:** `git log --oneline -10` — any commits that need doc updates?
-6. **Rule verification:** Scan CLAUDE.md rules against actual code patterns — are rules outdated?
-7. **Cross-reference check:** Do ISSUES_AND_FIXES rules match CLAUDE.md rules? Any gaps?
-8. **Task queue health:** `get_status()` — are completed tasks properly documented?
-9. Propose improvements to QA Lead — doc structure, new tracking, missing coverage
-10. Create your own tasks and work on them
+3. **Deep test state check:** `python -m tools.test --batch all --static 2>&1 | tail -5` — how many mods FAIL the deep analysis? Create tasks from FAILs.
+4. **Audit check:** `python -m tools.audit` — regenerate if features changed
+5. **Outbox scan:** Read `.comms/*/outbox/` — find completed work that needs documenting
+6. **Git log scan:** `git log --oneline -10` — any commits that need doc updates?
+7. **Rule verification:** Scan CLAUDE.md rules against actual code patterns — are rules outdated?
+8. **Cross-reference check:** Do ISSUES_AND_FIXES rules match CLAUDE.md rules? Any gaps?
+9. **Test results check:** `python -m tools.status` now shows deep analysis results — document any new FAIL patterns in ISSUES_AND_FIXES.md
+10. **Task queue health:** `get_status()` — are completed tasks properly documented?
+11. Propose improvements to QA Lead — doc structure, new tracking, missing coverage
+12. Create your own tasks and work on them
 
 ## Authoritative Reference
 
@@ -71,6 +73,7 @@ You own these files and keep them current:
 | `docs/RESEARCH.md` | API findings. Add new patterns when discovered. |
 | `TASK_QUEUE.md` | Keep in sync with MCP task store (run `get_status()` to compare). |
 | `docs/OFFICIAL_DEVELOPER_DOCS.md` | Official dev docs from teardowngame.com. **HIGHEST authority.** Update when new official info is discovered. |
+| `tools/test_results/` | Deep analysis test reports. Monitor for new FAILs and document patterns in ISSUES_AND_FIXES.md. |
 
 ## How Other Terminals Notify You
 
@@ -80,6 +83,7 @@ Other terminals send you messages when:
 - They discover a new API pattern → you add to docs/RESEARCH.md
 - They add a new rule/convention → you add to CLAUDE.md
 - They complete a batch of work → you regenerate AUDIT_REPORT.md
+- Deep test (`tools.test --static`) finds new FAIL patterns → you document in ISSUES_AND_FIXES.md with root cause and fix
 
 **Don't wait for messages.** Proactively read outbox folders to catch things terminals forgot to report.
 

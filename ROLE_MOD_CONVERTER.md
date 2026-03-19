@@ -99,6 +99,9 @@ Every converted mod MUST have:
 - [ ] info.txt with `version = 2`
 - [ ] All assets copied (vox, snd, img, xml)
 - [ ] `python -m tools.lint --mod "ModName"` passes clean
+- [ ] `python -m tools.test --mod "ModName" --static` passes (no FAILs)
+  - This catches bugs lint misses: broken firing chains, missing ServerCall targets, effects on wrong side, ID mismatches, missing asset files
+  - A mod can pass ALL lint checks and still FAIL the deep test
 
 ## Plugins & Agents — Use These
 
@@ -116,5 +119,10 @@ Every converted mod MUST have:
 - Read v1 source BEFORE converting — understand what it does
 - Copy ALL assets from Workshop to local mod folder
 - Start with smaller mods (< 300 lines) for quick wins
-- After each conversion: lint, verify, notify docs_keeper
+- After each conversion: lint AND deep test, verify, notify docs_keeper:
+  ```
+  python -m tools.lint --mod "ModName"
+  python -m tools.test --mod "ModName" --static
+  ```
 - If you find a bug in an existing mod while working, fix it and log it
+- If the deep test finds FAILs (broken chains, ID mismatches, missing assets), fix them before marking the task complete

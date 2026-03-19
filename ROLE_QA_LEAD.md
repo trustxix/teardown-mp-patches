@@ -267,10 +267,21 @@ Dispatch background agents freely for parallel work:
 
 ### Reviewing Work
 - Lint every touched mod: `python -m tools.lint --mod "ModName"`
+- **Deep test every touched mod: `python -m tools.test --mod "ModName" --static`** — catches logic bugs lint misses (broken firing chains, missing ServerCall targets, server-side effects, ID mismatches, missing assets)
+- **Full runtime test for critical mods: `python -m tools.test --mod "ModName"`** — launches Teardown, fires weapon, captures screenshots, reads diagnostic counters. Use this before shipping a batch.
+- **Batch test all mods: `python -m tools.test --batch all --static`** — run periodically to find regressions
 - Trivial fixes (< 3 lines): fix it yourself, don't round-trip
 - Send `review` messages with EXACT fix instructions — no ambiguity
 - Batch-approve low-risk work to avoid bottlenecking the pipeline
 - Track quality per terminal — if one keeps making mistakes, update their role file
+
+### Test Platform
+The autonomous test platform (`tools/test.py`) gives you **eyes on the game without the user playing**:
+- `--static` mode traces code logic chains: does usetool → ServerCall → Shoot actually work? Are effects on the right side? Do assets exist?
+- Full mode launches Teardown, injects diagnostic wrappers (counts Shoot/PlaySound/etc calls), captures screenshots, parses runtime errors
+- Test results appear in `tools.status` output — mods that FAIL tests need attention
+- **Use `python -m tools.test --setup` once** to configure the game exe path and install the test harness mod
+- When the task queue runs dry, run `python -m tools.test --batch all --static` and create tasks from FAILs
 
 ### Handling Problems
 - **Terminal blocked:** Solve it immediately or reassign the task

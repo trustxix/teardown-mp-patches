@@ -164,18 +164,35 @@ class TestEffectChain:
         assert any("server" in f.detail.lower() and "PlaySound" in f.detail for f in fails)
 
     def test_silent_weapon_warns(self, tmp_path):
+        """QueryShot+ApplyPlayerDamage without ClientCall should warn."""
         mod = tmp_path / "silent"
         mod.mkdir()
         (mod / "info.txt").write_text("name = Silent\nversion = 2")
         (mod / "main.lua").write_text(
             '#version 2\n'
-            'function server.shoot(p, pos, dir)\n'
-            '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
+            'function server.slash(p, pos, dir)\n'
+            '    local hit, dist, shape, player = QueryShot(pos, dir, 5, 0.5, p)\n'
+            '    if player ~= 0 then ApplyPlayerDamage(player, 0.5, "sword", p) end\n'
             'end\n'
         )
         findings = check_effect_chain(mod)
         warns = [f for f in findings if f.status == "WARN"]
-        assert any("no ClientCall" in f.detail.lower() or "silent" in f.detail.lower() for f in warns)
+        assert any("no clientcall" in f.detail.lower() or "silent" in f.detail.lower() for f in warns)
+
+    def test_auto_replicated_no_warn(self, tmp_path):
+        """Shoot() and Explosion() are auto-replicated — no ClientCall needed."""
+        mod = tmp_path / "autofx"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = AutoFX\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.fire(p, pos, dir)\n'
+            '    Shoot(pos, dir, "bullet", 1, 100, p, "gun")\n'
+            'end\n'
+        )
+        findings = check_effect_chain(mod)
+        warns = [f for f in findings if f.status == "WARN"]
+        assert len(warns) == 0
 
     def test_non_weapon_empty(self, tmp_path):
         mod = tmp_path / "env"

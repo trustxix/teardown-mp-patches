@@ -60,11 +60,18 @@ You are one of 4 terminals that coordinate via MCP tools and a filesystem inbox 
 python -m tools.logparse
 ```
 
-**After writing or editing any mod code:**
+**After writing or editing any mod code (BOTH commands, EVERY time):**
 ```
 python -m tools.lint --mod "ModName"
 python -m tools.test --mod "ModName" --static
 ```
+Lint catches pattern bugs. Test catches LOGIC bugs (broken chains, missing ServerCall targets, wrong-side effects, asset references to nonexistent files, ID mismatches). BOTH are required. A mod that passes lint can still FAIL the test.
+
+**For full runtime testing (launches Teardown, captures screenshots, fires weapon):**
+```
+python -m tools.test --mod "ModName"
+```
+This requires `python -m tools.test --setup` to have been run first. It injects diagnostic counters, launches the game, simulates input, captures screenshots, and reads back runtime data from savegame.xml.
 
 ## Developer Tools — Use These, Not Manual Work
 

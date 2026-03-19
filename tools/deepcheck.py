@@ -130,7 +130,7 @@ def check_assets(mod_dir: Path) -> list[AssetFinding]:
 _REGISTER_TOOL_ID_RE = re.compile(r'RegisterTool\s*\(\s*"([^"]+)"')
 _SET_TOOL_ENABLED_ID_RE = re.compile(r'SetToolEnabled\s*\(\s*"([^"]+)"')
 _SET_TOOL_AMMO_ID_RE = re.compile(r'SetToolAmmo\s*\(\s*"([^"]+)"')
-_GET_PLAYER_TOOL_ID_RE = re.compile(r'GetPlayerTool\s*\([^)]*\)\s*==\s*"([^"]+)"')
+_GET_PLAYER_TOOL_ID_RE = re.compile(r'GetPlayerTool\s*\([^)]*\)\s*[~=]=\s*"([^"]+)"')
 _AMMO_DISPLAY_ID_RE = re.compile(r'SetString\s*\(\s*"game\.tool\.([^.]+)\.ammo\.display"')
 
 
@@ -419,16 +419,26 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
                     target_func = m.group(2)
                     clientcall_targets.append((target_player, target_func))
 
-    # If server has damage but no ClientCall → silent weapon
+    # If server has damage but no ClientCall → may be silent
+    # Shoot() and Explosion() are auto-replicated by the engine (sounds + visuals
+    # on all clients), so they don't need explicit ClientCall for effects.
+    # Only QueryShot+ApplyPlayerDamage (custom damage) needs explicit ClientCall.
     if not clientcall_targets:
-        # Only warn if there are no FAIL findings (server-side effects already reported)
         server_fails = [f for f in findings if f.status == "FAIL"]
         if not server_fails:
-            findings.append(ChainFinding(
-                validator="EFFECT-CHAIN", status="WARN",
-                detail="Server has Shoot/Explosion but no ClientCall — weapon may be silent (no sound/particles for other players)",
-                chain=["Shoot()", "no ClientCall"],
-            ))
+            # Only warn if using QueryShot (custom damage) without ClientCall
+            if has_queryshot and not has_shoot and not has_explosion:
+                findings.append(ChainFinding(
+                    validator="EFFECT-CHAIN", status="WARN",
+                    detail="Server has QueryShot damage but no ClientCall — weapon may be silent (no sound/particles for other players)",
+                    chain=["QueryShot()", "no ClientCall"],
+                ))
+            elif has_queryshot:
+                findings.append(ChainFinding(
+                    validator="EFFECT-CHAIN", status="WARN",
+                    detail="Server has QueryShot damage but no ClientCall — beam/melee effects may be silent for other players",
+                    chain=["QueryShot()", "no ClientCall"],
+                ))
         return findings
 
     # Verify ClientCall targets exist and have effects
@@ -518,7 +528,56 @@ def check_hud(mod_dir: Path) -> list[Finding]:
 # 1.6 ServerCall Parameter Validator
 # ---------------------------------------------------------------------------
 
-_SERVERCALL_FULL_RE = re.compile(r'ServerCall\s*\(\s*"([^"]+)"\s*([^)]*)\)')
+_SERVERCALL_START_RE = re.compile(r'ServerCall\s*\(\s*"([^"]+)"\s*')
+
+
+def _extract_balanced_args(source: str, start: int) -> str | None:
+    """Extract argument string from source starting after the function name,
+    handling nested parentheses correctly."""
+    depth = 1  # we're already inside the outer ServerCall(
+    i = start
+    while i < len(source) and depth > 0:
+        ch = source[i]
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+            if depth == 0:
+                return source[start:i]
+        elif ch == '"':
+            # skip string literals
+            i += 1
+            while i < len(source) and source[i] != '"':
+                if source[i] == '\\':
+                    i += 1
+                i += 1
+        i += 1
+    return None
+
+
+def _split_args_balanced(args_str: str) -> list[str]:
+    """Split comma-separated args respecting nested parentheses."""
+    args = []
+    depth = 0
+    current = []
+    for ch in args_str:
+        if ch == '(' or ch == '{':
+            depth += 1
+            current.append(ch)
+        elif ch == ')' or ch == '}':
+            depth -= 1
+            current.append(ch)
+        elif ch == ',' and depth == 0:
+            token = ''.join(current).strip()
+            if token:
+                args.append(token)
+            current = []
+        else:
+            current.append(ch)
+    token = ''.join(current).strip()
+    if token:
+        args.append(token)
+    return args
 
 
 def check_servercall_params(mod_dir: Path) -> list[Finding]:
@@ -530,14 +589,22 @@ def check_servercall_params(mod_dir: Path) -> list[Finding]:
 
     funcs = _extract_functions(all_source)
 
-    for m in _SERVERCALL_FULL_RE.finditer(all_source):
+    for m in _SERVERCALL_START_RE.finditer(all_source):
         target = m.group(1)
-        args_str = m.group(2).strip()
+        # Extract the full argument list with balanced parentheses
+        after_name = m.end()
+        args_str_raw = _extract_balanced_args(all_source, after_name)
+        if args_str_raw is None:
+            continue
 
-        # Count args (split by comma, accounting for nested parens)
+        # Strip the leading comma separator after the function name string
+        args_str = args_str_raw.strip()
+        if args_str.startswith(","):
+            args_str = args_str[1:].strip()
+
+        # Split args respecting nested parens
         if args_str:
-            # Simple comma split — good enough for most cases
-            call_args = [a.strip() for a in args_str.split(",") if a.strip()]
+            call_args = _split_args_balanced(args_str)
         else:
             call_args = []
 

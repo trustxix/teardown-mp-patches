@@ -103,7 +103,13 @@ local _, pos, endPos, dir = GetPlayerAimInfo(muzzlePos, 100, p)
 
 ## Rules
 - Read each mod's main.lua BEFORE editing — understand what it does
-- After each mod: `python -m tools.lint --mod "ModName"`
+- After each mod, run BOTH:
+  ```
+  python -m tools.lint --mod "ModName"
+  python -m tools.test --mod "ModName" --static
+  ```
+  The deep test catches logic bugs lint misses: broken firing chains (usetool → ServerCall → server function → Shoot), effects called on wrong side, ServerCall arg count mismatches, missing assets, ID case mismatches.
 - Keep MakeHole for non-weapon effects
 - Do NOT restructure mods — focused API swaps only
 - If you find a bug while working, fix it and notify docs_keeper
+- If the deep test shows FAIL for a ServerCall param mismatch, this is likely a missing player ID (Issue #51 pattern) — fix it

@@ -31,29 +31,61 @@ You are one of 4 terminals that coordinate via MCP tools and a filesystem inbox 
 - `complete_task(id, summary)` — mark task done
 - `create_task(title, role, priority, desc, mods)` — create new task
 
-**Your work loop (MANDATORY — never stop unless killswitch):**
-1. `check_killswitch()` — **if active, STOP. Do not continue. Wait for user.**
-2. `get_focus()` — read the current team focus area
-3. `check_inbox(your_role)` — process messages first (highest priority). If you see a STOP ORDER, finish current task and halt.
+## Batch Pass System (MANDATORY)
+
+The team works in **supervised batches**, never autonomously. All work follows this cycle:
+
+### Pass Structure
+A **pass** is a complete sweep through all mods with a specific goal (e.g., "fix compile errors", "add AmmoPickup", "general bug fixing"). The user defines the goal.
+
+### Batch Rules
+1. **QA Lead assigns a batch of 2-3 mods** to the team. All terminals work on the SAME batch simultaneously, each in their own area (api_surgeon: code fixes, mod_converter: structural changes, docs_keeper: documentation).
+2. **One mod, one writer.** Only ONE terminal may edit a given mod's files. Others can READ it for context. No two terminals touch the same mod's code.
+3. **Forward only.** Once a batch is complete and the user says "continue", the team moves to the next batch. NEVER go back to re-edit a previous batch's mods unless the user explicitly requests it.
+4. **Stop after every batch.** When all terminals finish their batch work, QA Lead halts the team and reports to the user: what changed, which mods, lint/test results. Then WAIT for the user to say "continue" before the next batch.
+5. **No initiative work.** Terminals do NOT self-assign work, run auto-fixes across all mods, or make "improvement" changes outside the current batch. If you see something that needs fixing in a mod outside the current batch, log it as a task for a future batch.
+6. **Max 3 mods changed per batch.** Never touch more than 3 mod directories in a single batch. This keeps changes small and debuggable.
+7. **User can test between batches.** The stop point lets the user launch the game and verify nothing broke before proceeding.
+
+### Work Loop
+1. `check_killswitch()` — if active, STOP.
+2. `get_focus()` — read current pass goal and batch assignment
+3. `check_inbox(your_role)` — process messages
 4. `clear_message()` each processed message
-5. `get_task(your_role)` — pick up next queued task within the focus area
-6. **BROADCAST START:** `broadcast(your_role, "info", "low", "STARTING: [task id] [title] — mods: [list]")`
-7. Do the work
-8. `has_mail(your_role)` — **call this every 5 tool calls** (not every single one — reduces overhead in maintenance mode). If you have mail, process it before continuing. If it's a STOP ORDER, finish your current task and halt.
-9. `complete_task()` when done
-10. **BROADCAST DONE:** `broadcast(your_role, "info", "low", "FINISHED: [task id] [summary of what changed]")`
-11. If no inbox or tasks: `get_lint_summary()` / `get_audit_summary()` to find work
-12. GOTO 1
+5. `get_task(your_role)` — pick up task within the CURRENT BATCH ONLY
+6. Do the work on assigned mods only
+7. `has_mail(your_role)` — check every 5 tool calls
+8. `complete_task()` when done
+9. When batch is complete: QA Lead reports to user, team HALTS until user says "continue"
 
-**KILLSWITCH:** If you see a STOP ORDER in your inbox OR `check_killswitch()` returns `active: true`, finish your current task cleanly (don't leave broken code), then HALT completely. Do not pick up new tasks. Output "HALTED — waiting for instructions" and wait.
+### Between Batches (QA Lead Only)
+- Report: "Batch N complete. Changed: [mod list]. Lint: [result]. Test: [result]. Ready for you to test."
+- Wait for user response before assigning next batch
+- If user reports issues, fix ONLY those issues before moving forward
 
-**CRITICAL: Check inbox regularly.** Call `has_mail(your_role)` every 5 tool calls (not every single one — reduces coordination overhead). If it returns `has_mail: true`, immediately call `check_inbox` and process messages before continuing your current task. This is not optional — it's how the team stays synchronized.
-
-**When QA Lead sends a `brainstorm` message:** Stop current work, analyze the topic, send your recommendations back to QA Lead's inbox. Wait for QA Lead's decision before resuming.
+**KILLSWITCH:** If `check_killswitch()` returns `active: true`, finish current task cleanly, then HALT. Output "HALTED — waiting for instructions."
 
 **Message protocol:** See `.comms/PROTOCOL.md` for format details.
 **When to message:** See `.comms/TRIGGERS.md` for exactly when to write to other inboxes.
-**Team collaboration:** See `.comms/TEAMWORK.md` for how all 3 terminals work together on the same focus area.
+
+## Rules to Prevent Repeated Mistakes
+
+### No Mass Changes
+**NEVER apply changes to more than 3 mods at once.** The crash investigation showed that changing 30+ mods simultaneously makes bugs impossible to isolate. Even "safe" changes (preview images, lint annotations, auto-fixes) must go through the batch system.
+
+### No Reverting Other Terminals' Work
+If you disagree with another terminal's change, send a message to QA Lead — do NOT revert it yourself. QA Lead decides.
+
+### Commit After Every Batch
+QA Lead calls `auto_commit()` after each completed batch with a descriptive message listing exactly which mods changed. This creates rollback points if something breaks.
+
+### Verify Before Claiming Done
+Before marking any task complete, run BOTH:
+```
+python -m tools.lint --mod "ModName"
+python -m tools.test --mod "ModName" --static
+```
+If either fails, the task is NOT done.
 
 **After user tests a mod:**
 ```
@@ -163,9 +195,60 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 5. `ServerCall("server.fn", p, ...)` — ALWAYS pass player ID `p` explicitly as first param. Engine does NOT auto-inject it. (Issue #51)
 6. ALWAYS run `python -m tools.lint --mod "ModName"` after writing any mod code
 
-## Do NOT Use Agents to Write Mod Code
+## Do NOT Copy Preview Images Into Mod Folders
 
-Agents can research, analyze, update docs, run tools. But mod rewrites must be done manually.
+**NEVER copy preview.jpg/preview.png files from workshop originals into `Documents/Teardown/mods/`.** This crashed the game engine (strncpy buffer overflow during mod enumeration). The engine handles workshop previews through Steam — local copies are unnecessary and dangerous. (Issue #66)
+
+## Do NOT Use Agents/Subagents to Write ANY Code or Files
+
+**Subagents are READ-ONLY.** They may research, search, analyze, and read files. They must NEVER write, edit, create, or delete any file — mod code, tool code, docs, configs, or anything else. Subagents cause too many issues when writing. All writing must be done by the main terminal directly.
+
+## Do NOT Modify Asset Files
+
+**NEVER modify `.vox`, `.xml` prefab, `.png`, `.ogg`, or other asset files in mod directories.** Only edit `.lua` scripts and `info.txt`. Creating or modifying asset files (e.g., adding `main.xml` to Jetskis, copying `flamer.vox`) has caused game crashes. If a mod has broken/missing assets, document it — don't try to fix the assets.
+
+## Active Mod Count Ceiling
+
+**Warn the user when active mods approach 150.** The Teardown engine crashes from shadow volume integer overflow at ~178 active mods. Safe limit is ~125-150. Audio memory also becomes a concern above 150 (760MB+ causes instability). When installing new mods from the workshop backlog (~75 pending), track the total active count and advise the user which to keep disabled.
+
+## Clear __pycache__ Before Batch Tests
+
+**Always run `find . -name "__pycache__" -type d -exec rm -rf {} +` before `python -m tools.test --batch all --static`.** Stale Python bytecode caused phantom test results for an entire session. Do this after ANY change to `tools/*.py`.
+
+## Crash Investigation Protocol
+
+When the user reports a game crash:
+1. **Check ALL file types changed** — not just `.lua`. Preview images, `.vox` files, `.xml` prefabs, and directory structure changes can all crash the engine.
+2. **Read the crash dump** — check `AppData/Local/Teardown/crash/` for `callstack.txt`, `error.yaml`. The `callstack_lua` field shows if it's a Lua or C++ crash.
+3. **Don't dismiss game log errors as stale** — compile errors may be real bugs our tools don't catch (deepcheck checks semantics, not syntax).
+4. **Check file modification times** — `find mods/ -mmin -N` to narrow which files changed since the last working state.
+
+## Every Installed Mod Must Have id.txt
+
+When installing or patching any mod, ensure it has an `id.txt` with the Steam Workshop ID on the first line. Without it, workshop sync is unreliable — 97 mods were missing id.txt, making subscription tracking a manual guessing game. If the workshop ID is unknown, check the workshop folder by matching mod name/author.
+
+## No Mod Edits While Game Is Running
+
+**Before writing to `Documents/Teardown/mods/`, check if the game is running:**
+```
+tasklist | grep -i teardown
+```
+If `teardown.exe` is running, do NOT edit mod files. Wait for the user to close the game first. Editing files mid-session can corrupt game state.
+
+## QA Lead Batch Reports Must List Exact Changes
+
+When reporting a completed batch to the user, list the **exact file paths and line ranges** changed — not just mod names. Example:
+```
+Batch 3 complete:
+- AC130_Airstrike_MP/main.lua: lines 88-95 (removed v1 SetBool, added PlayersAdded loop)
+- Bunker_Buster_MP/main.lua: lines 310-315 (same fix)
+Lint: both clean. Deepcheck: both PASS.
+```
+This lets the user know exactly what to revert if something breaks.
+
+## First Change = Immediate Test
+
+At the start of every session that will edit mods, make ONE small change to ONE mod, then ask the user to launch the game and verify it works. This catches environmental issues (engine limits, corrupted state, Steam updates) before the team does a full batch of work. Only proceed with real batches after the smoke test passes.
 
 ## Plugins & Agents — USE THEM
 

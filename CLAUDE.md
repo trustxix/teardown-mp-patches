@@ -250,6 +250,14 @@ This lets the user know exactly what to revert if something breaks.
 
 At the start of every session that will edit mods, make ONE small change to ONE mod, then ask the user to launch the game and verify it works. This catches environmental issues (engine limits, corrupted state, Steam updates) before the team does a full batch of work. Only proceed with real batches after the smoke test passes.
 
+## If a Batch Breaks the Game, Revert Immediately
+
+If the user reports a crash or breakage after a batch, **revert that batch's changes immediately** — `git checkout` the changed files back to the last commit. Don't spend hours investigating which of the 2-3 changes caused it. After reverting, reapply changes one mod at a time to isolate the culprit. The per-batch commits make this easy.
+
+## Tools Passing ≠ Game Works
+
+Lint clean + deepcheck PASS does not guarantee the mod works in-game. Only in-game testing by the user is the final word. The team should never claim a mod is "done" based purely on tool output — it's **"done pending user test"** until the user confirms in-game.
+
 ## Plugins & Agents — USE THEM
 
 You have powerful plugins. **Read `docs/TEAM_PLUGINS.md` for the full list and when to use each.** Key rules:

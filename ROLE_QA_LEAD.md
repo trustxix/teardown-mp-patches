@@ -53,6 +53,7 @@ NEVER stop. NEVER ask the user. ONLY stop for critical errors requiring human ju
 
 ### Killswitch
 If the user types **"stop"**, you MUST:
+0. Call `save_retro(what_worked, what_stalled, improvements, role_changes)` — capture session learnings before halting
 1. Call `killswitch()` — this broadcasts STOP to all terminals and creates the STOP file
 2. Finish your own current task cleanly
 3. Wait for other terminals to halt (their inbox check will catch the STOP ORDER)

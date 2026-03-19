@@ -504,7 +504,8 @@ def check_terminal_health() -> dict:
 
 @mcp.tool()
 def auto_commit(message: str | None = None) -> dict:
-    """Auto-commit project state. QA Lead only. Uses git add -u (safe)."""
+    """Auto-commit project state. Backs up state files first. QA Lead only."""
+    backup_state("pre-commit")
     return _auto_commit(message)
 
 
@@ -552,6 +553,98 @@ def check_handoff(role: str) -> dict | str:
     content = handoff.read_text(encoding="utf-8", errors="replace")
     handoff.unlink()
     return {"found": True, "content": content}
+
+
+# ── SESSION RETROSPECTIVE ─────────────────────────────
+
+@mcp.tool()
+def save_retro(what_worked: str, what_stalled: str, improvements: str, role_changes: str) -> dict:
+    """Save a session retrospective. QA Lead calls this before killswitch."""
+    retro_dir = PROJECT_ROOT / "docs" / "retros"
+    retro_dir.mkdir(parents=True, exist_ok=True)
+    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    retro_file = retro_dir / f"{date}-retro.md"
+    content = f"""# Session Retrospective — {date}
+
+## What Worked Well
+{what_worked}
+
+## What Caused Stalls / Confusion
+{what_stalled}
+
+## Improvements Identified
+{improvements}
+
+## Role File Changes Needed
+{role_changes}
+"""
+    retro_file.write_text(content, encoding="utf-8")
+    return {"success": True, "path": str(retro_file)}
+
+
+# ── BACKUP ────────────────────────────────────────────
+
+import shutil
+
+
+@mcp.tool()
+def backup_state(label: str = "auto") -> dict:
+    """Backup critical state files. Keeps last 3 backups."""
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    backup_dir = PROJECT_ROOT / "backups" / f"{ts}_{label}"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    files_to_backup = [
+        PROJECT_ROOT / "mcp_task_server" / "tasks.json",
+        PROJECT_ROOT / "mcp_change_tracker" / "changes.json",
+        COMMS_DIR / "heartbeats.json",
+        PROJECT_ROOT / "mcp_task_server" / "locks.json",
+    ]
+    backed_up = []
+    for f in files_to_backup:
+        if f.exists():
+            shutil.copy2(f, backup_dir / f.name)
+            backed_up.append(f.name)
+
+    # Keep only last 3 backup directories
+    backups_root = PROJECT_ROOT / "backups"
+    all_backups = sorted(
+        [d for d in backups_root.iterdir() if d.is_dir()],
+        reverse=True,
+    )
+    for old in all_backups[3:]:
+        shutil.rmtree(old)
+
+    return {"success": True, "path": str(backup_dir), "files": backed_up}
+
+
+# ── ERROR REPORTING ───────────────────────────────────
+
+@mcp.tool()
+def report_error(role: str, error_type: str, details: str, task_id: str | None = None) -> dict:
+    """Report an error for dashboard visibility. All terminals should call this on unresolvable errors."""
+    errors_file = PROJECT_ROOT / "logs" / "errors.json"
+    errors_file.parent.mkdir(parents=True, exist_ok=True)
+
+    errors = []
+    if errors_file.exists():
+        try:
+            errors = json.loads(errors_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            errors = []
+
+    errors.append({
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "role": role,
+        "type": error_type,
+        "details": details,
+        "task_id": task_id,
+    })
+
+    # Keep last 100
+    errors = errors[-100:]
+    errors_file.write_text(json.dumps(errors, indent=2), encoding="utf-8")
+    return {"success": True}
 
 
 # Write roles.json on startup

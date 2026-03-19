@@ -14,8 +14,8 @@ def _with_lock(fn):
 
     Uses a separate lock file so the lock byte count stays constant
     even as tasks.json grows/shrinks during writes.
-    Retries up to 10 times with 0.2s delay if lock is held.
-    Falls back to unlocked read if lock fails completely.
+    Retries up to 20 times with exponential backoff.
+    Raises RuntimeError if lock cannot be acquired.
     """
     import time
 
@@ -24,7 +24,8 @@ def _with_lock(fn):
         TASKS_FILE.write_text(json.dumps({"tasks": [], "next_id": 1}, indent=2))
     LOCK_FILE.touch()
 
-    max_retries = 10
+    max_retries = 20
+    delay = 0.1
     for attempt in range(max_retries):
         try:
             with open(LOCK_FILE, "r+") as lf:
@@ -41,17 +42,12 @@ def _with_lock(fn):
                     msvcrt.locking(lf.fileno(), msvcrt.LK_UNLCK, 1)
         except IOError:
             if attempt < max_retries - 1:
-                time.sleep(0.2)
+                time.sleep(delay)
+                delay = min(delay * 1.5, 1.0)  # exponential backoff, cap 1s
             else:
-                # Fallback: read without lock (safe for reads, risky for writes)
-                content = TASKS_FILE.read_text(encoding="utf-8").strip()
-                data = json.loads(content) if content else {"tasks": [], "next_id": 1}
-                result = fn(data)
-                try:
-                    TASKS_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
-                except:
-                    pass
-                return result
+                raise RuntimeError(
+                    f"Could not acquire task store lock after {max_retries} attempts"
+                )
 
 
 def _now() -> str:

@@ -952,7 +952,7 @@
       "type": "bug_fix",
       "description": "Issue #56 completion: Added ApplyPlayerDamage with distance falloff after all Explosion() calls in warhead.lua and cluster.lua. Propagated owner player ID through shared.spawnHandleTargets (main.lua) and shared.spawnTargets extraction in entity scripts. Kill attribution uses toolId \"bunkerbustermissile\".",
       "timestamp": "2026-03-19T11:17:51.505683+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 107,
@@ -961,7 +961,7 @@
       "type": "bug_fix",
       "description": "Issue #56 completion: Added environmental ApplyPlayerDamage (attacker=0) with distance falloff after Explosion() in ball.lua cannonball impact. Uses toolId \"lightning_stick\", damageRadius=6.",
       "timestamp": "2026-03-19T11:17:53.011470+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 108,
@@ -970,7 +970,7 @@
       "type": "bug_fix",
       "description": "Issue #56 miss: C4 and Landmine Explosion() calls had NO player damage. Added applyExplosionDamage() helper with distance falloff after all 3 Explosion() calls (C4 detonation, landmine detonation, landmine trip). Claymore already had directional shrapnel damage. Fixed incorrect @audit-ok annotation.",
       "timestamp": "2026-03-19T11:24:19.627308+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 109,
@@ -979,7 +979,7 @@
       "type": "doc_update",
       "description": "Created docs/UMF_TRANSLATION_GUIDE.md \u2014 practical reference for converting Geneosis UMF mods to standalone v2. Covers registry layer, tool layer, input, UI widgets, UMF features to drop, server/client split, 15-point checklist, complexity estimates.",
       "timestamp": "2026-03-19T11:41:30.438569+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 110,
@@ -988,7 +988,7 @@
       "type": "bug_fix",
       "description": "ClientCall(p, ...) \u2192 ClientCall(0, ...) for shoot effects (sound + particles). Other players couldn't hear/see shots.",
       "timestamp": "2026-03-19T12:12:00.919012+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 111,
@@ -997,7 +997,7 @@
       "type": "bug_fix",
       "description": "ClientCall(p, ...) \u2192 ClientCall(0, ...) for place/remove/polarity-flip sounds (3 fixes). Other players couldn't hear magnet interactions.",
       "timestamp": "2026-03-19T12:12:01.843888+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 112,
@@ -1006,7 +1006,7 @@
       "type": "bug_fix",
       "description": "Landmine auto-trigger: ClientCall(p, ...) \u2192 ClientCall(0, ...) for explosion effects. Manual detonation was already correct. Other players couldn't see landmine explosion effects.",
       "timestamp": "2026-03-19T12:12:02.580246+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 113,
@@ -1015,7 +1015,7 @@
       "type": "bug_fix",
       "description": "Issue #56 miss: Added applyExplosionDamage() with distance falloff after all 4 weapon Explosion() calls (HE, Cluster initial, Cluster continuation, Frag). Grenade explosions can now damage players with kill attribution via tool ID \"Launcher\".",
       "timestamp": "2026-03-19T12:21:52.118753+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 114,
@@ -1024,7 +1024,7 @@
       "type": "tool_update",
       "description": "EXPLOSION-NO-DAMAGE lint rule: removed Shoot() from skip condition. Shoot() handles direct-hit projectile damage, NOT Explosion() splash damage \u2014 having Shoot() doesn't mean Explosion() is covered. This fixes the false negative that missed Multiple_Grenade_Launcher (Issue #56 miss). Updated 1 test, added 1 new test (438\u2192439).",
       "timestamp": "2026-03-19T12:26:20.168201+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 115,
@@ -1033,7 +1033,7 @@
       "type": "bug_fix",
       "description": "Client-side QueryShot() \u2192 QueryRaycast() for laser beam visualization. QueryShot is server-only; client only needs geometry hit distance for beam drawing, not player detection. Found by new lint rule addition.",
       "timestamp": "2026-03-19T12:29:01.019215+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 116,
@@ -1042,7 +1042,7 @@
       "type": "tool_update",
       "description": "Added QueryShot and Spawn to CLIENT-SERVER-FUNC server-only function list. Both are documented server-only in official API. Caught real bug in Tripmine (client-side QueryShot for laser visual).",
       "timestamp": "2026-03-19T12:29:03.601686+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 117,
@@ -1051,7 +1051,7 @@
       "type": "bug_fix",
       "description": "ApplyPlayerDamage missing toolId + attacker. Added \"FlameKat\" tool ID and attacker param (both available in scope). Katana kills now show properly in kill feed.",
       "timestamp": "2026-03-19T12:37:23.992072+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 118,
@@ -1060,7 +1060,7 @@
       "type": "bug_fix",
       "description": "ApplyPlayerDamage missing attacker param. Added attacker=0 (environmental \u2014 drone owner not tracked in damage_system).",
       "timestamp": "2026-03-19T12:37:24.937222+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 119,
@@ -1069,7 +1069,7 @@
       "type": "bug_fix",
       "description": "ApplyPlayerDamage missing attacker param. Added attacker=0 (environmental weather damage).",
       "timestamp": "2026-03-19T12:37:25.811237+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 120,
@@ -1078,7 +1078,7 @@
       "type": "bug_fix",
       "description": "ApplyPlayerDamage missing attacker param in 2 multi-line calls. Added attacker=0 (vehicle entity script \u2014 owner not tracked).",
       "timestamp": "2026-03-19T12:37:26.866297+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 121,
@@ -1087,7 +1087,7 @@
       "type": "bug_fix",
       "description": "Issue #47: QueryShot player guard \u2014 changed `if shotPlayer then` and `if fragPlayer then` to `~= 0` in rpg_projectile.lua. Lua 0 is truthy, so the old guard would damage the host when QueryShot returned player=0 for non-player hits.",
       "timestamp": "2026-03-19T12:39:03.587448+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 122,
@@ -1096,7 +1096,7 @@
       "type": "bug_fix",
       "description": "Issue #47: QueryShot player guard \u2014 changed 2x `if shotPlayer then` and 2x `if fragPlayer then` to `~= 0` in TankMain.lua. Prevented phantom host damage from non-player QueryShot hits.",
       "timestamp": "2026-03-19T12:39:33.812866+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 123,
@@ -1105,8 +1105,53 @@
       "type": "bug_fix",
       "description": "Issue #58: ClientCall(p, ...) \u2192 ClientCall(0, ...) for spawn and shoot sounds. Other players couldn't hear sphere spawn/launch effects. Grab sound correctly targeted (uses GetLocalPlayer position).",
       "timestamp": "2026-03-19T12:46:34.621919+00:00",
-      "documented": false
+      "documented": true
+    },
+    {
+      "id": 124,
+      "role": "api_surgeon",
+      "mod": "Telekinesis",
+      "type": "bug_fix",
+      "description": "Fixed asset path typo: liquidifying.ogg \u2192 liquifying.ogg (sound file exists but was silently not loading due to misspelling)",
+      "timestamp": "2026-03-19T17:20:14.897334+00:00",
+      "documented": true
+    },
+    {
+      "id": 125,
+      "role": "api_surgeon",
+      "mod": "Koenigsegg_Agera_MP",
+      "type": "polish",
+      "description": "Added @deepcheck-ok ASSET annotations for 15 missing assets in auxiliary map scripts (trextest.lua, pine.lua, tree.lua, radio.lua) \u2014 assets never shipped in workshop original",
+      "timestamp": "2026-03-19T17:20:15.338667+00:00",
+      "documented": true
+    },
+    {
+      "id": 126,
+      "role": "api_surgeon",
+      "mod": "tools/deepcheck.py",
+      "type": "tool_update",
+      "description": "Fixed _extract_functions() to concatenate duplicate function bodies instead of overwriting. Eliminates 16 false-positive HUD validation WARNs caused by options.lua client.draw() shadowing main.lua client.draw().",
+      "timestamp": "2026-03-19T17:27:44.332638+00:00",
+      "documented": true
+    },
+    {
+      "id": 127,
+      "role": "api_surgeon",
+      "mod": "tools/deepcheck.py",
+      "type": "tool_update",
+      "description": "Fixed firing chain false positives: expanded any_target_has_damage to include Explosion() and server_damage_apis, suppressing WARNs for auxiliary ServerCall targets when server already has damage APIs",
+      "timestamp": "2026-03-19T17:34:42.612049+00:00",
+      "documented": true
+    },
+    {
+      "id": 128,
+      "role": "api_surgeon",
+      "mod": "tests/test_deepcheck.py",
+      "type": "tool_update",
+      "description": "Added regression test: options.lua client.draw() must not shadow main.lua's tool guard in HUD check (test_options_lua_does_not_shadow_main_tool_guard). Test count: 545\u2192546.",
+      "timestamp": "2026-03-19T17:38:49.829558+00:00",
+      "documented": true
     }
   ],
-  "next_id": 124
+  "next_id": 129
 }

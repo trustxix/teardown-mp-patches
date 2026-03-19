@@ -312,11 +312,14 @@ def test_cli(mod_name, static_only, batch, no_input, verbose, setup):
         return
 
     if batch:
+        from collections import Counter
         mods = discover_mods()
         total = len(mods)
         passes = 0
         fails = 0
         warns = 0
+        warn_reasons: Counter = Counter()
+        fail_mods: list[str] = []
         for i, mod_dir in enumerate(mods, 1):
             try:
                 report = run_test(mod_dir.name, static_only=True, verbose=verbose)
@@ -328,12 +331,27 @@ def test_cli(mod_name, static_only, batch, no_input, verbose, setup):
                     passes += 1
                 elif status == "WARN":
                     warns += 1
+                    # Collect warn reasons from the static report
+                    if report.static_report:
+                        for f in (report.static_report.assets + report.static_report.firing_chain +
+                                  report.static_report.effect_chain + report.static_report.hud +
+                                  report.static_report.id_xref + report.static_report.servercall_params):
+                            if f.status == "WARN":
+                                warn_reasons[f.detail] += 1
                 else:
                     fails += 1
+                    fail_mods.append(mod_dir.name)
             except Exception as e:
                 click.echo(f"  [ERROR] {mod_dir.name}: {e}")
                 fails += 1
         click.echo(f"\n{total} mods tested: {passes} PASS, {warns} WARN, {fails} FAIL")
+        if fail_mods:
+            click.echo(f"\nFAIL mods: {', '.join(fail_mods)}")
+        if warn_reasons and not verbose:
+            click.echo(f"\nWARN breakdown:")
+            for reason, count in warn_reasons.most_common(5):
+                short = reason[:80] + "..." if len(reason) > 80 else reason
+                click.echo(f"  {count:3d}x  {short}")
         return
 
     if not mod_name:

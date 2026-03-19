@@ -383,6 +383,8 @@ ClientCall(playerId, functionName, [param1, param2, ...])
 
 **Best for:** One-time events (fire, reload, round start). **NOT** for continuous state sync (use registry sync instead).
 
+**Targeting:** Use `ClientCall(0, ...)` for world-space effects visible to all players (explosions, gunfire sounds, impact particles at a position). Use `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD state sync). Wrong targeting means other players can't see/hear the effect. (Issue #58)
+
 ---
 
 ## Registry Sync
@@ -482,6 +484,16 @@ Standardized Location Node tags (convention, not requirement):
 - Voxels connect along sides, not edges/corners
 - 14 material types with hardness levels
 - Support named locations (muzzle, fp_action, etc.)
+
+### Asset Path Prefix (v2 REQUIRED)
+All asset paths in v2 scripts **MUST** use the `MOD/` prefix:
+```lua
+LoadSound("MOD/snd/fire.ogg")       -- CORRECT
+LoadSprite("MOD/img/crosshair.png")  -- CORRECT
+UiImage("MOD/ui/hud.png")           -- CORRECT
+LoadSound("snd/fire.ogg")           -- WRONG: silently returns nil/0 in v2
+```
+In v1, the engine resolved relative paths from the mod folder automatically. In v2, paths without `MOD/` silently fail to load — no error, no crash, just missing sound/sprite. (Issue #63)
 
 ### Audio
 - Format: `.ogg`
@@ -810,6 +822,16 @@ Gate all projectile physics with `IsPlayerLocal(p)`. Remote player projectile si
 
 ### 10. Lua 5.1 Restrictions
 No `goto` statements, no labels. No `mousedx`/`mousedy` — use `camerax`/`cameray` instead.
+
+### 11. Asset Paths Require MOD/ Prefix in v2
+```lua
+-- WRONG (silently returns nil/0 — no error, no crash):
+LoadSound("snd/fire.ogg")
+
+-- CORRECT:
+LoadSound("MOD/snd/fire.ogg")
+```
+In v1, relative paths resolved from the mod folder. In v2, `LoadSound`/`LoadSprite`/`UiImage` without `MOD/` prefix silently fail. Assets appear missing at runtime (no sound, no sprite) but the mod doesn't crash. (Issue #63)
 
 ---
 

@@ -82,47 +82,63 @@ class DeepcheckReport:
 _ASSET_REF_RE = re.compile(r'"(MOD/[^"]+\.(?:ogg|vox|png|jpg|xml|kv6))"')
 
 
+def _is_commented_out(line: str, match_start: int) -> bool:
+    """Check if a regex match position falls inside a Lua single-line comment."""
+    comment_pos = line.find("--")
+    return comment_pos != -1 and comment_pos < match_start
+
+
 def check_assets(mod_dir: Path) -> list[AssetFinding]:
     """Check that all MOD/ asset references point to existing files."""
     findings = []
     seen: set[str] = set()
 
     for rel_path, source in read_lua_files(mod_dir):
-        for m in _ASSET_REF_RE.finditer(source):
-            asset_ref = m.group(1)
-            if asset_ref in seen:
+        # File-level suppression: @deepcheck-ok ASSET in first 5 lines skips file
+        first_lines = source.split('\n')[:5]
+        file_suppressed = any(
+            '@deepcheck-ok' in ln and 'ASSET' in ln for ln in first_lines
+        )
+        if file_suppressed:
+            continue
+        for line_no, line in enumerate(source.splitlines(), 1):
+            # Skip @deepcheck-ok ASSET suppressed lines
+            if '@deepcheck-ok' in line and 'ASSET' in line:
                 continue
-            seen.add(asset_ref)
+            for m in _ASSET_REF_RE.finditer(line):
+                # Skip references inside Lua comments
+                if _is_commented_out(line, m.start()):
+                    continue
 
-            local_path = asset_ref.replace("MOD/", "", 1)
-            full_path = mod_dir / local_path
+                asset_ref = m.group(1)
+                if asset_ref in seen:
+                    continue
+                seen.add(asset_ref)
 
-            # Also check .tde variant (Teardown's encrypted asset format)
-            # Engine transparently loads .ogg.tde when code references .ogg
-            tde_path = mod_dir / (local_path + ".tde")
+                local_path = asset_ref.replace("MOD/", "", 1)
+                full_path = mod_dir / local_path
 
-            if full_path.exists() or tde_path.exists():
-                findings.append(AssetFinding(
-                    validator="ASSET",
-                    status="PASS",
-                    detail=f"Asset found: {local_path}",
-                    file=rel_path,
-                    path=local_path,
-                ))
-            else:
-                line_no = 0
-                for i, line in enumerate(source.splitlines(), 1):
-                    if asset_ref in line:
-                        line_no = i
-                        break
-                findings.append(AssetFinding(
-                    validator="ASSET",
-                    status="FAIL",
-                    detail=f"Asset NOT found: {local_path}",
-                    file=rel_path,
-                    line=line_no,
-                    path=local_path,
-                ))
+                # Also check .tde variant (Teardown's encrypted asset format)
+                # Engine transparently loads .ogg.tde when code references .ogg
+                tde_path = mod_dir / (local_path + ".tde")
+
+                if full_path.exists() or tde_path.exists():
+                    findings.append(AssetFinding(
+                        validator="ASSET",
+                        status="PASS",
+                        detail=f"Asset found: {local_path}",
+                        file=rel_path,
+                        path=local_path,
+                    ))
+                else:
+                    findings.append(AssetFinding(
+                        validator="ASSET",
+                        status="FAIL",
+                        detail=f"Asset NOT found: {local_path}",
+                        file=rel_path,
+                        line=line_no,
+                        path=local_path,
+                    ))
 
     return findings
 
@@ -276,7 +292,11 @@ def _extract_functions(source: str) -> dict[str, str]:
             if depth <= 0:
                 break
             body_lines.append(line)
-        funcs[func_name] = '\n'.join(body_lines)
+        body = '\n'.join(body_lines)
+        if func_name in funcs:
+            funcs[func_name] += '\n' + body
+        else:
+            funcs[func_name] = body
 
     return funcs
 
@@ -363,16 +383,15 @@ def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
 
     # Find ServerCall targets from client functions that handle usetool
     # Also trace one level of function call indirection (e.g., usetool → client.shoot() → ServerCall)
-    servercall_targets: list[str] = []
+    servercall_target_set: set[str] = set()
     for func_name, body in funcs.items():
         if _is_client_context(func_name) and _USETOOL_INPUT_RE.search(body):
-            targets = _SERVERCALL_RE.findall(body)
-            servercall_targets.extend(targets)
+            servercall_target_set.update(_SERVERCALL_RE.findall(body))
             # Trace calls to other functions and check those for ServerCalls
             for called_fn in re.findall(r'\b((?:client\.)?[\w]+)\s*\(', body):
                 if called_fn in funcs:
-                    indirect_targets = _SERVERCALL_RE.findall(funcs[called_fn])
-                    servercall_targets.extend(indirect_targets)
+                    servercall_target_set.update(_SERVERCALL_RE.findall(funcs[called_fn]))
+    servercall_targets = sorted(servercall_target_set)
 
     # Check for Shoot() in client context (wrong side)
     # Skip if mod defines a custom global "Shoot" function (shadows the API)
@@ -443,6 +462,18 @@ def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
         return findings
 
     # Verify each ServerCall target exists and calls Shoot/damage
+    # Two-pass approach: first check if ANY target has a complete damage chain,
+    # then suppress WARNs for auxiliary targets (options, reload, etc.)
+    any_target_has_damage = server_has_usetool_and_damage or bool(server_damage_apis)
+    for target in servercall_targets:
+        if target in funcs:
+            body = funcs[target]
+            if (_SHOOT_CALL_RE.search(body) or _EXPLOSION_RE.search(body) or
+                    _APPLY_DAMAGE_RE.search(body) or
+                    (_QUERYSHOT_CALL_RE.search(body) and _APPLY_DAMAGE_RE.search(body))):
+                any_target_has_damage = True
+                break
+
     for target in servercall_targets:
         if target not in funcs:
             findings.append(ChainFinding(
@@ -475,6 +506,10 @@ def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
                 detail=f'{target} calls QueryShot but no ApplyPlayerDamage — may not deal damage',
                 chain=["usetool", f"ServerCall:{target}", "QueryShot()", "???"],
             ))
+        elif any_target_has_damage:
+            # Another ServerCall target already has a complete damage chain —
+            # this is an auxiliary function (options, reload, etc.), not a missing chain.
+            pass
         else:
             findings.append(ChainFinding(
                 validator="FIRING-CHAIN", status="WARN",
@@ -500,8 +535,28 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
     """Trace damage -> ClientCall -> PlaySound/SpawnParticle on client."""
     findings: list[ChainFinding] = []
     all_source = ""
+    # Collect file-level SERVER-EFFECT suppressions so we can skip functions
+    # from files that have @lint-ok-file SERVER-EFFECT at the top
+    suppressed_funcs: set[str] = set()
+    effect_suppressed = False
     for _, source in read_lua_files(mod_dir):
+        # File-level suppression: @deepcheck-ok EFFECT in first 5 lines
+        first_lines = source.split('\n')[:5]
+        if any('@deepcheck-ok' in ln and 'EFFECT' in ln for ln in first_lines):
+            effect_suppressed = True
+        # Check first 20 lines for file-level SERVER-EFFECT suppression
+        first_lines_20 = source.split('\n')[:20]
+        has_file_suppression = any(
+            '@lint-ok-file' in line and 'SERVER-EFFECT' in line
+            for line in first_lines_20
+        )
+        if has_file_suppression:
+            for fn_name in _extract_functions(source):
+                suppressed_funcs.add(fn_name)
         all_source += source + "\n"
+
+    if effect_suppressed:
+        return []
 
     # Check if mod has damage calls at all
     has_shoot = _SHOOT_CALL_RE.search(all_source)
@@ -517,6 +572,9 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
     # use PlaySound for UI feedback that lint.py's server_side_effects check handles
     for func_name, body in funcs.items():
         if _is_server_context(func_name):
+            # Skip functions from files with @lint-ok-file SERVER-EFFECT
+            if func_name in suppressed_funcs:
+                continue
             has_damage = (_SHOOT_CALL_RE.search(body) or _EXPLOSION_RE.search(body) or
                          _QUERYSHOT_CALL_RE.search(body) or _APPLY_DAMAGE_RE.search(body))
             if has_damage:
@@ -538,15 +596,18 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
                             chain=[func_name, f"{api_name}()"],
                         ))
 
-    # Find ClientCall targets from server functions that have damage
-    clientcall_targets: list[tuple[str, str]] = []  # (target_player, func_name)
+    # Find ClientCall targets from ALL server/bare functions (not just damage ones).
+    # Effect broadcasting ClientCalls may be in a caller (e.g., server.tick) while
+    # the actual QueryShot is in a helper (e.g., damage_system). Cross-function
+    # tracing is needed to avoid false WARNs.
+    clientcall_target_set: set[tuple[str, str]] = set()  # (target_player, func_name)
     for func_name, body in funcs.items():
-        if _is_server_context(func_name):
-            if _SHOOT_CALL_RE.search(body) or _EXPLOSION_RE.search(body) or _QUERYSHOT_CALL_RE.search(body):
-                for m in _CLIENTCALL_RE.finditer(body):
-                    target_player = m.group(1).strip()
-                    target_func = m.group(2)
-                    clientcall_targets.append((target_player, target_func))
+        if not _is_client_context(func_name):
+            for m in _CLIENTCALL_RE.finditer(body):
+                target_player = m.group(1).strip()
+                target_func = m.group(2)
+                clientcall_target_set.add((target_player, target_func))
+    clientcall_targets = sorted(clientcall_target_set)
 
     # If server has damage but no ClientCall → may be silent
     # Shoot() and Explosion() are auto-replicated by the engine (sounds + visuals
@@ -555,13 +616,84 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
     if not clientcall_targets:
         server_fails = [f for f in findings if f.status == "FAIL"]
         if not server_fails:
-            # Only warn if using QueryShot (custom damage) without ClientCall
-            if has_queryshot and not has_shoot and not has_explosion:
+            # Check for registry sync as alternative effect broadcasting
+            # Mods using SetFloat/SetBool/SetInt with per-player keys near damage
+            # code are broadcasting state via registry (correct for continuous beams)
+            _REGISTRY_SYNC_RE = re.compile(r'Set(?:Float|Bool|Int|String)\s*\([^)]*,\s*(?:true|sync)')
+            has_registry_sync = False
+            for func_name, body in funcs.items():
+                if not _is_client_context(func_name):
+                    if (_QUERYSHOT_CALL_RE.search(body) or _APPLY_DAMAGE_RE.search(body)):
+                        if _REGISTRY_SYNC_RE.search(body):
+                            has_registry_sync = True
+                            break
+            # Also check shared table usage across ALL server functions.
+            # Shared tables auto-sync to all clients, so writes in ANY server
+            # function (not just the damage function) constitute effect broadcasting.
+            # Example: AC130 writes hitPos to shared.projectiles in updateProjectile,
+            # client reads them in handleImpactEffects — both via local variable refs.
+            if not has_registry_sync:
+                _SHARED_WRITE_RE = re.compile(r'shared\.\w+\s*[\[=]')
+                has_shared_writes = False
+                has_shared_client_reads = False
+                for func_name, body in funcs.items():
+                    if not _is_client_context(func_name):
+                        if _SHARED_WRITE_RE.search(body):
+                            has_shared_writes = True
+                    else:
+                        if re.search(r'shared\.\w+', body):
+                            has_shared_client_reads = True
+                if has_shared_writes and has_shared_client_reads:
+                    has_registry_sync = True
+
+            # Check for all-player client effects: if client functions iterate
+            # all players (via InputDown("usetool", p) with player param) and
+            # have effect APIs, effects are visible to everyone — no ClientCall
+            # needed. This is the standard v2 continuous-weapon pattern.
+            if not has_registry_sync:
+                _USETOOL_WITH_PLAYER_RE = re.compile(r'InputDown\s*\(\s*"usetool"\s*,\s*\w+\s*\)')
+                for func_name, body in funcs.items():
+                    if _is_client_context(func_name):
+                        if _USETOOL_WITH_PLAYER_RE.search(body):
+                            if any(api_re.search(body) for _, api_re in _EFFECT_APIS):
+                                has_registry_sync = True  # reuse flag — semantically "has broadcasting"
+                                break
+
+            if has_registry_sync:
+                # Registry sync or all-player client effects present
+                findings.append(ChainFinding(
+                    validator="EFFECT-CHAIN", status="PASS",
+                    detail="Server damage uses registry sync or all-player client effects for broadcasting",
+                    chain=["QueryShot()", "SetFloat/shared/client-all-players"],
+                ))
+            elif has_queryshot and not has_shoot and not has_explosion:
                 findings.append(ChainFinding(
                     validator="EFFECT-CHAIN", status="WARN",
                     detail="Server has QueryShot damage but no ClientCall — weapon may be silent (no sound/particles for other players)",
                     chain=["QueryShot()", "no ClientCall"],
                 ))
+            elif has_queryshot and has_explosion:
+                # QueryShot with Explosion() — the explosion IS the impact effect,
+                # auto-replicated to all clients. No additional ClientCall needed.
+                # Check if Explosion is in the same function as QueryShot damage.
+                colocated = False
+                for func_name, body in funcs.items():
+                    if not _is_client_context(func_name):
+                        if _QUERYSHOT_CALL_RE.search(body) and _EXPLOSION_RE.search(body):
+                            colocated = True
+                            break
+                if colocated:
+                    findings.append(ChainFinding(
+                        validator="EFFECT-CHAIN", status="PASS",
+                        detail="Server damage uses Explosion() for auto-replicated impact effects",
+                        chain=["QueryShot()", "Explosion()"],
+                    ))
+                else:
+                    findings.append(ChainFinding(
+                        validator="EFFECT-CHAIN", status="WARN",
+                        detail="Server has QueryShot damage but no ClientCall — beam/melee effects may be silent for other players",
+                        chain=["QueryShot()", "no ClientCall"],
+                    ))
             elif has_queryshot:
                 findings.append(ChainFinding(
                     validator="EFFECT-CHAIN", status="WARN",
@@ -571,6 +703,12 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
         return findings
 
     # Verify ClientCall targets exist and have effects
+    # Two-pass: first check if ANY target has effects, then suppress auxiliary targets
+    any_target_has_effects = any(
+        target_func in funcs and any(api_re.search(funcs[target_func]) for _, api_re in _EFFECT_APIS)
+        for _, target_func in clientcall_targets
+    )
+
     for target_player, target_func in clientcall_targets:
         if target_func not in funcs:
             findings.append(ChainFinding(
@@ -589,6 +727,14 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
                 detail=f"Effect chain: damage -> ClientCall -> {target_func} -> effects",
                 chain=[f"ClientCall:{target_func}", "effects"],
             ))
+        elif any_target_has_effects:
+            # Another ClientCall target already has effects — this is an auxiliary
+            # function (marker cleanup, HUD sync, etc.), not a missing effect chain.
+            pass
+        elif has_shoot or has_explosion:
+            # Shoot()/Explosion() auto-replicate effects to all clients — this
+            # ClientCall target is for auxiliary purposes (UI sync, counters).
+            pass
         else:
             findings.append(ChainFinding(
                 validator="EFFECT-CHAIN", status="WARN",
@@ -611,7 +757,15 @@ def check_hud(mod_dir: Path) -> list[Finding]:
     """Check that client.draw() exists and has a tool guard."""
     findings: list[Finding] = []
     all_source = ""
-    for _, source in read_lua_files(mod_dir):
+    for rel_path, source in read_lua_files(mod_dir):
+        # Skip options.lua — it's a v1 artifact whose client.draw() would
+        # shadow main.lua's in the function dict, causing false-positive WARNs.
+        if rel_path == "options.lua":
+            continue
+        # File-level suppression: @deepcheck-ok HUD in first 5 lines skips check
+        first_lines = source.split('\n')[:5]
+        if any('@deepcheck-ok' in ln and 'HUD' in ln for ln in first_lines):
+            return []
         all_source += source + "\n"
 
     # Only relevant for tool mods

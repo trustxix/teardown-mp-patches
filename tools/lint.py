@@ -1525,6 +1525,84 @@ def check_damage_no_attacker(source: str) -> list[dict]:
     return findings
 
 
+# ---------------------------------------------------------------------------
+# Check T2-19: Missing MOD/ prefix on asset paths
+# ---------------------------------------------------------------------------
+
+# Asset-loading functions that take a path string
+_ASSET_LOAD_RE = re.compile(
+    r'\b(LoadSound|LoadLoop|LoadSprite|LoadImage)\s*\(\s*"([^"]*)"'
+)
+_UI_IMAGE_RE = re.compile(
+    r'\bUiImage\s*\(\s*"([^"]*)"'
+)
+# Engine built-in paths that don't need MOD/ prefix
+_BUILTIN_PREFIXES = (
+    "ui/", "explosion/", "script/", "LEVEL/", "RAW:",
+    "gfx/", "font/", "menu/",
+)
+
+
+def check_missing_mod_prefix(source: str) -> list[dict]:
+    """Flag asset paths missing the MOD/ prefix.
+
+    In v2, asset paths must use MOD/ prefix (e.g., LoadSound("MOD/snd/fire.ogg")).
+    Without it, assets silently fail to load. V1 resolved relative paths
+    automatically but v2 does not. See Issue #63 in ISSUES_AND_FIXES.md.
+
+    Only applies to files with #version 2.
+    Skips engine built-in paths (ui/, explosion/, etc.).
+    """
+    if "#version 2" not in source:
+        return []
+    findings = []
+    cleaned = _strip_block_comments(source)
+    for lineno, raw_line in enumerate(cleaned.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        if stripped.lstrip().startswith('--'):
+            continue
+        # Check LoadSound/LoadLoop/LoadSprite/LoadImage
+        for m in _ASSET_LOAD_RE.finditer(stripped):
+            path = m.group(2)
+            if not path:
+                continue
+            if path.startswith("MOD/") or path.startswith("LEVEL/"):
+                continue
+            if any(path.startswith(p) for p in _BUILTIN_PREFIXES):
+                continue
+            # Skip string concatenation (dynamic paths)
+            if ".." in raw_line[m.start():]:
+                continue
+            findings.append(_finding(
+                "MISSING-MOD-PREFIX",
+                lineno,
+                f'{m.group(1)}("{path}") — missing MOD/ prefix. '
+                f'Asset paths must use MOD/ in v2 or they silently fail to load. '
+                f'Fix: {m.group(1)}("MOD/{path}"). See ISSUES_AND_FIXES.md Issue #63',
+                severity="warn",
+            ))
+        # Check UiImage
+        for m in _UI_IMAGE_RE.finditer(stripped):
+            path = m.group(1)
+            if not path:
+                continue
+            if path.startswith("MOD/") or path.startswith("LEVEL/"):
+                continue
+            if any(path.startswith(p) for p in _BUILTIN_PREFIXES):
+                continue
+            if ".." in raw_line[m.start():]:
+                continue
+            findings.append(_finding(
+                "MISSING-MOD-PREFIX",
+                lineno,
+                f'UiImage("{path}") — missing MOD/ prefix. '
+                f'Asset paths must use MOD/ in v2 or they silently fail to load. '
+                f'Fix: UiImage("MOD/{path}"). See ISSUES_AND_FIXES.md Issue #63',
+                severity="warn",
+            ))
+    return findings
+
+
 # ===========================================================================
 # Aggregation
 # ===========================================================================
@@ -1562,6 +1640,7 @@ TIER2_CHECKS = [
     check_explosion_no_player_damage,
     check_setplayer_arg_order,
     check_damage_no_attacker,
+    check_missing_mod_prefix,
 ]
 
 

@@ -6,15 +6,15 @@
 
 | Status | Count |
 |--------|-------|
-| **Fully Patched (v2 rewrite)** | 177 |
+| **Fully Patched (v2 rewrite)** | 178 |
 | **Installed — under review/fix** | 0 |
 | **Deferred (documented, not convertible)** | 12 |
 | **Not convertible (frameworks, maps, etc.)** | 6 |
-| **Total installed** | **177** |
+| **Total installed** | **178** |
 | **Tool-tagged workshop items** | 162 |
 | **Total workshop items (incl. maps)** | 243 |
 
-> Counts updated 2026-03-19. **177 mods installed** (all 177 fully patched, 0 under review). **MILESTONE: Workshop fully exhausted** — all 243 workshop items assessed, every convertible mod converted or deferred with documented reasons. UMF bypass strategy converted 14 mods total (Batch 13: #162-#177), dropping ~7K-12K framework for ~300-1100 line standalone rewrites. 12 mods deferred. ProBallistics closed (DO NOT CONVERT). 9 auto-fixers, 523 tests, 30 lint rules, 0 findings across 177 mods. **Under review:** None.
+> Counts updated 2026-03-19. **178 mods installed** (all 178 fully patched, 0 under review). **MILESTONE: Workshop fully exhausted** — all 243 workshop items assessed, every convertible mod converted or deferred with documented reasons. UMF bypass strategy converted 14 UMF-blocked mods (Batch 13: 16 mods total, #162-#177), dropping ~7K-12K framework for ~300-1100 line standalone rewrites. 12 mods deferred. ProBallistics closed (DO NOT CONVERT). 9 auto-fixers, 550 tests, 30 lint rules, 0 findings across 178 mods. Deep analysis: **0 FAIL**, **0 WARN**, 178 PASS, 178 tested (**100%**). Session improved from 77/101/12 → 178/0/0. All WARNs resolved via deepcheck improvements (false positive elimination). **Under review:** None.
 
 ## Fully Patched Mods (Batch 1 — 35 mods)
 
@@ -233,9 +233,9 @@
 - ARM AK-47 (3665100521) — mod #160. Author: ARM framework. Already v2 from workshop. Auto-fixed 7→0 findings (5 raw-key-player removed, 1 #version 2 header added to projectile.lua, 1 MANUAL-AIM suppressed). Keybind hints added: [R] Reload [MMB] Fire Mode [Shift] ADS. Lint clean.
 - GYM Ragdoll (3668043935) — mod #161. Author: GLaD. 3 medical tools (bandages, resurrect, sedatives) + body part health HUD + ragdoll entity script. 294→320 lines v2 main.lua (server/client split, HUD helpers). gore.lua: added #version 2 header. Removed 9 backup lua files. Second "Very High" mod converted. Lint clean.
 
-## Fully Patched Mods (Batch 13 — 14 mods, UMF Bypass + v1→v2 conversions 2026-03-19)
+## Fully Patched Mods (Batch 13 — 16 mods, UMF Bypass + v1→v2 conversions 2026-03-19)
 
-> UMF-blocked mods converted without porting the framework. Strategy: rewrite each mod's game logic as standalone v2 (~119-1071 lines), dropping the ~7000-12000 line UMF framework entirely. API Surgeon built UMF-to-v2 translation guide (`docs/UMF_TRANSLATION_GUIDE.md`). Also includes v1→v2 conversions (TABS_Effect, Adjustable_Fire). **14 mods total**, completing the workshop exhaustion milestone.
+> UMF-blocked mods converted without porting the framework. Strategy: rewrite each mod's game logic as standalone v2 (~119-1071 lines), dropping the ~7000-12000 line UMF framework entirely. API Surgeon built UMF-to-v2 translation guide (`docs/UMF_TRANSLATION_GUIDE.md`). Also includes v1→v2 conversions (TABS_Effect, Adjustable_Fire). **16 mods total** (14 UMF bypass + 2 v1→v2), completing the workshop exhaustion milestone.
 
 - Omni Gun (2994616319) — mod #162. Author: Geneosis. Physics projectile spawner that copies voxel shapes. 370 lines standalone v2 (replaces ~11K UMF framework). 15 configurable settings via options menu (fire rate, spread, velocity, density, friction, bounce, solid, unbreakable, explosive, ghost), shape copy system (CopyShapePalette + CopyShapeContent), cleanup command. Lint clean.
 - Magnets (2783125614) — mod #163. Author: Geneosis. Place N/S polarity magnets that attract/repel via physics simulation. ~330 lines standalone v2. Server-authoritative magnet physics (force/factor configurable), place/drop/remove/flip-polarity/attach-detach commands, polarity visualization (client-throttled FindBodies at 4Hz), options menu with 5 settings. Lint clean.

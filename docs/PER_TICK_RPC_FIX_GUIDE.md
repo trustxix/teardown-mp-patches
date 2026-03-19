@@ -4,7 +4,7 @@
 > This floods the reliable network channel every frame, causing lag spikes and input delay.
 > The lint rule `PER-TICK-RPC` flags these.
 >
-> **Status (2026-03-19):** All 69 findings resolved. 0 PER-TICK-RPC findings across 177 mods. Guide kept for reference.
+> **Status (2026-03-19):** All 69 findings resolved. 0 PER-TICK-RPC findings across 178 mods. Guide kept for reference.
 
 ---
 

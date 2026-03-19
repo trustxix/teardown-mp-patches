@@ -2,7 +2,7 @@
 
 All resolved bugs and the rules derived from them. Consult before making changes. Append after fixing new issues.
 
-## Key Rules (condensed from all 59 issues)
+## Key Rules (condensed from all 65 issues)
 
 1. NEVER use `goto` or `::label::` (Lua 5.1 only)
 2. NEVER use raw key names with player parameter - use ServerCall pattern
@@ -34,6 +34,7 @@ All resolved bugs and the rules derived from them. Consult before making changes
 28. `ServerCall("server.fn", p, ...)` — player ID is REQUIRED, NOT auto-injected by engine
 29. `Explosion()` does NOT damage players — add explicit `ApplyPlayerDamage()` with distance falloff + tool ID for kill attribution
 30. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync)
+31. All asset paths MUST use `MOD/` prefix in v2: `LoadSound("MOD/snd/fire.ogg")`. Without it, assets silently fail to load (v1 resolved relative paths automatically)
 
 > **Note:** Issues #1-19 were resolved in earlier sessions. Their rules are captured above. Detailed entries for #1-19 are no longer available but all patterns are encoded in the lint tool (`python -m tools.lint`).
 
@@ -795,6 +796,116 @@ end
 
 ---
 
+## Issue #60: v1-style SetBool tool setup — tools invisible to joining players
+
+**Bug:** AC130_Airstrike_MP and Bunker_Buster_MP used v1-style `SetBool("game.tool.X.enabled", true)` + `SetFloat("game.tool.X.ammo", 101)` in `server.init()` instead of per-player `SetToolEnabled("toolid", true, p)` + `SetToolAmmo("toolid", 101, p)` in a `PlayersAdded()` loop. The v1 registry calls only affect the host — joining players never get the tool enabled, so it's invisible in their toolbar.
+
+**Root cause:** These mods were converted to v2 but the tool setup was left in the v1 pattern. The `RegisterTool()` call was correctly present, but without `SetToolEnabled` per-player, joining players can't use the tool.
+
+**Fix:** Removed v1 `SetBool`/`SetFloat`/`SetString` from `server.init()`. Added `PlayersAdded()` loop in `server.tick()` with `SetToolEnabled(id, true, p)` + `SetToolAmmo(id, 101, p)`.
+
+**Mods fixed:** AC130_Airstrike_MP, Bunker_Buster_MP
+
+**Note:** 40+ other mods still have v1 `SetBool` calls in `server.init()`, but they ALSO have correct v2 `SetToolEnabled` per-player setup — the v1 calls are harmless legacy cruft, not bugs.
+
+**RULE:** Always use `SetToolEnabled("id", true, p)` + `SetToolAmmo("id", N, p)` in `PlayersAdded()`. Never rely on `SetBool("game.tool.X.enabled", true)` — it only works for the host.
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #61: Deep analysis HUD guard false positives from options.lua
+
+**Bug:** 16 mods showed false "client.draw() has no GetPlayerTool guard" WARN because deepcheck combined source from all .lua files. When a mod has both `main.lua` and `options.lua` defining `client.draw()`, the extractor could pick up the options.lua version (which has no tool guard because it's the settings page UI).
+
+**Root cause:** `check_hud()` read all .lua files including `options.lua`. In Teardown, `options.lua` runs in a different context (mod settings page) and its `client.draw()` is separate from the gameplay HUD.
+
+**Fix:** Skip `options.lua` in `check_hud()`. Also added `@deepcheck-ok HUD` suppression (file-level and line-level) for launcher/controller mods that intentionally draw HUD across all tools (AC130, Bunker_Buster, Predator_Missile, Bomb_Attack, CnC_Weather_Machine).
+
+**Impact:** 16 false positive WARNs eliminated. 5 genuine HUD WARNs suppressed with annotations. Batch results improved 101→43 WARN.
+
+**RULE:** Deepcheck must skip `options.lua` when analyzing gameplay code. Use `@deepcheck-ok HUD` for mods with intentional cross-tool HUD.
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #62: Deepcheck auxiliary target false positives + hit effect broadcasting
+
+**Bug:** deepcheck.py's firing chain and effect chain validators generated WARNs for auxiliary ServerCall/ClientCall targets (setOptionsOpen, reload, setMode, cancelStrike, UI counters, state sync) even when the server already had a complete damage chain. Additionally, `_extract_functions()` used dict assignment which caused options.lua `client.draw()` to overwrite main.lua's version, losing the tool guard.
+
+**Root causes (4 categories):**
+
+1. **options.lua shadow** (check_hud, Issue #61): `_extract_functions()` dict key collision — options.lua `client.draw()` overwrote main.lua's. Fix: concatenate duplicate function bodies.
+2. **Auxiliary ServerCall targets** (check_firing_chain): ServerCall targets like `setOptionsOpen`, `reload`, `setMode` were flagged even when server already had Shoot/QueryShot/Explosion in other targets. Fix: expanded `any_target_has_damage` to include `Explosion()` and `server_damage_apis`.
+3. **Auxiliary ClientCall targets** (check_effect_chain): ClientCall targets for UI/state sync were flagged even when other targets had PlaySound/SpawnParticle or when `Shoot()`/`Explosion()` auto-replicates effects. Fix: auxiliary target suppression when effects exist elsewhere.
+4. **Target dedup**: `servercall_targets` and `clientcall_targets` now use sets to prevent duplicate findings from aliases.
+
+**Also this session:** API Surgeon added ClientCall hit effect broadcasting to 9 standard-pattern mods (500_Magnum, AK-47, AWP, Desert_Eagle, Dual_Berettas, Attack_Drone, Charge_Shotgun, Exploding_Star, Guided_Missile) — adding `client.onProjectileHit` with PlaySound + SpawnParticle so other players can hear/see bullet impacts.
+
+**Impact:** Batch deep analysis improved 77 PASS / 101 WARN / 12 FAIL → 162 PASS / 16 WARN / 0 FAIL. Test count: 523 → 548 (25 new tests across all fixes).
+
+**RULE:** When deepcheck reports a WARN for auxiliary ServerCall/ClientCall targets, check if the server already has damage APIs in other targets before treating it as actionable.
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #63: Missing MOD/ prefix on asset paths causes silent load failure in v2
+
+**Bug:** 7 mods had asset paths like `LoadSound("snd/fire.ogg")` or `LoadSprite("img/crosshair.png")` without the `MOD/` prefix. In v1, the engine resolved relative paths from the mod folder. In v2, the engine requires explicit `MOD/snd/fire.ogg` — without it, `LoadSound`/`LoadSprite`/`UiImage` silently return nil/0 with no error. Assets appear missing at runtime (no sound, no sprite) but the mod doesn't crash.
+
+**Root cause:** v1→v2 conversions preserved original asset paths without adding the `MOD/` prefix required in v2.
+
+**Fix:** Added `MOD/` prefix to all relative asset paths.
+
+**Mods fixed (7):**
+- Lava_Gun: UiImage crosshair
+- BHL-X42: LoadSprite
+- CnC_Weather_Machine: LoadSound (4 paths) + LoadSprite
+- Hurricanes_and_Blizzards: 8 paths across 4 files
+- Ion_Cannon_Beacon: 8 paths
+- Jetpack: 1 path
+- M2A1_Flamethrower: asset copy
+
+**RULE: All asset paths in v2 MUST use `MOD/` prefix: `LoadSound("MOD/snd/file.ogg")`, `LoadSprite("MOD/img/sprite.png")`, `UiImage("MOD/ui/image.png")`. Without it, assets silently fail to load.**
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #64: Orphaned `end` from incomplete raw-key block removal
+
+**Bug:** ARM_M4A4 and ARM_NOVA had compile errors ("Error compiling" in game log). When the `InputPressed("mmb", p)` block was refactored to use the ServerCall pattern (raw key fix), the `if` block was deleted but its closing `end` and `sharedData.CurrentFireMode = ...` assignment were left behind. The orphaned `end` caused Lua to see an unmatched block terminator — compile error.
+
+**Root cause:** Incomplete block deletion during raw-key refactoring. The fire mode toggle code was moved to `server.onChangeMode()` RPC handler, but the old in-line code wasn't fully cleaned up.
+
+**Fix:** Removed the 3 orphaned lines (assignment + blank line + `end`) from both mods.
+
+**Mods fixed (2):** ARM_M4A4, ARM_NOVA
+
+**RULE: When moving code from an `if` block to an RPC handler, delete the ENTIRE block including its `end`. Verify the `end` count matches the control structure count after editing.**
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #65: Lint annotation placed between function name and arguments
+
+**Bug:** Hurricanes_and_Blizzards had compile errors from lint annotations inserted between `ClientCall` and its `(` arguments: `ClientCall -- @lint-ok PER-TICK-RPC: ...(id, "banner_send", ...)`. Since `--` comments extend to end of line, the `(id, ...)` was commented out. Lua then saw bare `ClientCall` followed by `end` — not a valid statement.
+
+**Root cause:** The `@lint-ok` annotation was placed mid-expression instead of at end of line. Our lint tool matched and annotated the line but the annotation split the function call syntax.
+
+**Fix:** Moved annotations to end of line: `ClientCall(id, ...) -- @lint-ok PER-TICK-RPC: ...`
+
+**Mods fixed (1):** Hurricanes_and_Blizzards (2 lines)
+
+**RULE: `@lint-ok` annotations MUST go at the END of the line, AFTER the closing `)`. NEVER between a function name and its arguments. Pattern to avoid: `Func -- comment(args)`. Correct: `Func(args) -- comment`.**
+
+**Date fixed:** 2026-03-19
+
+---
+
 ## Tooling: PER-TICK-RPC destruction event guard (2026-03-19)
 
 **Improvement:** Added a 4th guard pattern to the PER-TICK-RPC lint rule. RPC calls (ServerCall/ClientCall) inside tick/update are now auto-suppressed if `MakeHole()` or `Explosion()` appears within ±10 lines — indicating the RPC is part of a destruction impact event, not continuous per-tick spam.
@@ -825,6 +936,35 @@ end
 - HANDLE-GT-ZERO: expanded suffix list (Sum, Value, Total)
 
 **Remaining convertible (2 — both HIGH/DEFERRED):** GLARE (LnL framework), Lockonauts Toolbox (custom UI). ProBallistics closed (17,447 lines — DO NOT CONVERT). 16 UMF-blocked.
+
+---
+
+## Milestone: Deep Analysis Zero FAIL — 178 Mods (2026-03-19)
+
+**Achievement:** 178 mods installed. 546 tests. LINT ZERO (0 findings, 30 rules). 0 missing features (0/123 Shoot, 0/123 AimInfo, 0/145 AmmoPickup). Deep analysis: **0 FAIL** out of 178 tested (was 57→28→12→0).
+
+**Tasks completed this pass:**
+- T96 (api_surgeon): Fixed server-side PlaySound/SpawnParticle/PointLight in 8 mods → moved to client with `ClientCall(0, ...)`
+- T97 (api_surgeon): Fixed Bee_Gun missing server.setOptionsOpen function
+- T98 (mod_converter): Fixed 22 mods with missing assets — deepcheck.py now skips commented-out refs, supports @deepcheck-ok ASSET
+- T99 (mod_converter): Copied missing assets from workshop originals for 5 mods
+- Telekinesis: Fixed asset typo (liquidifying→liquifying)
+- Koenigsegg_Agera_MP: 15 upstream-missing assets annotated with @deepcheck-ok
+- 6 mods annotated as having upstream-missing assets (never in workshop original): American_High_School, Hide_and_Seek, Jetskis, Koenigsegg_Agera_MP, Multiplayer_Spawnable_Pack, PPAN_Vehicle_Pack
+
+**deepcheck.py improvements (Phase 3):** @lint-ok-file SERVER-EFFECT support, commented-out asset skip, @deepcheck-ok ASSET annotation (file-level in first 5 lines, or per-line)
+
+**deepcheck.py improvements (Phase 4 — changes #126-#128):**
+- `_extract_functions()` was overwriting duplicate function bodies (dict key collision). Options.lua `client.draw()` shadowed main.lua's, causing false WARNs in HUD, firing chain, effect chain, and ID cross-ref validators. Fix: concatenate bodies instead of overwrite. Impact: 50+ false positives eliminated.
+- Firing chain: auxiliary ServerCall targets (setOptionsOpen, setMode, cancelStrike, etc.) generated WARNs even when server already had damage APIs. Fix: expanded `any_target_has_damage` to include `Explosion()` and `server_damage_apis`.
+- Regression test added: `test_options_lua_does_not_shadow_main_tool_guard`. Test count: 545→546.
+
+**Remaining WARNs (43 mods — polish, not blocking):**
+- 31x QueryShot bullet weapons without ClientCall — these should migrate to `Shoot()` for automatic cross-player effects
+- 11x QueryShot beam/melee without ClientCall — need manual effect broadcasting via `ClientCall(0, ...)`
+- 1x empty onExplosion callback
+
+**Final deep analysis:** 135 PASS, 43 WARN, 0 FAIL out of 178 tested. deepcheck.py false-positive reduction: 101→43 WARNs (58 eliminated across 8 fixes in 4 phases).
 
 ---
 

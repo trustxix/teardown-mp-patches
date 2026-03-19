@@ -19,6 +19,7 @@ Applies ALL known rules from CLAUDE.md and ISSUES_AND_FIXES.md:
 - client.draw() not draw() (Rule 19)
 - Server handles: MakeHole, Explosion, ammo decrement (Rule 8)
 - Client handles: PlaySound, SpawnParticle, PointLight (Rule 9/29)
+- ClientCall(0) for projectile hit effects broadcast to all clients (Rule 37)
 - Entity handles check ~= 0 not > 0 (Rule 15)
 - Keybind hints always shown (KeybindHints feature)
 - OptionsMenu with unlimited ammo toggle (OptionsMenu feature)
@@ -180,6 +181,12 @@ function client.init()
 {client_sound_loads}
 end
 
+-- Called via ClientCall(0, ...) when a projectile hits — broadcasts to ALL clients
+function client.onProjectileHit(x, y, z)
+\tlocal pos = Vec(x, y, z)
+\tSpawnParticle("smoke", pos, Vec(0, 1, 0), 0.5, 0.3)
+end
+
 function client.tick(dt)
 \tfor p in PlayersAdded() do
 \t\tif not players[p] then
@@ -283,17 +290,19 @@ def generate_standard_auto_rifle(config):
     if has_mag_anim:
         extra_body_state += "\n\t\tbody = nil,\n\t\tmag = nil,\n\t\tmagTrans = nil,"
 
-    # Projectile hit logic
+    # Projectile hit logic (+ ClientCall to broadcast impact effects to all clients)
     if has_penetration:
         proj_hit_logic = '''
 \t\tif projectile.index < projectile.penetration then
 \t\t\tMakeHole(hitPos, 0.2, 0.2, 0.2)
 \t\telse
 \t\t\tMakeHole(hitPos, data.damage, data.damage * 0.7, data.damage * 0.4)
-\t\tend'''
+\t\tend
+\t\tClientCall(0, "client.onProjectileHit", hitPos[1], hitPos[2], hitPos[3])'''
     else:
         proj_hit_logic = '''
-\t\tMakeHole(hitPos, data.damage, data.damage * 0.85, data.damage * 0.7)'''
+\t\tMakeHole(hitPos, data.damage, data.damage * 0.85, data.damage * 0.7)
+\t\tClientCall(0, "client.onProjectileHit", hitPos[1], hitPos[2], hitPos[3])'''
 
     # Server shoot logic
     input_fn = "InputPressed" if is_semi else "InputDown"

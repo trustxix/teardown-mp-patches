@@ -125,11 +125,16 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     # Deep analysis test results
     try:
         from tools.common import TEST_RESULTS_DIR
+        from datetime import datetime, timedelta
         if TEST_RESULTS_DIR.exists():
             tested = set()
             failed = []
+            warned = 0
+            newest_ts = None
             for mod_result_dir in sorted(TEST_RESULTS_DIR.iterdir()):
                 if mod_result_dir.is_dir():
+                    if mod_result_dir.name.startswith("__"):
+                        continue  # skip test harness and internal mods
                     tested.add(mod_result_dir.name)
                     # Read most recent report
                     runs = sorted(mod_result_dir.iterdir())
@@ -139,14 +144,27 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
                             text = report_file.read_text(encoding="utf-8", errors="replace")
                             if "RESULT: FAIL" in text:
                                 failed.append(mod_result_dir.name)
+                            elif "RESULT: WARN" in text:
+                                warned += 1
+                            # Track newest result timestamp from dir name (YYYY-MM-DD_HH-MM-SS)
+                            try:
+                                ts = datetime.strptime(runs[-1].name, "%Y-%m-%d_%H-%M-%S")
+                                if newest_ts is None or ts > newest_ts:
+                                    newest_ts = ts
+                            except ValueError:
+                                pass
             if tested:
                 untested = len(mods) - len(tested)
+                stale_tag = ""
+                if newest_ts and (datetime.now() - newest_ts) > timedelta(hours=4):
+                    age_hours = (datetime.now() - newest_ts).total_seconds() / 3600
+                    stale_tag = f" (results {age_hours:.0f}h old — re-run: python -m tools.test --batch all --static)"
                 if failed:
-                    lines.append(f"Deep analysis:    {len(tested)} tested, {len(failed)} FAIL, {untested} untested")
+                    lines.append(f"Deep analysis:    {len(tested)} tested, {len(failed)} FAIL, {warned} WARN, {untested} untested{stale_tag}")
                     for m in failed[:3]:
                         lines.append(f"  - {m}: FAIL (run: python -m tools.test --mod \"{m}\" --static)")
                 else:
-                    lines.append(f"Deep analysis:    {len(tested)} tested, 0 FAIL, {untested} untested [OK]")
+                    lines.append(f"Deep analysis:    {len(tested)} tested, 0 FAIL, {warned} WARN, {untested} untested [OK]{stale_tag}")
     except Exception:
         pass
 

@@ -73,11 +73,20 @@ function Restart-Terminal {
     }
 }
 
-# Main loop
-Write-Log "Watchdog started. Check interval: ${CheckIntervalSeconds}s, Stale threshold: ${StaleMinutes}m, Max restarts: $MaxRestarts"
+# Main loop — grace period lets terminals boot up before monitoring
+$startTime = [DateTimeOffset]::UtcNow
+$GraceMinutes = 3
+Write-Log "Watchdog started. Grace period: ${GraceMinutes}m, Check interval: ${CheckIntervalSeconds}s, Stale threshold: ${StaleMinutes}m, Max restarts: $MaxRestarts"
 
 while ($true) {
     Start-Sleep -Seconds $CheckIntervalSeconds
+
+    # Grace period: don't restart anything for the first N minutes after launch
+    $uptime = ([DateTimeOffset]::UtcNow - $startTime).TotalMinutes
+    if ($uptime -lt $GraceMinutes) {
+        Write-Log "Grace period: ${uptime:F1}m / ${GraceMinutes}m — skipping health check"
+        continue
+    }
 
     # Respect killswitch
     if (Test-Path $StopFile) {

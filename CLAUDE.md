@@ -98,8 +98,9 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 - `-- @lint-ok RULE-NAME` — suppress a specific finding on the current line
 - `-- @lint-ok-file RULE-NAME` — suppress a rule for the entire file (place at top of file)
 - `-- @audit-ok` — suppress audit false positives (e.g., tools using QueryShot instead of Shoot)
+- `-- @deepcheck-ok CATEGORY` — suppress deep analysis false positives (e.g., `@deepcheck-ok ASSET` for upstream missing assets, `@deepcheck-ok ENTITY` for entity scripts, `@deepcheck-ok EFFECT` for mods with non-standard effect broadcasting). Place in first 5 lines for file-level, or on the specific line.
 
-**Tests:** `python -m pytest tests/ -q` — 523 tests covering all tools.
+**Tests:** `python -m pytest tests/ -q` — 550 tests covering all tools.
 
 ## Where Mods Live
 
@@ -150,6 +151,7 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 35. `ServerCall("server.fn", p, ...)` — player ID `p` is REQUIRED as first param. The engine does NOT auto-inject it. Server functions receive exactly what the client sends. (Issue #51)
 36. `Explosion()` does NOT damage players — it destroys terrain + applies physics impulse but NO health damage. Weapons using Explosion MUST add explicit `ApplyPlayerDamage()` with distance falloff + tool ID for kill attribution. (Issue #56)
 37. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions visible to all players). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync). Wrong targeting = other players can't hear/see effects. (Issue #58)
+38. All asset paths MUST use `MOD/` prefix: `LoadSound("MOD/snd/fire.ogg")`, `LoadSprite("MOD/img/crosshair.png")`, `UiImage("MOD/ui/img.png")`. Without it, assets silently fail to load in v2 (v1 resolved relative paths automatically). (Issue #63)
 
 ## Known Subagent Bugs (agents ALWAYS make these)
 
@@ -196,7 +198,7 @@ The tools automatically tell you which docs to read:
 | `docs/UMF_TRANSLATION_GUIDE.md` | UMF framework API → v2 equivalents. Registry layer, tool patterns, input, UI, server/client split, 15-point conversion checklist. **Read before converting any UMF-blocked mod.** | High |
 | `docs/TEAM_PLUGINS.md` | All available plugins, agents, and skills with when-to-use decision table. **Every terminal should read this.** | High |
 | `docs/AUDIT_REPORT.md` | Generated feature matrix — which mods have/lack each feature. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` | Generated |
-| `ISSUES_AND_FIXES.md` | 40 resolved bugs (#20-#59) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
+| `ISSUES_AND_FIXES.md` | 46 resolved bugs (#20-#65) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
 | `MASTER_MOD_LIST.md` | All patched mods by batch with workshop IDs. Update after converting new mods. | Project |
 | `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` | Full v2 API (550+ functions). For exact function signatures. | Reference |
 

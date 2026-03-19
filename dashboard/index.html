@@ -180,24 +180,346 @@ a:hover { text-decoration: underline; }
     display: none;
 }
 .footer { text-align: center; color: #484f58; font-size: 11px; margin-top: 20px; }
+
+/* Actions Panel */
+.actions-panel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+.actions-toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #58a6ff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 18px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.actions-toggle:hover { background: #1f242c; }
+.actions-toggle .chevron { transition: transform 0.2s; font-size: 12px; }
+.actions-toggle .chevron.open { transform: rotate(180deg); }
+.actions-body {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid #30363d;
+}
+.actions-body.open { display: block; }
+.actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 14px;
+}
+@media (max-width: 900px) { .actions-grid { grid-template-columns: 1fr; } }
+.action-card {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px;
+}
+.action-card h3 {
+    font-size: 13px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 10px;
+}
+.action-card label {
+    display: block;
+    font-size: 11px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 3px;
+    margin-top: 8px;
+}
+.action-card label:first-of-type { margin-top: 0; }
+.action-card input[type="text"],
+.action-card textarea,
+.action-card select {
+    width: 100%;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #c9d1d9;
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+}
+.action-card input:focus,
+.action-card textarea:focus,
+.action-card select:focus {
+    outline: none;
+    border-color: #58a6ff;
+}
+.action-card textarea { min-height: 60px; }
+.btn {
+    display: inline-block;
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: #238636; color: #fff; border-color: #2ea04333; }
+.btn-danger { background: #da3633; color: #fff; border-color: #f8514933; }
+.btn-blue { background: #1f6feb; color: #fff; border-color: #58a6ff33; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.flash-msg {
+    font-size: 12px;
+    margin-top: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: none;
+}
+.flash-ok { display: block; background: #23863622; color: #3fb950; border: 1px solid #3fb95033; }
+.flash-err { display: block; background: #da363322; color: #f85149; border: 1px solid #f8514933; }
+
+/* Focus Editor */
+.focus-editor-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex: 1;
+}
+.focus-editor-wrap textarea {
+    flex: 1;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #f0883e;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 6px 10px;
+    resize: vertical;
+    min-height: 32px;
+}
+.focus-editor-wrap textarea:focus { outline: none; border-color: #58a6ff; }
+.focus-edit-btn {
+    background: none;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+}
+.focus-edit-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+/* Metrics Section */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.metric-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+}
+.metric-card .num { font-size: 30px; font-weight: 700; line-height: 1; }
+.metric-card .lbl { font-size: 12px; color: #8b949e; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.metric-role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+.metric-role-card {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+}
+.metric-role-card .role-name { color: #58a6ff; font-weight: 600; margin-bottom: 4px; }
+.metric-role-card .role-stat { display: flex; justify-content: space-between; color: #8b949e; padding: 1px 0; }
+.metric-role-card .role-stat .v { color: #c9d1d9; font-weight: 600; }
+
+/* Error Indicator */
+.error-badge {
+    display: none;
+    background: #da3633;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    animation: pulse 1.5s infinite;
+}
+.error-badge:hover { opacity: 0.85; }
+.errors-dropdown {
+    display: none;
+    position: absolute;
+    right: 20px;
+    top: 50px;
+    background: #161b22;
+    border: 1px solid #f8514933;
+    border-radius: 10px;
+    padding: 14px;
+    max-width: 500px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.errors-dropdown.open { display: block; }
+.errors-dropdown h3 {
+    font-size: 13px;
+    color: #f85149;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+}
+.error-item {
+    font-size: 12px;
+    font-family: monospace;
+    color: #f85149;
+    padding: 4px 0;
+    border-bottom: 1px solid #21262d;
+    word-break: break-word;
+}
+.error-item:last-child { border-bottom: none; }
+.error-item .error-time { color: #8b949e; font-family: 'Segoe UI', sans-serif; }
 </style>
 </head>
 <body>
 
-<div class="header">
+<div class="header" style="position:relative;">
     <h1>Teardown MP — Team Dashboard</h1>
     <div class="header-right">
+        <span id="error-badge" class="error-badge" onclick="toggleErrorsDropdown()">0 errors</span>
         <span id="killswitch" class="pill pill-green">RUNNING</span>
         <span style="color: #484f58;" id="update-time">connecting...</span>
+    </div>
+    <div id="errors-dropdown" class="errors-dropdown">
+        <h3>Recent Errors</h3>
+        <div id="errors-list"></div>
     </div>
 </div>
 
 <div id="error-banner" class="error-banner"></div>
 <div id="stale-banner" class="error-banner" style="background:#d2992222;border-color:#d2992233;color:#d29922;"></div>
 
-<div class="focus-row">
+<!-- Actions Panel (collapsible) -->
+<div class="actions-panel">
+    <button class="actions-toggle" onclick="toggleActionsPanel()">
+        <span>Actions</span>
+        <span class="chevron" id="actions-chevron">&#9660;</span>
+    </button>
+    <div class="actions-body" id="actions-body">
+        <div class="actions-grid">
+            <!-- Create Task -->
+            <div class="action-card">
+                <h3>Create Task</h3>
+                <label>Title</label>
+                <input type="text" id="task-title" placeholder="Task title...">
+                <label>Role</label>
+                <select id="task-role">
+                    <option value="qa_lead">QA Lead</option>
+                    <option value="api_surgeon">API Surgeon</option>
+                    <option value="mod_converter">Mod Converter</option>
+                    <option value="docs_keeper">Docs Keeper</option>
+                    <option value="maintainer">Maintainer</option>
+                </select>
+                <label>Priority</label>
+                <select id="task-priority">
+                    <option value="medium">Medium</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="low">Low</option>
+                </select>
+                <label>Description</label>
+                <textarea id="task-desc" placeholder="Task description..."></textarea>
+                <button class="btn btn-primary" id="task-submit" onclick="submitTask()">Create Task</button>
+                <div class="flash-msg" id="task-flash"></div>
+            </div>
+
+            <!-- Killswitch -->
+            <div class="action-card" style="display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                    <h3>Killswitch Control</h3>
+                    <p style="font-size:12px;color:#8b949e;margin-bottom:12px;">
+                        Emergency stop for all terminals. Requires confirmation.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-danger" id="killswitch-btn" style="width:100%;font-size:15px;padding:14px;" onclick="toggleKillswitch()">
+                        ACTIVATE KILLSWITCH
+                    </button>
+                    <div class="flash-msg" id="killswitch-flash"></div>
+                </div>
+            </div>
+
+            <!-- Send Message -->
+            <div class="action-card">
+                <h3>Send Message</h3>
+                <label>To (Role)</label>
+                <select id="msg-to">
+                    <option value="qa_lead">QA Lead</option>
+                    <option value="api_surgeon">API Surgeon</option>
+                    <option value="mod_converter">Mod Converter</option>
+                    <option value="docs_keeper">Docs Keeper</option>
+                    <option value="maintainer">Maintainer</option>
+                </select>
+                <label>Type</label>
+                <select id="msg-type">
+                    <option value="task">Task</option>
+                    <option value="info">Info</option>
+                    <option value="review">Review</option>
+                </select>
+                <label>Priority</label>
+                <select id="msg-priority">
+                    <option value="medium">Medium</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="low">Low</option>
+                </select>
+                <label>Content</label>
+                <textarea id="msg-content" placeholder="Message content..."></textarea>
+                <button class="btn btn-blue" id="msg-submit" onclick="submitMessage()">Send Message</button>
+                <div class="flash-msg" id="msg-flash"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Focus (with inline editor) -->
+<div class="focus-row" id="focus-row">
     <span class="lbl">Focus</span>
-    <span class="val" id="focus">Loading...</span>
+    <span class="val" id="focus" style="flex:1;">Loading...</span>
+    <button class="focus-edit-btn" id="focus-edit-btn" onclick="startEditFocus()">Edit</button>
+</div>
+<div class="focus-row" id="focus-editor-row" style="display:none;">
+    <span class="lbl">Focus</span>
+    <div class="focus-editor-wrap">
+        <textarea id="focus-textarea" rows="2"></textarea>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <button class="btn btn-primary btn-sm" onclick="saveFocus()">Save</button>
+            <button class="btn btn-sm" style="background:#30363d;color:#c9d1d9;" onclick="cancelEditFocus()">Cancel</button>
+        </div>
+    </div>
+    <div class="flash-msg" id="focus-flash"></div>
 </div>
 
 <div class="focus-row docs-row">
@@ -220,6 +542,15 @@ a:hover { text-decoration: underline; }
     <div class="stat-card"><div class="num orange" id="s-changes">-</div><div class="lbl">Changes</div></div>
     <div class="stat-card"><div class="num" id="s-review">-</div><div class="lbl">Pending Review</div></div>
 </div>
+
+<!-- Metrics -->
+<div class="section-title">Metrics</div>
+<div class="metrics-grid" id="metrics-grid">
+    <div class="metric-card"><div class="num green" id="m-throughput">-</div><div class="lbl">Tasks / Hour</div></div>
+    <div class="metric-card"><div class="num blue" id="m-avgtime">-</div><div class="lbl">Avg Time (min)</div></div>
+    <div class="metric-card"><div class="num orange" id="m-completed">-</div><div class="lbl">Completed (window)</div></div>
+</div>
+<div id="metrics-role-breakdown" style="margin-bottom:16px;"></div>
 
 <!-- Terminals -->
 <div class="section-title">Terminals</div>
@@ -262,6 +593,10 @@ const ROLES = {
 
 let lastError = null;
 let fetchCount = 0;
+let currentKillswitchState = false;
+let currentFocusText = "";
+let isEditingFocus = false;
+let errorsDropdownOpen = false;
 
 function esc(s) {
     const d = document.createElement("div");
@@ -284,8 +619,11 @@ function update(d) {
     ks.className = "pill " + (d.killswitch ? "pill-red" : "pill-green");
     ks.textContent = d.killswitch ? "STOPPED" : "RUNNING";
 
-    // Focus
-    document.getElementById("focus").textContent = d.focus || "Not set";
+    // Focus (only update display if not editing)
+    currentFocusText = d.focus || "";
+    if (!isEditingFocus) {
+        document.getElementById("focus").textContent = d.focus || "Not set";
+    }
 
     // Stats
     const mods = d.mods || {};
@@ -463,11 +801,206 @@ function update(d) {
         }).join("");
     }
 
+    // Killswitch button state
+    currentKillswitchState = !!d.killswitch;
+    const ksBtn = document.getElementById("killswitch-btn");
+    if (d.killswitch) {
+        ksBtn.textContent = "DEACTIVATE KILLSWITCH";
+        ksBtn.className = "btn btn-primary";
+        ksBtn.style.cssText = "width:100%;font-size:15px;padding:14px;";
+    } else {
+        ksBtn.textContent = "ACTIVATE KILLSWITCH";
+        ksBtn.className = "btn btn-danger";
+        ksBtn.style.cssText = "width:100%;font-size:15px;padding:14px;";
+    }
+
+    // Error Indicator
+    const errors = d.errors || {};
+    const errorBadge = document.getElementById("error-badge");
+    const errorsList = document.getElementById("errors-list");
+    if ((errors.total || 0) > 0) {
+        errorBadge.style.display = "inline-block";
+        errorBadge.textContent = errors.total + " error" + (errors.total !== 1 ? "s" : "");
+        const recentErrors = errors.recent || [];
+        if (recentErrors.length > 0) {
+            errorsList.innerHTML = recentErrors.map(function(err) {
+                const errObj = typeof err === "string" ? {message: err} : err;
+                return '<div class="error-item">' +
+                    (errObj.timestamp ? '<span class="error-time">' + esc(errObj.timestamp) + '</span> ' : '') +
+                    esc(errObj.message || errObj.error || String(err)) +
+                    (errObj.role ? ' <span class="badge badge-role">' + esc(errObj.role) + '</span>' : '') +
+                    '</div>';
+            }).join("");
+        } else {
+            errorsList.innerHTML = '<div class="error-item">' + errors.total + ' error(s) — no details available</div>';
+        }
+    } else {
+        errorBadge.style.display = "none";
+        errorsList.innerHTML = '<div style="color:#3fb950;font-size:12px;text-align:center;">No errors</div>';
+    }
+
+    // Metrics
+    const metrics = d.metrics || {};
+    const throughput = metrics.throughput_per_hour;
+    const avgTime = metrics.avg_time_minutes;
+    const completed = metrics.completed_in_window;
+    document.getElementById("m-throughput").textContent = throughput != null ? throughput.toFixed(1) : "-";
+    document.getElementById("m-avgtime").textContent = avgTime != null ? avgTime.toFixed(1) : "-";
+    document.getElementById("m-completed").textContent = completed != null ? completed : "-";
+
+    const roleBreakdown = document.getElementById("metrics-role-breakdown");
+    const byRole = metrics.by_role || {};
+    const roleKeys = Object.keys(byRole);
+    if (roleKeys.length > 0) {
+        let html = '<div class="metric-role-grid">';
+        for (const role of roleKeys) {
+            const rm = byRole[role];
+            const display = ROLES[role] || {name: role, icon: ""};
+            html += '<div class="metric-role-card">' +
+                '<div class="role-name">' + esc(display.icon + " " + display.name) + '</div>' +
+                '<div class="role-stat"><span>Throughput/hr</span><span class="v">' + (rm.throughput_per_hour != null ? rm.throughput_per_hour.toFixed(1) : "-") + '</span></div>' +
+                '<div class="role-stat"><span>Avg time</span><span class="v">' + (rm.avg_time_minutes != null ? rm.avg_time_minutes.toFixed(1) + "m" : "-") + '</span></div>' +
+                '<div class="role-stat"><span>Completed</span><span class="v">' + (rm.completed_in_window != null ? rm.completed_in_window : "-") + '</span></div>' +
+                '</div>';
+        }
+        html += '</div>';
+        roleBreakdown.innerHTML = html;
+    } else {
+        roleBreakdown.innerHTML = "";
+    }
+
     // Footer
     fetchCount++;
     document.getElementById("update-time").textContent = "Updated " + new Date().toLocaleTimeString();
     document.getElementById("footer").textContent = "Auto-refreshes every 5s \u00B7 " + fetchCount + " updates";
 }
+
+// --- Actions Panel ---
+function toggleActionsPanel() {
+    const body = document.getElementById("actions-body");
+    const chevron = document.getElementById("actions-chevron");
+    body.classList.toggle("open");
+    chevron.classList.toggle("open");
+}
+
+function showFlash(id, msg, ok) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = "flash-msg " + (ok ? "flash-ok" : "flash-err");
+    setTimeout(() => { el.className = "flash-msg"; }, 4000);
+}
+
+async function postJSON(url, body) {
+    const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || data.detail || "HTTP " + res.status);
+    return data;
+}
+
+async function submitTask() {
+    const btn = document.getElementById("task-submit");
+    const title = document.getElementById("task-title").value.trim();
+    const role = document.getElementById("task-role").value;
+    const priority = document.getElementById("task-priority").value;
+    const desc = document.getElementById("task-desc").value.trim();
+    if (!title) { showFlash("task-flash", "Title is required", false); return; }
+    btn.disabled = true;
+    try {
+        await postJSON("/api/task", {title, role, priority, description: desc});
+        showFlash("task-flash", "Task created", true);
+        document.getElementById("task-title").value = "";
+        document.getElementById("task-desc").value = "";
+    } catch (e) {
+        showFlash("task-flash", "Failed: " + e.message, false);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function toggleKillswitch() {
+    const action = currentKillswitchState ? "deactivate" : "activate";
+    const confirmMsg = currentKillswitchState
+        ? "Deactivate killswitch and resume all terminals?"
+        : "ACTIVATE KILLSWITCH? This will stop ALL terminals immediately.";
+    if (!window.confirm(confirmMsg)) return;
+    const btn = document.getElementById("killswitch-btn");
+    btn.disabled = true;
+    try {
+        await postJSON("/api/killswitch", {action, confirm: true});
+        showFlash("killswitch-flash", action === "activate" ? "Killswitch activated" : "Killswitch deactivated", true);
+        fetchData();
+    } catch (e) {
+        showFlash("killswitch-flash", "Failed: " + e.message, false);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function submitMessage() {
+    const btn = document.getElementById("msg-submit");
+    const to = document.getElementById("msg-to").value;
+    const type = document.getElementById("msg-type").value;
+    const priority = document.getElementById("msg-priority").value;
+    const content = document.getElementById("msg-content").value.trim();
+    if (!content) { showFlash("msg-flash", "Content is required", false); return; }
+    btn.disabled = true;
+    try {
+        await postJSON("/api/message", {to, type, priority, content});
+        showFlash("msg-flash", "Message sent", true);
+        document.getElementById("msg-content").value = "";
+    } catch (e) {
+        showFlash("msg-flash", "Failed: " + e.message, false);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+// --- Focus Editor ---
+function startEditFocus() {
+    isEditingFocus = true;
+    document.getElementById("focus-row").style.display = "none";
+    document.getElementById("focus-editor-row").style.display = "flex";
+    document.getElementById("focus-textarea").value = currentFocusText;
+    document.getElementById("focus-textarea").focus();
+}
+
+function cancelEditFocus() {
+    isEditingFocus = false;
+    document.getElementById("focus-row").style.display = "flex";
+    document.getElementById("focus-editor-row").style.display = "none";
+}
+
+async function saveFocus() {
+    const content = document.getElementById("focus-textarea").value.trim();
+    try {
+        await postJSON("/api/focus", {content});
+        showFlash("focus-flash", "Focus saved", true);
+        currentFocusText = content;
+        document.getElementById("focus").textContent = content || "Not set";
+        setTimeout(cancelEditFocus, 800);
+        fetchData();
+    } catch (e) {
+        showFlash("focus-flash", "Failed: " + e.message, false);
+    }
+}
+
+// --- Error Indicator ---
+function toggleErrorsDropdown() {
+    errorsDropdownOpen = !errorsDropdownOpen;
+    document.getElementById("errors-dropdown").className = "errors-dropdown" + (errorsDropdownOpen ? " open" : "");
+}
+
+// Close errors dropdown when clicking outside
+document.addEventListener("click", function(e) {
+    if (errorsDropdownOpen && !e.target.closest("#error-badge") && !e.target.closest("#errors-dropdown")) {
+        errorsDropdownOpen = false;
+        document.getElementById("errors-dropdown").className = "errors-dropdown";
+    }
+});
 
 async function fetchData() {
     try {

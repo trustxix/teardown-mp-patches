@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 import webbrowser
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from threading import Thread
@@ -276,6 +276,30 @@ def get_team_log():
         return []
 
 
+def get_errors():
+    """Get recent errors from error log."""
+    errors_file = PROJECT / "logs" / "errors.json"
+    if not errors_file.exists():
+        return {"total": 0, "recent": []}
+    try:
+        errors = json.loads(errors_file.read_text(encoding="utf-8"))
+        now = datetime.now(timezone.utc)
+        one_hour_ago = (now - timedelta(hours=1)).isoformat()
+        recent = [e for e in errors if e.get("timestamp", "") >= one_hour_ago]
+        return {"total": len(recent), "recent": recent[-5:]}
+    except (json.JSONDecodeError, OSError):
+        return {"total": 0, "recent": []}
+
+
+def get_metrics_data():
+    """Get team metrics."""
+    try:
+        from mcp_task_server import metrics
+        return metrics.compute()
+    except Exception:
+        return {"throughput_per_hour": 0, "avg_time_minutes": 0, "by_role": {}, "completed_in_window": 0}
+
+
 def build_api_response():
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -289,6 +313,8 @@ def build_api_response():
         "docs": get_docs(),
         "heartbeats": get_heartbeats(),
         "team_log": get_team_log(),
+        "errors": get_errors(),
+        "metrics": get_metrics_data(),
     }
 
 
@@ -314,6 +340,66 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         else:
             self.send_response(404)
             self.end_headers()
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(content_length)) if content_length else {}
+
+        if parsed.path == "/api/task":
+            try:
+                sys.path.insert(0, str(PROJECT))
+                from mcp_task_server import task_store
+                tid = task_store.create_task(
+                    body["title"], body["role"], body.get("priority", "medium"),
+                    body.get("description", ""), body.get("mods", []),
+                )
+                self._json_response(200, {"success": True, "task_id": tid})
+            except Exception as e:
+                self._json_response(400, {"error": str(e)})
+
+        elif parsed.path == "/api/killswitch":
+            if not body.get("confirm"):
+                self._json_response(400, {"error": "Must include confirm: true"})
+                return
+            stop_file = COMMS / "STOP"
+            if body.get("action") == "activate":
+                stop_file.write_text("STOP", encoding="utf-8")
+                self._json_response(200, {"success": True, "active": True})
+            elif body.get("action") == "deactivate":
+                if stop_file.exists():
+                    stop_file.unlink()
+                self._json_response(200, {"success": True, "active": False})
+            else:
+                self._json_response(400, {"error": "action must be activate or deactivate"})
+
+        elif parsed.path == "/api/focus":
+            focus_file = COMMS / "FOCUS.md"
+            focus_file.write_text(body.get("content", ""), encoding="utf-8")
+            self._json_response(200, {"success": True})
+
+        elif parsed.path == "/api/message":
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            to_role = body.get("to", "")
+            msg_type = body.get("type", "info")
+            priority = body.get("priority", "medium")
+            content = body.get("content", "")
+            fn = f"{ts}_user_{msg_type}.md"
+            full = f"---\nfrom: user\nto: {to_role}\ntype: {msg_type}\npriority: {priority}\n---\n\n{content}"
+            inbox = COMMS / to_role / "inbox"
+            inbox.mkdir(parents=True, exist_ok=True)
+            (inbox / fn).write_text(full, encoding="utf-8")
+            self._json_response(200, {"success": True, "filename": fn})
+
+        else:
+            self._json_response(404, {"error": "not found"})
+
+    def _json_response(self, code, data):
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
 
     def log_message(self, format, *args):
         pass

@@ -1,44 +1,35 @@
 # Current Team Focus
 
-## Focus: Final Polish Sprint + Milestone Commit
+## Focus: Post-Conversion — Documentation, Polish & Maintenance
 **Set by:** QA Lead
-**Date:** 2026-03-18
+**Date:** 2026-03-19
 
-### Previous Sprint: COMPLETE
-PER-TICK-RPC sprint finished: **69 warnings → 0**. CLIENT-SERVER-FUNC: **3 warnings → 0**.
-All tier-1 errors: 0. All tier-2 warnings: 0. 102 mods installed, all passing.
+### MILESTONE: Workshop Fully Exhausted — 177 Mods, Feature Complete
+- **177 mods** installed, **0 findings across all tiers**, **0 missing features**
+- **30 lint rules**, **458 tests**, **9 auto-fixers**
+- **All 243 workshop mods assessed** — every convertible mod converted, every deferral documented
+- **86 tasks completed** across all sessions
 
-### Required Reading (Every Terminal On Boot)
-1. **`docs/OFFICIAL_DEVELOPER_DOCS.md`** — GROUND TRUTH from teardowngame.com. Highest authority.
-2. **`docs/TEAM_PLUGINS.md`** — All plugins, agents, skills. USE THEM.
+### Session Conversions (#172-#177)
+| # | Mod | Lines | Converter | Notes |
+|---|-----|-------|-----------|-------|
+| 172 | BHL-X42 | 1143 | api_surgeon | UMF bypass, Black Hole Launcher |
+| 173 | TABS_Effect | 479 | mod_converter | v1→v2, vehicle fire/smoke effects |
+| 174 | Adjustable_Fire | 119 | mod_converter | v1→v2, fire size adjustment |
+| 175 | Enchanter | 1071 | api_surgeon | UMF bypass, object enchantments |
+| 176 | Always_Up | 572 | mod_converter | UMF bypass, gravity manipulation |
+| 177 | Hungry_Slimes | 602 | mod_converter | UMF bypass, AI slime creatures |
 
-### MANDATORY Plugin Usage Rules
-- **Bug or test failure?** → `Skill: superpowers:systematic-debugging` BEFORE guessing
-- **Marking a task done?** → `Skill: superpowers:verification-before-completion` FIRST
-- **2+ independent tasks?** → `Skill: superpowers:dispatching-parallel-agents`
-- **Just wrote code?** → Dispatch `code-simplifier:code-simplifier` or `feature-dev:code-reviewer`
+### Current Priority: Documentation & Commit
+1. **docs_keeper:** Update MASTER_MOD_LIST with #172-#177, update summary counts to 177
+2. **All terminals:** 4,341 lines uncommitted — await user decision on commit
+3. **qa_lead:** Final audit report regenerated, memory updated
 
-### Current State
-102 mods installed. **0 tier-1 errors. 0 tier-2 warnings.** 52 info-level findings (18 MAKEHOLE-DAMAGE + 32 MANUAL-AIM + 2 other). 24 lint checks. 309+ tests.
+### Deferred Mods (12 — documented, not convertible)
+Ascended Sword Master, Shards Summoner, GLARE, Lockonauts Toolbox, AI Trainer, Blight Gun, Thermite Cannon, Chaos_Mod, Player_Scaler, ProBallistics, Tameable Dragon, Synthetic Swarm
 
-**3,452 uncommitted insertions across 24 files.** Commit needed after polish tasks complete.
-
-### Priority Work
-
-1. **HIGH: 3 gun mods missing polish features**
-   - **Jackhammer** — Missing: OptionsMenu, OptionsGuard, KeybindHints
-   - **Tripmine** — Missing: OptionsMenu, OptionsGuard
-   - **Shape_Collapsor** — Missing: AmmoDisplay
-
-2. **MEDIUM: Commit milestone** — Once polish tasks land, commit everything:
-   `"feat: 102 mods, 0 errors/warnings, PER-TICK-RPC sprint complete, 24 lint rules"`
-
-3. **LOW: Info findings triage** — 52 info-level findings. Most are intentional (projectile weapons using QueryRaycast, terrain tools using MakeHole). Case-by-case review, suppress with `@lint-ok` where appropriate.
-
-4. **LOW: Docs consistency** — Docs Keeper fixing API signature inconsistencies in OFFICIAL_DEVELOPER_DOCS.md.
-
-### Assignments
-- **API Surgeon:** Fix Jackhammer (add OptionsMenu, OptionsGuard, KeybindHints). Then fix Shape_Collapsor (add AmmoDisplay).
-- **Mod Converter:** Fix Tripmine (add OptionsMenu, OptionsGuard). Then review info-level findings for mods you converted — add `@lint-ok` where findings are intentional.
-- **Docs Keeper:** Continue fixing API signature discrepancies in OFFICIAL_DEVELOPER_DOCS.md. Update MASTER_MOD_LIST to 102 mods. Prepare commit message.
-- **QA Lead:** Review polish fixes. Run lint after each. Triage info-level findings. Approve commit.
+### What's Next (when user gives direction)
+- **In-game testing** — verify mods work in actual MP sessions
+- **Performance profiling** — identify any mods causing frame drops
+- **New workshop mods** — monitor for new Tool-tagged workshop uploads
+- **Tooling** — add new lint rules if patterns emerge from testing

@@ -332,7 +332,7 @@ def generate_tasks_from_lint(role: str = "api_surgeon", priority: str = "medium"
         result = subprocess.run(
             [sys.executable, "-m", "tools.lint", "--json-output"],
             capture_output=True, text=True,
-            cwd=str(PROJECT_ROOT), timeout=60,
+            cwd=str(PROJECT_ROOT), timeout=180,
         )
         all_results = __import__("json").loads(result.stdout)
     except Exception as e:

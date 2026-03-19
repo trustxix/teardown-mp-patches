@@ -195,10 +195,10 @@ SetPlayerTransform(transform, playerId)             -- Server only (player param
 SetPlayerTransformWithPitch(transform, pitch, playerId)  -- Server only (player param LAST)
 GetPlayerEyeTransform(playerId)                     -- Camera/eye transform
 GetPlayerCameraTransform(playerId)                  -- Current camera transform
-SetPlayerCameraOffsetTransform(playerId, transform) -- Offset camera
+SetPlayerCameraOffsetTransform(transform, stackable, playerId) -- Offset camera (value FIRST, player LAST)
 GetPlayerPitch(playerId)                            -- Returns pitch in degrees
 GetPlayerYaw(playerId)                              -- Returns yaw in degrees
-SetPlayerPitch(playerId, pitch)                     -- Set pitch (degrees)
+SetPlayerPitch(pitch, playerId)                     -- Set pitch (degrees) (value FIRST, player LAST)
 GetPlayerCrouch(playerId)                           -- Returns crouch state
 ```
 
@@ -248,32 +248,32 @@ RegisterTool(name, label, file, [group])
     -- file: string XML path (e.g., "MOD/prefab/minigun.xml")
     -- group: number for tool ordering (optional, from official minigun)
 
--- Enable/Disable (NOTE: param order differs from API page which shows playerId first)
-SetToolEnabled(toolName, enabled, playerId)         -- Server only
-IsToolEnabled(playerId, toolName)
+-- Enable/Disable (player param LAST — API page incorrectly shows playerId first)
+SetToolEnabled(toolId, enabled, playerId)           -- Server only
+IsToolEnabled(toolId, playerId)                     -- toolId FIRST, player LAST
 
--- Ammo (NOTE: param order differs from API page which shows playerId first)
-SetToolAmmo(toolName, ammo, playerId)               -- Server only
-GetToolAmmo(playerId, toolName)
-SetToolAmmoPickupAmount(toolName, amount)            -- Global pickup amount
-GetToolAmmoPickupAmount(toolName)
+-- Ammo (player param LAST — API page incorrectly shows playerId first)
+SetToolAmmo(toolId, ammo, playerId)                 -- Server only
+GetToolAmmo(toolId, playerId)                       -- toolId FIRST, player LAST
+SetToolAmmoPickupAmount(toolId, amount)              -- Global pickup amount
+GetToolAmmoPickupAmount(toolId)
 
--- Tool bodies and transforms
-GetToolBody(playerId, toolName)                     -- Returns body handle
-GetToolHandPoseLocalTransform(playerId)
-GetToolHandPoseWorldTransform(playerId)
-SetToolHandPoseLocalTransform(playerId, transform)
-GetToolLocationLocalTransform(playerId)
-GetToolLocationWorldTransform(playerId, toolName, location)
-    -- location: string name (e.g., "muzzle", "fp_action", "tp_action")
-SetToolTransform(playerId, transform)               -- Client only
-SetToolAllowedZoom(playerId, enabled)
-SetToolTransformOverride(playerId, transform)
-SetToolOffset(playerId, offset)
+-- Tool bodies and transforms (player param LAST throughout)
+GetToolBody(playerId)                               -- Returns body handle (single param)
+GetToolHandPoseLocalTransform(playerId)              -- Returns right, left transforms
+GetToolHandPoseWorldTransform(playerId)              -- Returns right, left transforms
+SetToolHandPoseLocalTransform(right, left, playerId) -- Set hand poses (values FIRST, player LAST)
+GetToolLocationLocalTransform(name, playerId)        -- location name FIRST, player LAST
+GetToolLocationWorldTransform(name, playerId)        -- location name FIRST, player LAST
+    -- name: string location (e.g., "muzzle", "fp_action", "tp_action")
+SetToolTransform(transform, sway, playerId)          -- Client only (values FIRST, player LAST)
+SetToolAllowedZoom(zoom, _zoom)                      -- No player param in script_defs
+SetToolTransformOverride(transform, playerId)        -- Client only (value FIRST, player LAST)
+SetToolOffset(offset, playerId)                      -- Client only (value FIRST, player LAST)
 
--- Player tool state
+-- Player tool state (player param LAST)
 GetPlayerTool(playerId)                             -- Current tool name
-SetPlayerTool(playerId, tool)                       -- Switch tool
+SetPlayerTool(tool, playerId)                       -- Switch tool (tool FIRST, player LAST)
 GetPlayerCanUseTool(playerId)                       -- Can fire?
 ```
 
@@ -304,12 +304,13 @@ QueryShot(position, direction, length, radius, playerId)
     -- radius: number hit radius
     -- playerId: attacker (for self-hit exclusion — excludes this player from detection)
     -- Returns: hit, dist, shape, player, hitFactor, normal
-    --   player = nil when no player hit (5-param form)
+    --   player = 0 or nil when no player hit (BOTH forms)
+    --   ALWAYS guard with `if player ~= 0 then` (Lua 0 is truthy!)
     -- NOTE: API page shows (pos, dir, [maxDist]) but official lasergun
     --   uses this extended signature
     -- IMPORTANT: Always use the 5-param form for weapons. The 3-param form
-    --   QueryShot(pos, dir, maxDist) has no attacker exclusion and may
-    --   return player=0 for non-player hits (see Issue #47)
+    --   QueryShot(pos, dir, maxDist) has no attacker exclusion.
+    --   See Issue #47 — 39 mods fixed for this bug pattern
 ```
 
 ### ApplyPlayerDamage (beam/melee damage — server only)
@@ -334,6 +335,8 @@ MakeHole(position, radius)
 ```lua
 Explosion(position, radius, [impulse], [damage])
     -- Auto-replicated like MakeHole
+    -- Does NOT damage players — only destroys terrain + applies physics impulse
+    -- For player damage, add ApplyPlayerDamage() with distance falloff (Issue #56)
 ```
 
 ---
@@ -363,6 +366,12 @@ InputLastPressedKey([playerId])
 ServerCall(functionName, [param1, param2, ...])
     -- functionName: string name of server function (e.g., "server.onFire")
     -- Function must exist in the same script
+    -- CRITICAL: Engine does NOT auto-inject caller's player ID.
+    -- Client MUST pass player ID explicitly as first param:
+    --   ServerCall("server.onFire", p, aimX, aimY, aimZ)
+    -- Server function receives exactly what client sends:
+    --   function server.onFire(p, ax, ay, az)
+    -- Verified from official minigun source (Issue #51)
 ```
 
 ### ClientCall (server → client)
@@ -542,11 +551,11 @@ GetPlayerInteractBody(playerId)       -- Interactable body
 ## Player Spawn & Respawn API
 
 ```lua
-SetPlayerSpawnTransform(playerId, transform)   -- Set spawn location
-SetPlayerSpawnHealth(playerId, health)          -- Set health on respawn
-SetPlayerSpawnTool(playerId, tool)              -- Set tool on respawn
-RespawnPlayer(playerId)                         -- Respawn at set location
-RespawnPlayerAtTransform(playerId, transform)   -- Respawn at specific location
+SetPlayerSpawnTransform(transform, playerId)    -- Set spawn location (value FIRST, player LAST)
+SetPlayerSpawnHealth(health, playerId)           -- Set health on respawn (value FIRST, player LAST)
+SetPlayerSpawnTool(toolId, playerId)             -- Set tool on respawn (value FIRST, player LAST)
+RespawnPlayer(playerId)                          -- Respawn at set location
+RespawnPlayerAtTransform(transform, playerId)    -- Respawn at specific location (value FIRST, player LAST)
 ```
 
 ---
@@ -555,24 +564,24 @@ RespawnPlayerAtTransform(playerId, transform)   -- Respawn at specific location
 
 ```lua
 GetPlayerVehicle(playerId)
-SetPlayerVehicle(playerId, vehicle)
-IsPlayerVehicleDriver(playerId)
-IsPlayerVehiclePassenger(playerId)
+SetPlayerVehicle(vehicle, playerId)              -- value FIRST, player LAST
+IsPlayerVehicleDriver(handle, playerId)          -- vehicle handle FIRST, player LAST
+IsPlayerVehiclePassenger(handle, playerId)        -- vehicle handle FIRST, player LAST
 GetPlayerAnimator(playerId)
-SetPlayerAnimator(playerId, animator)
-GetPlayerBodies(playerId)                       -- All bodies belonging to player
-SetPlayerRig(playerId, rig)
+SetPlayerAnimator(animator, playerId)            -- value FIRST, player LAST
+GetPlayerBodies(playerId)                        -- All bodies belonging to player
+SetPlayerRig(rig, playerId)                      -- value FIRST, player LAST
 GetPlayerRig(playerId)
 GetPlayerRigWorldTransform(playerId)
-SetPlayerRigTransform(playerId, transform)
+SetPlayerRigTransform(rig_id, location, playerId) -- values FIRST, player LAST
 ClearPlayerRig(playerId)
-SetPlayerRigLocationLocalTransform(playerId, location, transform)
-GetPlayerRigLocationWorldTransform(playerId, location)
-GetPlayerRigHasTag(playerId, tag)
-GetPlayerRigTagValue(playerId, tag)
-SetPlayerRigTags(playerId, tags)
-GetPlayerColor(playerId)
-SetPlayerColor(playerId, r, g, b)               -- Server only
+SetPlayerRigLocationLocalTransform(rig_id, name, location, playerId) -- values FIRST, player LAST
+GetPlayerRigLocationWorldTransform(name, playerId) -- name FIRST, player LAST
+GetPlayerRigHasTag(tag, playerId)                -- tag FIRST, player LAST
+GetPlayerRigTagValue(tag, playerId)              -- tag FIRST, player LAST
+SetPlayerRigTags(rig_id, tag, playerId)          -- values FIRST, player LAST
+GetPlayerColor(playerId)                         -- Returns found, r, g, b
+SetPlayerColor(r, g, b, playerId)                -- Server only (colors FIRST, player LAST)
 ```
 
 ---
@@ -581,22 +590,22 @@ SetPlayerColor(playerId, r, g, b)               -- Server only
 
 ```lua
 GetPlayerWalkingSpeed(playerId)
-SetPlayerWalkingSpeed(playerId, speed)           -- Server only
+SetPlayerWalkingSpeed(speed, playerId)           -- Server only (value FIRST, player LAST)
 GetPlayerCrouchSpeedScale(playerId)
-SetPlayerCrouchSpeedScale(playerId, scale)       -- Server only
+SetPlayerCrouchSpeedScale(speed, playerId)       -- Server only (value FIRST, player LAST)
 GetPlayerHurtSpeedScale(playerId)
-SetPlayerHurtSpeedScale(playerId, scale)         -- Server only: slow when hurt
-GetPlayerParam(playerId, param)
-SetPlayerParam(playerId, param, value)
-SetPlayerHidden(playerId, hidden)                -- Server only
-DisablePlayerInput(playerId)                     -- Server only: block all input
+SetPlayerHurtSpeedScale(speed, playerId)         -- Server only (value FIRST, player LAST)
+GetPlayerParam(parameter, player)                -- param FIRST, player LAST
+SetPlayerParam(parameter, value, player)         -- param FIRST, value SECOND, player LAST
+SetPlayerHidden(playerId)                        -- Server only (single param per script_defs)
+DisablePlayerInput(player)                       -- Server only: block all input
 DisablePlayer(playerId)                          -- Server only: fully disable
 IsPlayerDisabled(playerId)
 DisablePlayerDamage(playerId)                    -- Server only: invulnerable
-SetPlayerScreen(playerId, screen)
+SetPlayerScreen(handle, playerId)                -- handle FIRST, player LAST
 GetPlayerScreen(playerId)
-SetPlayerRegenerationState(playerId, state)
-SetPlayerOrientation(playerId, orientation)
+SetPlayerRegenerationState(state, player)        -- value FIRST, player LAST
+SetPlayerOrientation(orientation, playerId)      -- value FIRST, player LAST
 GetPlayerOrientation(playerId)
 GetPlayerUp(playerId)
 ```
@@ -770,21 +779,27 @@ if handle > 0 then ... end
 if handle ~= 0 then ... end
 ```
 
-### 4. MakeHole Cannot Damage Players
-Use `Shoot()` for bullets or `QueryShot()` + `ApplyPlayerDamage()` for beams/melee.
+### 4. MakeHole and Explosion Cannot Damage Players
+`MakeHole()` and `Explosion()` destroy terrain and apply physics impulse, but do **NOT** reduce player health. Use `Shoot()` for bullets or `QueryShot()` + `ApplyPlayerDamage()` for beams/melee. For explosive weapons, add `ApplyPlayerDamage()` with distance falloff after `Explosion()`. (Issue #56)
 
 ### 5. Server-Only vs Client-Only Functions
 
 **Server only:** `MakeHole`, `Explosion`, `Shoot`, `SetBodyVelocity`, `ApplyBodyImpulse`, `Spawn`, `Delete`, `SpawnFire`, `SetPlayerVelocity`, `SetPlayerTransform`, `ApplyPlayerDamage`, `SetPlayerHealth`, `SetToolEnabled`, `SetToolAmmo`, `DisablePlayerInput`, `SetPlayerColor`, `SetPlayerWalkingSpeed`
 
 **Client only:** `PlaySound`, `SpawnParticle`, `DrawLine`, `DrawSprite`, `PointLight`, `SetToolTransform`, `SetCameraTransform`, all `Ui*` functions, `ShakeCamera`, `SetCameraDof`, `DrawBodyOutline`
+**Effectively client-only (visual):** `SetShapeEmissiveScale` — server calls only render for host; use in client code for all players to see (Issue #53)
 
 ### 6. UiMakeInteractive Before UiPush
 Options menus MUST call `UiMakeInteractive()` before `UiPush()`. Without it, buttons render but can't be clicked.
 
-### 7. SetPlayerHealth Parameter Order
+### 7. Player Param is ALWAYS LAST
 ```lua
-SetPlayerHealth(health, playerId)   -- health FIRST, player SECOND
+SetPlayerHealth(health, playerId)       -- value FIRST, player LAST
+SetPlayerWalkingSpeed(speed, playerId)  -- value FIRST, player LAST
+SetPlayerColor(r, g, b, playerId)       -- values FIRST, player LAST
+SetPlayerTool(tool, playerId)           -- value FIRST, player LAST
+-- This pattern applies to ALL Set*/Get* functions with playerId.
+-- The API page shows playerId FIRST — it is WRONG. See discrepancy table.
 ```
 
 ### 8. Per-Tick RPC Floods the Network
@@ -817,7 +832,7 @@ C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/mpclassics/
 
 ## API Signature Notes
 
-> The official API page (api.html) sometimes shows **simplified or differently-ordered signatures** compared to what actually works. The main sections above now use the **actual working signatures** verified from official reference mods (minigun/lasergun) and our 102 working mods. The table below documents the discrepancies for reference.
+> The official API page (api.html) sometimes shows **simplified or differently-ordered signatures** compared to what actually works. The main sections above now use the **actual working signatures** verified from official reference mods (minigun/lasergun) and our 159 working mods. The table below documents the discrepancies for reference.
 
 **API page vs actual signatures (main sections above already use the correct versions):**
 
@@ -826,7 +841,7 @@ C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/mpclassics/
 | `RegisterTool` | `(name, label, file)` | `(name, label, file, group)` — group number for tool ordering |
 | `Shoot` | `(pos, dir, force, damage, [playerId], [blunt])` | `(pos, dir, "bullet", damage, range, playerId, "toolId")` — from minigun |
 | `ApplyPlayerDamage` | `(playerId, damage, healthBefore, cause, point, impulse)` | `(targetPlayer, damage, "toolId", attackerPlayer)` — from lasergun |
-| `SetToolEnabled` | `(playerId, toolName, enabled)` | `(toolName, enabled, playerId)` — from 102 working mods |
+| `SetToolEnabled` | `(playerId, toolName, enabled)` | `(toolName, enabled, playerId)` — from 159 working mods |
 | `SetToolAmmo` | `(playerId, toolName, ammo)` | `(toolName, ammo, playerId)` — matches SetToolEnabled pattern |
 | `SetPlayerHealth` | `(playerId, health)` | `(health, playerId)` — health value FIRST |
 | `SetPlayerTransform` | `(playerId, transform)` | `(transform, playerId)` — player param LAST |
@@ -835,8 +850,44 @@ C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/mpclassics/
 | `SetPlayerGroundVelocity` | `(playerId, velocity)` | `(velocity, playerId)` — player param LAST |
 | `GetPlayerAimInfo` | `(playerId)` | `(muzzlePos, maxDist, playerId)` — from minigun |
 | `QueryShot` | `(pos, dir, [maxDist])` | `(pos, dir, len, radius, playerId)` — from lasergun |
+| `SetPlayerSpawnTransform` | `(playerId, transform)` | `(transform, playerId)` — from script_defs.lua + hub/startpos.lua |
+| `SetPlayerSpawnHealth` | `(playerId, health)` | `(health, playerId)` — from script_defs.lua |
+| `SetPlayerSpawnTool` | `(playerId, tool)` | `(toolId, playerId)` — from script_defs.lua |
+| `RespawnPlayerAtTransform` | `(playerId, transform)` | `(transform, playerId)` — from script_defs.lua + mpclassics/spawn.lua |
+| `SetPlayerPitch` | `(playerId, pitch)` | `(pitch, playerId)` — from script_defs.lua |
+| `SetPlayerCameraOffsetTransform` | `(playerId, transform)` | `(transform, stackable, playerId)` — from script_defs.lua (extra param) |
+| `SetPlayerWalkingSpeed` | `(playerId, speed)` | `(speed, playerId)` — from script_defs.lua + mplib/countdown.lua |
+| `SetPlayerCrouchSpeedScale` | `(playerId, scale)` | `(speed, playerId)` — from script_defs.lua |
+| `SetPlayerHurtSpeedScale` | `(playerId, scale)` | `(speed, playerId)` — from script_defs.lua |
+| `SetPlayerParam` | `(playerId, param, value)` | `(parameter, value, player)` — from script_defs.lua |
+| `GetPlayerParam` | `(playerId, param)` | `(parameter, player)` — from script_defs.lua |
+| `SetPlayerScreen` | `(playerId, screen)` | `(handle, playerId)` — from script_defs.lua |
+| `SetPlayerRegenerationState` | `(playerId, state)` | `(state, player)` — from script_defs.lua |
+| `SetPlayerOrientation` | `(playerId, orientation)` | `(orientation, playerId)` — from script_defs.lua |
+| `SetPlayerTool` | `(playerId, tool)` | `(tool, playerId)` — from script_defs.lua + mpclassics |
+| `SetPlayerVehicle` | `(playerId, vehicle)` | `(vehicle, playerId)` — from script_defs.lua |
+| `SetPlayerAnimator` | `(playerId, animator)` | `(animator, playerId)` — from script_defs.lua |
+| `SetPlayerRig` | `(playerId, rig)` | `(rig, playerId)` — from script_defs.lua |
+| `SetPlayerColor` | `(playerId, r, g, b)` | `(r, g, b, playerId)` — from script_defs.lua + mplib/teams.lua |
+| `SetPlayerHidden` | `(playerId, hidden)` | `(playerId)` — script_defs.lua shows single param |
+| `IsToolEnabled` | `(playerId, toolName)` | `(toolId, playerId)` — from script_defs.lua |
+| `GetToolAmmo` | `(playerId, toolName)` | `(toolId, playerId)` — from script_defs.lua |
+| `GetToolBody` | `(playerId, toolName)` | `(playerId)` — script_defs.lua shows single param |
+| `SetToolHandPoseLocalTransform` | `(playerId, transform)` | `(right, left, playerId)` — from script_defs.lua (two transforms) |
+| `SetToolTransform` | `(playerId, transform)` | `(transform, sway, playerId)` — from script_defs.lua (extra sway param) |
+| `SetToolTransformOverride` | `(playerId, transform)` | `(transform, playerId)` — from script_defs.lua |
+| `SetToolOffset` | `(playerId, offset)` | `(offset, playerId)` — from script_defs.lua |
+| `GetToolLocationLocalTransform` | `(playerId)` | `(name, playerId)` — from script_defs.lua (needs name param) |
+| `GetToolLocationWorldTransform` | `(playerId, toolName, location)` | `(name, playerId)` — from script_defs.lua |
+| `GetPlayerRigLocationWorldTransform` | `(playerId, location)` | `(name, playerId)` — from script_defs.lua |
+| `GetPlayerRigHasTag` | `(playerId, tag)` | `(tag, playerId)` — from script_defs.lua |
+| `GetPlayerRigTagValue` | `(playerId, tag)` | `(tag, playerId)` — from script_defs.lua |
+| `IsPlayerVehicleDriver` | `(playerId)` | `(handle, playerId)` — from script_defs.lua (needs vehicle handle) |
+| `IsPlayerVehiclePassenger` | `(playerId)` | `(handle, playerId)` — from script_defs.lua (needs vehicle handle) |
 
-**Rule:** When the API page contradicts official mod source code, follow the source code. The main sections above already reflect the correct signatures.
+**Pattern:** The API page almost universally puts `playerId` FIRST. The actual engine puts `playerId` LAST (making it optional, defaulting to host/local). This applies to nearly every `Set*`/`Get*` function that takes a player parameter. Source: `script_defs.lua` (engine function definitions) + verified against official mod source code (mpclassics, minigun, lasergun, hub scripts).
+
+**Rule:** When the API page contradicts official mod source code or script_defs.lua, follow the source code. The main sections above already reflect the correct signatures.
 
 ---
 

@@ -73,7 +73,7 @@ Apply these to every mod:
 #### 2. QueryRaycast → QueryShot + ApplyPlayerDamage for beam/melee
 ```lua
 local hit, dist, shape, player, hitFactor, normal = QueryShot(pos, dir, maxDist, 0, p)
-if player then ApplyPlayerDamage(player, damage * dt * hitFactor, "toolId", p) end
+if player ~= 0 then ApplyPlayerDamage(player, damage * dt * hitFactor, "toolId", p) end  -- NOT "if player then" (Lua 0 is truthy)
 ```
 
 #### 3. Manual aim → GetPlayerAimInfo()

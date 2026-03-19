@@ -146,23 +146,43 @@ def check_raw_key_player(source: str) -> list[dict]:
 _SET_TOOL_ENABLED_RE = re.compile(r"SetToolEnabled\s*\(\s*([^\s,)]+)")
 
 
+_PLAYER_LIKE_NAMES = {
+    "p", "player", "playerid", "target", "attacker", "victim",
+    "localplayer", "hostplayer",
+}
+_PLAYER_LIKE_SUFFIX_RE = re.compile(r"(?:player|Player|Id)$")
+# Variable names that look like they end in Id but are NOT player IDs
+_NON_PLAYER_NAMES = {
+    "toolid", "toolname", "weaponid", "modid", "soundid", "bodyid",
+    "shapeid", "jointid", "vehicleid", "lightid", "screenid",
+}
+
+
 def check_tool_enabled_order(source: str) -> list[dict]:
     """Catch SetToolEnabled(p, 'id', true) - wrong argument order.
 
-    Correct form: SetToolEnabled("toolid", true, p) - first arg must be a string literal.
+    Correct form: SetToolEnabled("toolid", true, p).
+    Only flags when first arg looks like a player variable (p, playerId, etc.).
+    String literals, UPPER_CASE constants, and generic variables are accepted.
     """
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
         stripped = _strip_comment(raw_line)
         for m in _SET_TOOL_ENABLED_RE.finditer(stripped):
             first_arg = m.group(1).strip()
-            if not first_arg.startswith('"'):
-                findings.append(_finding(
-                    "TOOL-ENABLED-ORDER",
-                    lineno,
-                    f"SetToolEnabled() first arg is not a string literal ({first_arg!r}); "
-                    f"correct order is SetToolEnabled(\"toolid\", true, p)",
-                ))
+            if first_arg.startswith('"'):
+                continue  # string literal — correct
+            lower = first_arg.lower()
+            if lower in _NON_PLAYER_NAMES:
+                continue  # tool/entity ID, not a player
+            if lower not in _PLAYER_LIKE_NAMES and not _PLAYER_LIKE_SUFFIX_RE.search(first_arg):
+                continue  # not a player variable — likely a tool ID
+            findings.append(_finding(
+                "TOOL-ENABLED-ORDER",
+                lineno,
+                f"SetToolEnabled() first arg looks like a player ({first_arg!r}); "
+                f"correct order is SetToolEnabled(\"toolid\", true, p)",
+            ))
     return findings
 
 
@@ -265,9 +285,13 @@ def check_set_player_transform_client(source: str) -> list[dict]:
         opens = _count_opens(stripped)
         ends = _count_ends(stripped)
 
-        if func_match and depth == 0:
-            current_func = func_match.group(1)
-            depth = 1 + (opens - 1) - ends
+        if func_match:
+            name = func_match.group(1)
+            if depth == 0 or '.' in name:
+                current_func = name
+                depth = 1 + (opens - 1) - ends
+            else:
+                depth += opens - ends
         elif depth > 0:
             depth += opens - ends
 
@@ -315,8 +339,12 @@ def check_draw_not_client(source: str) -> list[dict]:
 
         # Update depth after checking (so the function itself is depth 0 when detected)
         func_match = _FUNC_DEF_RE.match(stripped)
-        if func_match and depth == 0:
-            depth = 1 + (opens - 1) - ends
+        if func_match:
+            name = func_match.group(1)
+            if depth == 0 or '.' in name:
+                depth = 1 + (opens - 1) - ends
+            else:
+                depth += opens - ends
         elif depth > 0:
             depth += opens - ends
 
@@ -439,13 +467,18 @@ _NEGATED_USETOOL_RE = re.compile(r'not\s+Input(?:Pressed|Down)\s*\(\s*"usetool"'
 _OPTIONS_OPEN_RE = re.compile(r"\b(?:optionsOpen|optionsopen|settingsOpen|showOptions|showSettings)\b")
 
 
+_FUNC_DECL_RE = re.compile(r"^\s*(?:local\s+)?function\s+")
+
+
 def check_missing_options_guard(source: str) -> list[dict]:
     """Warn if usetool input is used without nearby optionsOpen guard.
 
     Without the guard, the tool fires while the options menu is open.
     The guard should appear within 3 lines before the usetool check,
-    or on the same line. Negated patterns (not InputDown("usetool"))
-    are excluded — they run when NOT pressing trigger (e.g. spread decay).
+    or on the same line. Also recognizes function-level early return
+    guards (``if data.optionsOpen then return end``) at the enclosing
+    function entry. Negated patterns (not InputDown("usetool")) are
+    excluded — they run when NOT pressing trigger (e.g. spread decay).
     """
     if not _OPTIONS_OPEN_RE.search(source):
         # No optionsOpen concept at all - heuristic: skip if optionsOpen never used
@@ -461,13 +494,32 @@ def check_missing_options_guard(source: str) -> list[dict]:
         # spread-decay or idle checks that correctly run regardless of menu state
         if _NEGATED_USETOOL_RE.search(stripped):
             continue
-        # Check this line and up to 3 lines before for optionsOpen
+        # Check this line, up to 3 lines before, and 2 lines after for
+        # optionsOpen.  The "after" window covers multi-line if conditions
+        # where ``not data.optionsOpen`` is on the next continuation line.
         window_start = max(0, lineno - 4)  # lineno is 1-based; lines[lineno-1] is current
-        window = lines[window_start:lineno]
+        window_end = min(len(lines), lineno + 2)  # +2 = 2 lines after current
+        window = lines[window_start:window_end]
         has_guard = any(
             _OPTIONS_OPEN_RE.search(_strip_comment(l)) for l in window
         )
-        if not has_guard:
+        if has_guard:
+            continue
+        # Check for function-level early return guard: walk backwards from
+        # the usetool line to the enclosing function declaration, looking
+        # for any ``optionsOpen ... return`` line in between.  This catches
+        # guards placed anywhere before the usetool call in the same function.
+        func_guarded = False
+        for scan in range(lineno - 2, max(lineno - 200, -1), -1):
+            if scan < 0:
+                break
+            scan_line = _strip_comment(lines[scan])
+            if _OPTIONS_OPEN_RE.search(scan_line) and "return" in scan_line:
+                func_guarded = True
+                break
+            if _FUNC_DECL_RE.match(scan_line):
+                break
+        if not func_guarded:
             findings.append(_finding(
                 "MISSING-OPTIONS-GUARD",
                 lineno,
@@ -526,6 +578,10 @@ _NON_HANDLE_NAMES = {
     "x", "y", "z", "direction", "strength", "volume", "intensity",
     "temperature", "frequency", "lifetime",
     "scroll", "ymovement", "offset",
+    "removed", "limit", "active", "result",
+    "mode", "type", "state", "phase", "step", "burst", "round",
+    "r", "sv", "fuel", "t", "recoil", "life", "dist2",
+    "mag", "blend", "blendout", "smoke", "decays",  # ARM framework: ammo/animation/VFX
 }
 # Suffixes that indicate non-handle numeric variables
 _NON_HANDLE_SUFFIXES = (
@@ -534,6 +590,12 @@ _NON_HANDLE_SUFFIXES = (
     "Height", "Width", "Length", "Radius", "Weight", "Mass", "Force",
     "Level", "Index", "Velocity", "Progress", "Ratio", "Lifetime",
     "Pos", "Belts", "Clouds", "Binds", "Values",
+    "Removed", "Before", "Limit", "Time", "Anim", "Depth", "Mode",
+    "Voxels", "Type", "State",
+    "Remaining", "Damage", "Combo", "Frame", "Executions", "Temp",  # ARM framework
+    "Dir", "Direction", "Factor", "Mult", "Rate",  # steering/physics/multiplier values
+    "Sum", "Value", "Total",  # aggregated numeric values
+    "Assist", "Brake", "Thrust", "Friction", "Restitution",  # physics parameters
 )
 
 
@@ -541,7 +603,9 @@ def _is_non_handle_name(var_name: str) -> bool:
     """Return True if var_name is clearly not an entity handle."""
     if var_name.startswith("#"):
         return True  # #table is length, not a handle
-    lower = var_name.lower()
+    # Strip leading underscores for matching (e.g., _thirdExecutions)
+    stripped = var_name.lstrip("_")
+    lower = stripped.lower() if stripped else var_name.lower()
     if lower in _NON_HANDLE_NAMES:
         return True
     for suffix in _NON_HANDLE_SUFFIXES:
@@ -585,17 +649,28 @@ _GET_PLAYER_AIM_INFO_RE = re.compile(r"\bGetPlayerAimInfo\s*\(")
 
 
 def check_manual_aim(source: str) -> list[dict]:
-    """Info if QueryRaycast is used without GetPlayerAimInfo.
+    """Info if QueryRaycast is used without GetPlayerAimInfo in a weapon file.
 
     GetPlayerAimInfo is the preferred API in v2 for weapon aim; manual
     QueryRaycast from client eye transform can desync in multiplayer.
-    However, many mods use QueryRaycast for non-aim purposes (collision,
-    particles, utility tools needing shape/body/normal returns) where
-    GetPlayerAimInfo is not a suitable replacement.
+    Many mods use QueryRaycast for non-aim purposes (collision, particles,
+    utility tools) — suppress unless the file also contains weapon damage
+    functions (Shoot, QueryShot, ApplyPlayerDamage), indicating it's weapon
+    code where aim matters.
     """
     if not _QUERY_RAYCAST_RE.search(source):
         return []
     if _GET_PLAYER_AIM_INFO_RE.search(source):
+        return []
+    # Suppress if @audit-ok annotation covers this
+    if re.search(r"@audit-ok\s+(?:aiminfo|aim)", source):
+        return []
+    # Suppress if no weapon damage API in the file — QueryRaycast is for
+    # non-aim purposes (collision, physics, placement, utility)
+    has_weapon = bool(re.search(
+        r"\b(Shoot|QueryShot|ApplyPlayerDamage)\s*\(", source
+    ))
+    if not has_weapon:
         return []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
         stripped = _strip_comment(raw_line)
@@ -620,15 +695,21 @@ _MAKEHOLE_RE = re.compile(r"\bMakeHole\s*\(")
 
 
 def check_makehole_damage(source: str) -> list[dict]:
-    """Info finding if MakeHole is used WITHOUT QueryShot/ApplyPlayerDamage.
+    """Info finding if MakeHole is used WITHOUT any player damage mechanism.
 
     MakeHole cannot damage players; guns should use Shoot() instead.
-    If the file already has QueryShot or ApplyPlayerDamage, MakeHole is
-    presumably used for terrain damage alongside the player damage system
-    — suppress to reduce noise.
+    Suppress if the file already has QueryShot, ApplyPlayerDamage, Shoot,
+    or Explosion (MakeHole is supplementary terrain destruction), or if
+    @audit-ok shoot/makehole is present.
     """
-    has_player_damage = bool(re.search(r"\b(QueryShot|ApplyPlayerDamage)\s*\(", source))
-    if has_player_damage:
+    # Suppress if any player damage / weapon function exists in the file
+    has_damage = bool(re.search(
+        r"\b(QueryShot|ApplyPlayerDamage|Shoot|Explosion)\s*\(", source
+    ))
+    if has_damage:
+        return []
+    # Suppress if @audit-ok annotations cover this
+    if re.search(r"@audit-ok\s+(?:shoot|makehole)", source):
         return []
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
@@ -684,9 +765,15 @@ def check_server_side_effects(source: str) -> list[dict]:
         opens = _count_opens(stripped)
         ends = _count_ends(stripped)
 
-        if func_match and depth == 0:
-            current_func = func_match.group(1)
-            depth = 1 + (opens - 1) - ends
+        if func_match:
+            name = func_match.group(1)
+            # Dotted names (server.*, client.*) are always top-level;
+            # force-reset even if depth tracker got stuck
+            if depth == 0 or '.' in name:
+                current_func = name
+                depth = 1 + (opens - 1) - ends
+            else:
+                depth += opens - ends
         elif depth > 0:
             depth += opens - ends
 
@@ -695,13 +782,15 @@ def check_server_side_effects(source: str) -> list[dict]:
 
         m = _CLIENT_EFFECT_RE.search(stripped)
         if m and current_func is not None and current_func.startswith("server."):
+            # One-time functions (init/destroy) are less severe than per-frame
+            is_oneshot = current_func in ("server.init", "server.destroy")
             findings.append(_finding(
                 "SERVER-EFFECT",
                 lineno,
                 f"{m.group(1)}() is client-only; found inside {current_func!r} — "
                 f"use ClientCall() to play effects on all clients. "
                 f"See docs/MP_DESYNC_PATTERNS.md RC4",
-                severity="warn",
+                severity="info" if is_oneshot else "warn",
             ))
 
         if depth == 0:
@@ -729,16 +818,20 @@ def check_missing_interactive(source: str) -> list[dict]:
     ui_interactive_re = re.compile(r"\bUiMakeInteractive\s*\(")
     ui_button_re = re.compile(r"\bUiTextButton\s*\(")
 
-    if not ui_button_re.search(source):
+    # Strip comments to avoid false negatives from commented-out code
+    cleaned = _strip_block_comments(source)
+    stripped_lines = [_strip_comment(l) for l in cleaned.splitlines()]
+    code_only = "\n".join(stripped_lines)
+
+    if not ui_button_re.search(code_only):
         return []
 
-    if ui_interactive_re.search(source):
+    if ui_interactive_re.search(code_only):
         return []
 
     # Has optionsOpen + UiTextButton but no UiMakeInteractive
     # Find the first UiTextButton line for reporting
-    for lineno, raw_line in enumerate(source.splitlines(), 1):
-        stripped = _strip_comment(raw_line)
+    for lineno, stripped in enumerate(stripped_lines, 1):
         if ui_button_re.search(stripped):
             return [_finding(
                 "MISSING-INTERACTIVE",
@@ -820,9 +913,12 @@ def check_set_player_health_order(source: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 _SERVER_ONLY_FUNCS_RE = re.compile(
-    r"\b(Shoot|MakeHole|Explosion|DisablePlayerInput|DisablePlayer|"
-    r"SetPlayerVelocity|SetPlayerWalkingSpeed|SetPlayerHurtSpeedScale|"
-    r"ApplyBodyImpulse|SetBodyVelocity|SpawnFire|Delete)\s*\("
+    r"(?<!\.)\b(Shoot|MakeHole|Explosion|DisablePlayerInput|DisablePlayer|"
+    r"SetPlayerVelocity|SetPlayerGroundVelocity|SetPlayerWalkingSpeed|"
+    r"SetPlayerHurtSpeedScale|SetPlayerHealth|SetPlayerColor|"
+    r"ApplyPlayerDamage|ApplyBodyImpulse|SetBodyVelocity|"
+    r"SetToolEnabled|SetToolAmmo|SpawnFire|Delete|Spawn|QueryShot|"
+    r"DisablePlayerDamage|RespawnPlayer)\s*\("
 )
 
 
@@ -856,9 +952,13 @@ def check_server_only_in_client(source: str) -> list[dict]:
         opens = _count_opens(stripped)
         ends = _count_ends(stripped)
 
-        if func_match and depth == 0:
-            current_func = func_match.group(1)
-            depth = 1 + (opens - 1) - ends
+        if func_match:
+            name = func_match.group(1)
+            if depth == 0 or '.' in name:
+                current_func = name
+                depth = 1 + (opens - 1) - ends
+            else:
+                depth += opens - ends
         elif depth > 0:
             depth += opens - ends
 
@@ -901,7 +1001,8 @@ _TICK_FUNC_NAMES = {
 
 
 _INPUT_GUARD_RE = re.compile(
-    r"\bInput(?:Pressed|Down|Released)\s*\("
+    r"\bInput(?:Pressed|Down|Released)\s*\(|"
+    r"\bPauseMenuButton\s*\("
 )
 
 
@@ -913,8 +1014,10 @@ def check_per_tick_rpc(source: str) -> list[dict]:
     for continuous state instead.
 
     Skips RPC calls guarded by:
-    - InputPressed/InputDown/InputReleased within previous 5 lines (event-driven)
-    - State-change patterns (~= was/old/last/prev) within previous 3 lines (transition-only)
+    - InputPressed/InputDown/InputReleased/PauseMenuButton within previous 20 lines
+    - State-change patterns (~= was/old/last/prev) within previous 5 lines
+    - One-time events (Delete/flag set/cleared) within next 5 lines
+    - Destruction events (MakeHole/Explosion) within ±10 lines (impact events)
     See docs/OFFICIAL_DEVELOPER_DOCS.md § Critical Gotchas #8.
     """
     findings = []
@@ -925,6 +1028,19 @@ def check_per_tick_rpc(source: str) -> list[dict]:
     lines = cleaned.splitlines()
 
     state_change_re = re.compile(r"~=\s*(was|old|last|prev)\w*", re.IGNORECASE)
+    one_time_event_re = re.compile(
+        r"\bDelete\s*\(|"               # entity destroyed after RPC
+        r"\b\w+\s*=\s*true\b|"          # flag set (e.g., already_exploded = true)
+        r"\b\w+\s*=\s*nil\b|"           # flag cleared (e.g., pending[p] = nil)
+        r"\b\w+\s*=\s*false\b|"         # flag reset (e.g., active = false)
+        r"\btable\.remove\s*\(",        # removed from tracking table
+        re.IGNORECASE,
+    )
+    # MakeHole/Explosion nearby = impact event (inherently one-time per collision)
+    destruction_event_re = re.compile(
+        r"\bMakeHole\s*\(|"
+        r"\bExplosion\s*\(",
+    )
 
     for lineno, raw_line in enumerate(lines, 1):
         stripped = _strip_comment(raw_line)
@@ -932,9 +1048,13 @@ def check_per_tick_rpc(source: str) -> list[dict]:
         opens = _count_opens(stripped)
         ends = _count_ends(stripped)
 
-        if func_match and depth == 0:
-            current_func = func_match.group(1)
-            depth = 1 + (opens - 1) - ends
+        if func_match:
+            name = func_match.group(1)
+            if depth == 0 or '.' in name:
+                current_func = name
+                depth = 1 + (opens - 1) - ends
+            else:
+                depth += opens - ends
         elif depth > 0:
             depth += opens - ends
 
@@ -943,18 +1063,31 @@ def check_per_tick_rpc(source: str) -> list[dict]:
 
         m = _SERVER_CALL_RE.search(stripped)
         if m and current_func is not None and current_func in _TICK_FUNC_NAMES:
-            # Check if guarded by InputPressed/InputDown within 8 lines
-            window_start = max(0, lineno - 9)
+            # Check if guarded by InputPressed/InputDown within 20 lines
+            window_start = max(0, lineno - 21)
             window = lines[window_start:lineno]
             has_input_guard = any(
                 _INPUT_GUARD_RE.search(_strip_comment(l)) for l in window
             )
-            # Check if guarded by state-change pattern within 3 lines
-            sc_window = lines[max(0, lineno - 4):lineno]
+            # Check if guarded by state-change pattern within 5 lines
+            sc_window = lines[max(0, lineno - 6):lineno]
             has_state_change_guard = any(
                 state_change_re.search(_strip_comment(l)) for l in sc_window
             )
-            if not has_input_guard and not has_state_change_guard:
+            # Check if this is a one-time event (Delete/flag within 5 lines after)
+            forward_end = min(len(lines), lineno + 5)
+            forward_window = lines[lineno:forward_end]
+            is_one_time_event = any(
+                one_time_event_re.search(_strip_comment(l)) for l in forward_window
+            )
+            # Check if near MakeHole/Explosion (impact event, not continuous)
+            dest_start = max(0, lineno - 11)
+            dest_end = min(len(lines), lineno + 10)
+            dest_window = lines[dest_start:dest_end]
+            is_destruction_event = any(
+                destruction_event_re.search(_strip_comment(l)) for l in dest_window
+            )
+            if not has_input_guard and not has_state_change_guard and not is_one_time_event and not is_destruction_event:
                 findings.append(_finding(
                     "PER-TICK-RPC",
                     lineno,
@@ -1106,6 +1239,292 @@ def check_shoot_missing_attribution(source: str) -> list[dict]:
     return findings
 
 
+# ---------------------------------------------------------------------------
+# Check T1-11: QueryShot player=0 truthy guard (Issue #47)
+# ---------------------------------------------------------------------------
+
+_APPLY_PLAYER_DAMAGE_RE = re.compile(r"\bApplyPlayerDamage\s*\(\s*(\w+)")
+
+
+def check_queryshot_player_guard(source: str) -> list[dict]:
+    """Detect `if player then ApplyPlayerDamage(player, ...)` without ~= 0 guard.
+
+    QueryShot returns player=0 for non-player hits. In Lua, 0 is truthy, so
+    `if player then` passes and damages the host (player 0). Must use
+    `if player ~= 0 then` instead. See Issue #47.
+
+    Checks both single-line patterns and multi-line (condition within 3 lines
+    before the ApplyPlayerDamage call).
+    """
+    findings = []
+    lines = source.splitlines()
+    for lineno_0, raw_line in enumerate(lines):
+        stripped = _strip_comment(raw_line)
+        m = _APPLY_PLAYER_DAMAGE_RE.search(stripped)
+        if not m:
+            continue
+        var_name = m.group(1)
+        # Look backwards up to 3 lines for the condition guard
+        start = max(0, lineno_0 - 3)
+        context = "\n".join(_strip_comment(lines[i]) for i in range(start, lineno_0 + 1))
+        # Find `if ... then` lines in context and check if var appears
+        # without a proper ~= 0 or > 0 guard
+        if_then_pat = re.compile(r"\bif\b(.+?)\bthen\b")
+        found_bad_guard = False
+        found_safe_guard = False
+        for cond_match in if_then_pat.finditer(context):
+            condition = cond_match.group(1)
+            # Check if var_name appears in the condition
+            var_pat = re.compile(r"\b" + re.escape(var_name) + r"\b")
+            if not var_pat.search(condition):
+                continue
+            # Check if it's properly guarded with ~= 0 or > 0
+            safe_pat = re.compile(r"\b" + re.escape(var_name) + r"\s*~=\s*0|\b" + re.escape(var_name) + r"\s*>\s*0")
+            if safe_pat.search(condition):
+                found_safe_guard = True
+            else:
+                # Only flag if var appears as a direct condition, not as a function arg
+                # e.g. `if player then` is bad, but `if GetPlayerHealth(player) > 0 then` is fine
+                bare_guard_pat = re.compile(
+                    r"(?<!\w)" + re.escape(var_name) + r"\s*(?:then|and|or|\s*$)"
+                    r"|(?:not\s+)" + re.escape(var_name) + r"\b"
+                )
+                if bare_guard_pat.search(condition):
+                    found_bad_guard = True
+        if found_bad_guard and not found_safe_guard:
+            findings.append(_finding(
+                "QUERYSHOT-PLAYER-GUARD",
+                lineno_0 + 1,
+                f"ApplyPlayerDamage({var_name}, ...) guarded by truthy check — "
+                f"QueryShot returns player=0 for non-player hits (Lua 0 is truthy). "
+                f"Use `if {var_name} ~= 0 then` instead (Issue #47)",
+                severity="error",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check 26: Per-tick spatial queries (FindShapes/QueryAabb in tick functions)
+# ---------------------------------------------------------------------------
+
+_SPATIAL_QUERY_RE = re.compile(
+    r"\b(FindShapes|FindBodies|QueryAabbBodies|QueryAabbShapes)\s*\("
+)
+
+
+def check_per_tick_spatial(source: str) -> list[dict]:
+    """Warn if FindShapes/FindBodies/QueryAabb appear inside tick/update functions.
+
+    Spatial queries are expensive O(n) operations. Calling them every tick
+    per player floods the physics system, especially FindBodies(nil, true)
+    which scans every body in the scene. Throttle to <=4Hz or cache results.
+    See docs/MP_DESYNC_PATTERNS.md.
+    """
+    findings = []
+    current_func: str | None = None
+    depth = 0
+
+    cleaned = _strip_block_comments(source)
+    lines = cleaned.splitlines()
+
+    for lineno, raw_line in enumerate(lines, 1):
+        stripped = _strip_comment(raw_line)
+        func_match = _FUNC_DEF_RE.match(stripped)
+        opens = _count_opens(stripped)
+        ends = _count_ends(stripped)
+
+        if func_match:
+            name = func_match.group(1)
+            if depth == 0 or '.' in name:
+                current_func = name
+                depth = 1 + (opens - 1) - ends
+            else:
+                depth += opens - ends
+        elif depth > 0:
+            depth += opens - ends
+
+        if depth < 0:
+            depth = 0
+
+        m = _SPATIAL_QUERY_RE.search(stripped)
+        if m and current_func is not None and current_func in _TICK_FUNC_NAMES:
+            # Check if throttled: look for timer/counter guard within 5 lines
+            window_start = max(0, lineno - 6)
+            window = lines[window_start:lineno]
+            has_throttle = any(
+                re.search(r"timer|throttle|cooldown|cached|cache|interval|hz|frequency",
+                          _strip_comment(l), re.IGNORECASE)
+                for l in window
+            )
+            if not has_throttle:
+                findings.append(_finding(
+                    "PER-TICK-SPATIAL",
+                    lineno,
+                    f"{m.group(1)}() inside {current_func!r} — expensive spatial "
+                    f"query every tick. Throttle to <=4Hz or cache results. "
+                    f"See docs/MP_DESYNC_PATTERNS.md",
+                    severity="info",
+                ))
+
+        if depth == 0:
+            current_func = None
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check T2-16: Explosion without ApplyPlayerDamage in weapon mods
+# ---------------------------------------------------------------------------
+
+
+def check_explosion_no_player_damage(source: str) -> list[dict]:
+    """Warn if a weapon/tool mod uses Explosion() without ApplyPlayerDamage.
+
+    Explosion() handles terrain destruction and physics impulse but does NOT
+    damage players in v2 MP. Weapon mods need ApplyPlayerDamage() with
+    distance-based falloff after Explosion() for player-vs-player damage.
+
+    Only applies to files with RegisterTool (weapon/tool mods).
+    Skips files that already have ApplyPlayerDamage or @audit-ok explosion.
+    """
+    # Only weapon/tool mods
+    if not re.search(r"\bRegisterTool\s*\(", source):
+        return []
+    # Skip if already has player damage mechanism
+    # NOTE: Only ApplyPlayerDamage counts — Shoot() is a separate mechanism
+    # (bullets) that doesn't cover Explosion() damage. A mod can have Shoot()
+    # for bullets AND Explosion() without player damage (Issue #56 miss in MGL).
+    if re.search(r"\bApplyPlayerDamage\s*\(", source):
+        return []
+    # Skip if annotated
+    if re.search(r"@audit-ok\s+explosion", source):
+        return []
+    # Check for Explosion calls
+    findings = []
+    cleaned = _strip_block_comments(source)
+    for lineno, raw_line in enumerate(cleaned.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        if re.search(r"\bExplosion\s*\(", stripped):
+            findings.append(_finding(
+                "EXPLOSION-NO-DAMAGE",
+                lineno,
+                "Explosion() does not damage players in v2 MP — "
+                "add ApplyPlayerDamage() with distance falloff after Explosion() "
+                "for player-vs-player damage. "
+                "See docs/OFFICIAL_DEVELOPER_DOCS.md § Weapon & Combat API",
+                severity="info",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check T2-17: SetPlayer* argument order (player param should be LAST)
+# ---------------------------------------------------------------------------
+
+_SETPLAYER_ARG_ORDER_RE = re.compile(
+    r"\b(SetPlayerVelocity|SetPlayerGroundVelocity|SetPlayerTransform|"
+    r"SetPlayerTransformWithPitch|SetPlayerWalkingSpeed|SetPlayerCrouchSpeedScale|"
+    r"SetPlayerHurtSpeedScale|SetPlayerPitch|SetPlayerColor|SetPlayerTool|"
+    r"SetPlayerRig|SetPlayerSpawnTransform|SetPlayerSpawnHealth|SetPlayerSpawnTool|"
+    r"RespawnPlayerAtTransform|SetPlayerOrientation|SetPlayerRegenerationState|"
+    r"SetPlayerAnimator|SetPlayerVehicle|SetPlayerScreen)"
+    r"\s*\(\s*(\w+)"
+)
+
+_PLAYER_NAME_RE = re.compile(r"^(p|player|playerId|playerid|pid|pl|id)$", re.IGNORECASE)
+
+
+def check_setplayer_arg_order(source: str) -> list[dict]:
+    """Catch SetPlayer*(player, value) — player param should be LAST.
+
+    The API page shows playerId first for nearly all SetPlayer* functions,
+    but the actual engine puts it LAST. Getting the order wrong silently
+    sets the value on the wrong player or does nothing.
+    See docs/OFFICIAL_DEVELOPER_DOCS.md § API Signature Notes.
+    """
+    findings = []
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        m = _SETPLAYER_ARG_ORDER_RE.search(stripped)
+        if not m:
+            continue
+        func_name = m.group(1)
+        first_arg = m.group(2).strip()
+        if _PLAYER_NAME_RE.match(first_arg):
+            findings.append(_finding(
+                "SETPLAYER-ARG-ORDER",
+                lineno,
+                f"{func_name}() first arg is '{first_arg}' (looks like player ID); "
+                f"correct order is {func_name}(value, ..., player) — player param LAST. "
+                f"See docs/OFFICIAL_DEVELOPER_DOCS.md § API Signature Notes",
+                severity="warn",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check T2-18: ApplyPlayerDamage missing attacker param
+# ---------------------------------------------------------------------------
+
+_APPLY_DAMAGE_CALL_RE = re.compile(r"\bApplyPlayerDamage\s*\(")
+
+
+def check_damage_no_attacker(source: str) -> list[dict]:
+    """Flag ApplyPlayerDamage() calls with fewer than 4 args (missing attacker).
+
+    Full signature: ApplyPlayerDamage(target, damage, toolId, attacker)
+    Without attacker, kills show as 'unknown' in the kill feed.
+    See Issues #48, #27 in ISSUES_AND_FIXES.md.
+    """
+    findings = []
+    cleaned = _strip_block_comments(source)
+    lines = cleaned.splitlines()
+
+    for lineno, raw_line in enumerate(lines, 1):
+        stripped = _strip_comment(raw_line)
+        if not _APPLY_DAMAGE_CALL_RE.search(stripped):
+            continue
+
+        idx = stripped.find("ApplyPlayerDamage(")
+        if idx < 0:
+            continue
+        after = stripped[idx + len("ApplyPlayerDamage("):]
+
+        # Handle multi-line calls: if no closing ')' on this line,
+        # join subsequent lines until we find it
+        if ")" not in after:
+            for next_line in lines[lineno:]:  # lineno is 1-based, lines[lineno:] = next lines
+                after += " " + _strip_comment(next_line)
+                if ")" in _strip_comment(next_line):
+                    break
+
+        # Count commas at top-level (skip nested parens)
+        depth = 0
+        num_commas = 0
+        for ch in after:
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif ch == "," and depth == 0:
+                num_commas += 1
+
+        if num_commas < 3:
+            findings.append(_finding(
+                "DAMAGE-NO-ATTACKER",
+                lineno,
+                f"ApplyPlayerDamage() has {num_commas + 1} args (expected 4) — "
+                f"missing attacker param for kill attribution. "
+                f"Full: ApplyPlayerDamage(target, damage, toolId, attacker). "
+                f"See ISSUES_AND_FIXES.md Issue #48",
+                severity="warn",
+            ))
+
+    return findings
+
+
 # ===========================================================================
 # Aggregation
 # ===========================================================================
@@ -1121,6 +1540,7 @@ TIER1_CHECKS = [
     check_draw_not_client,
     check_set_player_health_order,
     check_missing_version2,
+    check_queryshot_player_guard,
 ]
 
 TIER2_CHECKS = [
@@ -1138,10 +1558,15 @@ TIER2_CHECKS = [
     check_server_only_in_client,
     check_per_tick_rpc,
     check_shoot_missing_attribution,
+    check_per_tick_spatial,
+    check_explosion_no_player_damage,
+    check_setplayer_arg_order,
+    check_damage_no_attacker,
 ]
 
 
 _LINT_OK_RE = re.compile(r'--\s*@lint-ok\s+([\w-]+(?:\s*,\s*[\w-]+)*)')
+_LINT_OK_FILE_RE = re.compile(r'--\s*@lint-ok-file\s+([\w-]+(?:\s*,\s*[\w-]+)*)')
 
 
 def _lint_suppressions(source: str) -> dict[int, set[str]]:
@@ -1159,6 +1584,21 @@ def _lint_suppressions(source: str) -> dict[int, set[str]]:
     return suppressions
 
 
+def _lint_file_suppressions(source: str) -> set[str]:
+    """Extract @lint-ok-file suppression tags for the whole file.
+
+    Usage in Lua: ``-- @lint-ok-file SERVER-EFFECT`` anywhere in the file
+    suppresses that check for ALL lines.  Typically placed near the top.
+    Multiple checks: ``-- @lint-ok-file SERVER-EFFECT, PER-TICK-SPATIAL``
+    """
+    suppressed: set[str] = set()
+    for line in source.splitlines():
+        m = _LINT_OK_FILE_RE.search(line)
+        if m:
+            suppressed.update(c.strip().upper() for c in m.group(1).split(","))
+    return suppressed
+
+
 def lint_source(source: str, filename: str, tier: str = "all") -> list[dict]:
     """Run lint checks on a single Lua source string.
 
@@ -1172,6 +1612,7 @@ def lint_source(source: str, filename: str, tier: str = "all") -> list[dict]:
       check, line, severity, file, detail
 
     Supports ``-- @lint-ok CHECK-ID`` comments to suppress specific checks per line.
+    Supports ``-- @lint-ok-file CHECK-ID`` to suppress a check for the entire file.
     """
     checks = []
     if tier in ("all", "1"):
@@ -1183,15 +1624,20 @@ def lint_source(source: str, filename: str, tier: str = "all") -> list[dict]:
         checks = TIER1_CHECKS + TIER2_CHECKS
 
     suppressions = _lint_suppressions(source)
+    file_suppressions = _lint_file_suppressions(source)
 
     results = []
     for check_fn in checks:
         findings = check_fn(source)
         for f in findings:
             f["file"] = filename
-            # Filter suppressed findings
+            check_upper = f["check"].upper()
+            # Filter file-level suppressions
+            if check_upper in file_suppressions:
+                continue
+            # Filter line-level suppressions
             line_sups = suppressions.get(f["line"], set())
-            if f["check"].upper() not in line_sups:
+            if check_upper not in line_sups:
                 results.append(f)
     return results
 

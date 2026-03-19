@@ -13,7 +13,7 @@ from pathlib import Path
 
 import click
 
-from tools.common import discover_mods, read_lua_files
+from tools.common import RAW_KEYS, discover_mods, read_lua_files
 
 
 # ---------------------------------------------------------------------------
@@ -37,8 +37,8 @@ def fix_ipairs_iterator(source: str) -> str:
 # Fixer 2: mousedx / mousedy → camerax / cameray
 # ---------------------------------------------------------------------------
 
-_MOUSEDX_RE = re.compile(r'InputValue\s*\(\s*"mousedx"\s*\)')
-_MOUSEDY_RE = re.compile(r'InputValue\s*\(\s*"mousedy"\s*\)')
+_MOUSEDX_RE = re.compile(r'InputValue\s*\(\s*"mousedx"(?:\s*,\s*[^)]+)?\s*\)')
+_MOUSEDY_RE = re.compile(r'InputValue\s*\(\s*"mousedy"(?:\s*,\s*[^)]+)?\s*\)')
 
 
 def fix_mousedx(source: str) -> str:
@@ -62,6 +62,34 @@ _ALTTOOL_RE = re.compile(r'"alttool"')
 def fix_alttool(source: str) -> str:
     """Replace wrong key name "alttool" with correct "rmb"."""
     return _ALTTOOL_RE.sub('"rmb"', source)
+
+
+# ---------------------------------------------------------------------------
+# Fixer 3b: Raw key + player param → remove player param
+# ---------------------------------------------------------------------------
+
+_RAW_KEY_PLAYER_RE = re.compile(
+    r"(\b(?:InputPressed|InputReleased|InputDown|InputValue)"
+    r"\s*\(\s*\"([^\"]+)\")\s*,\s*[^)]+\)"
+)
+
+
+def fix_raw_key_player(source: str) -> str:
+    """Remove player param from raw key input calls.
+
+    ``InputPressed("rmb", p)`` → ``InputPressed("rmb")``
+
+    Raw keys silently fail with a player parameter in v2 MP. Removing the
+    param makes them work for the local player only (the correct behavior).
+    Action keys (usetool, interact, etc.) are left unchanged.
+    """
+    def _replace(m: re.Match) -> str:
+        key_name = m.group(2)
+        if key_name in RAW_KEYS:
+            return m.group(1) + ")"
+        return m.group(0)  # Not a raw key — leave unchanged
+
+    return _RAW_KEY_PLAYER_RE.sub(_replace, source)
 
 
 # ---------------------------------------------------------------------------
@@ -118,9 +146,10 @@ def fix_draw_func(source: str) -> str:
     for line in lines:
         stripped = line.rstrip("\n\r")
         # Check if this line is a bare `function draw(` at depth 0
-        if depth == 0:
-            m = _TOP_DRAW_LINE_RE.match(stripped)
-            if m:
+        # Also accept non-indented draw() at any depth (depth tracker can lose sync)
+        m = _TOP_DRAW_LINE_RE.match(stripped)
+        if m and (depth == 0 or not m.group(1)):
+            if True:
                 indent = m.group(1)
                 rest = m.group(2)  # "(..." portion
                 new_line = f"{indent}function client.draw{rest}"
@@ -159,10 +188,14 @@ def fix_draw_func(source: str) -> str:
 # ---------------------------------------------------------------------------
 
 # Matches: <word> > 0 then  (entity handle check pattern)
-_HANDLE_GT_RE = re.compile(r"(\w+)\s*>\s*0\s+then")
+# Include optional # prefix to detect length checks (#table > 0)
+_HANDLE_GT_RE = re.compile(r"(\#?\w+)\s*>\s*0\s+then")
 
 # Import non-handle detection from lint.py
 from tools.lint import _is_non_handle_name
+
+
+_LINT_OK_HANDLE_RE = re.compile(r"@lint-ok\b.*\bHANDLE-GT-ZERO\b")
 
 
 def fix_handle_gt(source: str) -> str:
@@ -171,12 +204,18 @@ def fix_handle_gt(source: str) -> str:
     In Teardown v2, client-side entity handles can be negative, so ``> 0``
     incorrectly treats valid negative handles as nil/invalid.
     Skips variables that are clearly not entity handles (dist, count, etc.).
+    Skips lines with ``@lint-ok HANDLE-GT-ZERO`` annotations.
     """
-    def _replace(m):
-        if _is_non_handle_name(m.group(1)):
-            return m.group(0)
-        return m.group(1) + " ~= 0 then"
-    return _HANDLE_GT_RE.sub(_replace, source)
+    lines = source.split("\n")
+    for i, line in enumerate(lines):
+        if _LINT_OK_HANDLE_RE.search(line):
+            continue  # respect @lint-ok annotation
+        def _replace(m):
+            if _is_non_handle_name(m.group(1)):
+                return m.group(0)
+            return m.group(1) + " ~= 0 then"
+        lines[i] = _HANDLE_GT_RE.sub(_replace, line)
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +274,81 @@ def fix_ammo_display(source: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Fixer 7: QueryShot player=0 truthy guard (Issue #47)
+# ---------------------------------------------------------------------------
+
+_APD_RE = re.compile(r"\bApplyPlayerDamage\s*\(\s*(\w+)")
+
+
+def fix_queryshot_player_guard(source: str) -> str:
+    """Fix ``if player then`` → ``if player ~= 0 then`` near ApplyPlayerDamage.
+
+    QueryShot returns player=0 for non-player hits. Lua 0 is truthy, so
+    ``if player then`` passes and damages the host. See Issue #47.
+    """
+    lines = source.splitlines(keepends=True)
+    changed = False
+
+    for i, line in enumerate(lines):
+        m = _APD_RE.search(line)
+        if not m:
+            continue
+        var = m.group(1)
+        # Look back up to 3 lines for truthy guard
+        already_safe = False
+        for j in range(max(0, i - 3), i + 1):
+            # Find `if ... then` containing the variable
+            if_then = re.search(r"\bif\b(.+?)\bthen\b", lines[j])
+            if not if_then:
+                continue
+            condition = if_then.group(1)
+            # Check if var appears in condition without proper guard
+            var_re = re.compile(r"\b" + re.escape(var) + r"\b")
+            if not var_re.search(condition):
+                continue
+            safe_re = re.compile(r"\b" + re.escape(var) + r"\s*~=\s*0|\b" + re.escape(var) + r"\s*>\s*0")
+            if safe_re.search(condition):
+                already_safe = True
+                break  # found a proper guard — no fix needed
+            # Insert `~= 0` after the variable in the condition
+            # Replace first bare `var` with `var ~= 0` (not already guarded)
+            fix_re = re.compile(r"\b" + re.escape(var) + r"\b(?!\s*~=)(?!\s*>)")
+            new_line = fix_re.sub(var + " ~= 0", lines[j], count=1)
+            if new_line != lines[j]:
+                lines[j] = new_line
+                changed = True
+                break  # fixed one — done for this ApplyPlayerDamage
+
+    return "".join(lines) if changed else source
+
+
+# ---------------------------------------------------------------------------
+# Fixer 8: Add missing #version 2 header
+# ---------------------------------------------------------------------------
+
+_VERSION2_HEADER_RE = re.compile(r"^\s*#version\s+2\b", re.MULTILINE)
+_V2_PATTERN_RE = re.compile(
+    r"\bfunction\s+(server|client)\.\w+\s*\(|\bRegisterTool\s*\("
+)
+
+
+def fix_missing_version2(source: str) -> str:
+    """Add ``#version 2`` header to scripts that use v2 patterns but lack it.
+
+    Without #version 2, scripts are silently disabled in multiplayer.
+    Only adds the header if the file has server.*/client.*/RegisterTool patterns.
+    """
+    if _VERSION2_HEADER_RE.search(source):
+        return source  # Already has #version 2
+    if not _V2_PATTERN_RE.search(source):
+        return source  # Not a v2 script
+    # Skip include/library files (define Players() iterator)
+    if re.search(r"^\s*function\s+Players\s*\(", source, re.MULTILINE):
+        return source
+    return "#version 2\n" + source
+
+
+# ---------------------------------------------------------------------------
 # apply_fixes — orchestrator
 # ---------------------------------------------------------------------------
 
@@ -243,9 +357,12 @@ _FIXERS: list[tuple[str, callable, str]] = [
     ("ipairs-iterator", fix_ipairs_iterator, "removed ipairs() wrapper from Player iterator"),
     ("mousedx",         fix_mousedx,         "replaced mousedx/mousedy with camerax/cameray"),
     ("alttool",         fix_alttool,         'replaced "alttool" with "rmb"'),
+    ("raw-key-player",  fix_raw_key_player,  "removed player param from raw key input calls"),
     ("draw-func",       fix_draw_func,       "renamed top-level draw() to client.draw()"),
     ("handle-gt",       fix_handle_gt,       "replaced handle > 0 with handle ~= 0"),
     ("ammo-display",    fix_ammo_display,    "injected SetString ammo.display after RegisterTool"),
+    ("queryshot-guard", fix_queryshot_player_guard, "fixed QueryShot player=0 truthy guard (Issue #47)"),
+    ("missing-version2", fix_missing_version2, "added #version 2 header"),
 ]
 
 
@@ -296,7 +413,7 @@ def apply_fixes(
     default=None,
     help=(
         "Comma-separated fix IDs: "
-        "ipairs-iterator,mousedx,alttool,draw-func,handle-gt,ammo-display"
+        "ipairs-iterator,mousedx,alttool,raw-key-player,draw-func,handle-gt,ammo-display,queryshot-guard"
     ),
 )
 @click.option("--dry-run", is_flag=True, help="Preview changes without writing")

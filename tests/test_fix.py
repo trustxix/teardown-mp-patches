@@ -1,4 +1,4 @@
-"""Tests for tools/fix.py — all 6 auto-fixers plus apply_fixes."""
+"""Tests for tools/fix.py — all 9 auto-fixers plus apply_fixes."""
 
 import pytest
 
@@ -6,9 +6,12 @@ from tools.fix import (
     fix_ipairs_iterator,
     fix_mousedx,
     fix_alttool,
+    fix_raw_key_player,
     fix_draw_func,
     fix_handle_gt,
     fix_ammo_display,
+    fix_queryshot_player_guard,
+    fix_missing_version2,
     apply_fixes,
 )
 
@@ -80,6 +83,15 @@ def test_fix_mousedx_both_on_same_source():
     assert '"mousedy"' not in fixed
 
 
+def test_fix_mousedx_with_player_param():
+    """mousedx/dy with player param should also be fixed."""
+    src = 'local mx = InputValue("mousedx", id)\nlocal my = InputValue("mousedy", id)\n'
+    fixed = fix_mousedx(src)
+    assert 'InputValue("camerax") * 180 / math.pi' in fixed
+    assert 'InputValue("cameray") * 180 / math.pi' in fixed
+    assert '"mousedx"' not in fixed
+
+
 # ---------------------------------------------------------------------------
 # fix_alttool
 # ---------------------------------------------------------------------------
@@ -102,6 +114,43 @@ def test_fix_alttool_multiple_occurrences():
     fixed = fix_alttool(src)
     assert fixed.count('"rmb"') == 2
     assert '"alttool"' not in fixed
+
+
+# ---------------------------------------------------------------------------
+# fix_raw_key_player
+# ---------------------------------------------------------------------------
+
+
+def test_fix_raw_key_player_basic():
+    src = 'if InputPressed("rmb", p) then\n'
+    fixed = fix_raw_key_player(src)
+    assert 'InputPressed("rmb")' in fixed
+    assert ", p)" not in fixed
+
+
+def test_fix_raw_key_player_multiple_keys():
+    src = 'InputDown("w", p)\nInputDown("a", p)\nInputDown("s", p)\n'
+    fixed = fix_raw_key_player(src)
+    assert fixed.count(", p)") == 0
+    assert 'InputDown("w")' in fixed
+    assert 'InputDown("a")' in fixed
+
+
+def test_fix_raw_key_player_leaves_action_keys():
+    """Action keys like 'usetool' should keep their player param."""
+    src = 'if InputPressed("usetool", p) then\n'
+    assert fix_raw_key_player(src) == src
+
+
+def test_fix_raw_key_player_complex_expression():
+    src = 'InputDown("space", playerId)\n'
+    fixed = fix_raw_key_player(src)
+    assert 'InputDown("space")' in fixed
+
+
+def test_fix_raw_key_player_noop():
+    src = 'InputPressed("lmb")\n'
+    assert fix_raw_key_player(src) == src
 
 
 # ---------------------------------------------------------------------------
@@ -186,6 +235,18 @@ def test_fix_handle_gt_does_not_affect_numeric_comparisons():
     assert fix_handle_gt(src3) == src3
 
 
+def test_fix_handle_gt_respects_lint_ok():
+    """Lines with @lint-ok HANDLE-GT-ZERO annotations should not be modified."""
+    src = 'if siren > 0 then -- @lint-ok HANDLE-GT-ZERO: volume not handle\n'
+    assert fix_handle_gt(src) == src
+
+
+def test_fix_handle_gt_skips_length_check():
+    """#table > 0 is a length check, not a handle check."""
+    src = 'if #spawnedMines > 0 then\n'
+    assert fix_handle_gt(src) == src
+
+
 # ---------------------------------------------------------------------------
 # fix_ammo_display
 # ---------------------------------------------------------------------------
@@ -235,6 +296,39 @@ def test_fix_ammo_display_tool_id_extraction():
     src = 'RegisterTool("super_gun-v2", "Super Gun", "MOD/vox/sg.vox", 0)\n'
     fixed = fix_ammo_display(src)
     assert 'SetString("game.tool.super_gun-v2.ammo.display", "")' in fixed
+
+
+# ---------------------------------------------------------------------------
+# fix_missing_version2
+# ---------------------------------------------------------------------------
+
+
+def test_fix_missing_version2_adds_header():
+    src = 'function server.init()\nend\n'
+    fixed = fix_missing_version2(src)
+    assert fixed.startswith("#version 2\n")
+
+
+def test_fix_missing_version2_noop_already_present():
+    src = '#version 2\nfunction server.init()\nend\n'
+    assert fix_missing_version2(src) == src
+
+
+def test_fix_missing_version2_noop_no_v2_patterns():
+    src = 'function init()\n  print("hello")\nend\n'
+    assert fix_missing_version2(src) == src
+
+
+def test_fix_missing_version2_client_pattern():
+    src = 'function client.draw()\n  UiText("hi")\nend\n'
+    fixed = fix_missing_version2(src)
+    assert fixed.startswith("#version 2\n")
+
+
+def test_fix_missing_version2_skips_player_include():
+    """player.lua defines Players() — should not get #version 2 added."""
+    src = 'function Players()\n  return iter\nend\n'
+    assert fix_missing_version2(src) == src
 
 
 # ---------------------------------------------------------------------------
@@ -298,15 +392,81 @@ def test_apply_fixes_only_unknown_id():
     assert changes == []
 
 
-def test_apply_fixes_all_six():
-    """Smoke test: a source triggering all 6 fixers should produce 6 change entries."""
+def test_apply_fixes_all_nine():
+    """Smoke test: a source triggering all 9 fixers should produce 9 change entries."""
     src = (
         'for _, p in ipairs(Players()) do end\n'           # ipairs-iterator
         'local x = InputValue("mousedx")\n'                # mousedx
         'if InputPressed("alttool") then end\n'            # alttool
+        'if InputDown("rmb", p) then end\n'                # raw-key-player
         'function draw()\nend\n'                           # draw-func
         'if h > 0 then end\n'                              # handle-gt
         'RegisterTool("mygun", "Gun", "MOD/v.vox", 0)\n'  # ammo-display
+        'if player then ApplyPlayerDamage(player, 1, "t", p) end\n'  # queryshot-guard
+        'function server.init()\nend\n'                    # missing-version2
     )
     _, changes = apply_fixes(src)
-    assert len(changes) == 6
+    assert len(changes) == 9
+
+
+# ---------------------------------------------------------------------------
+# fix_queryshot_player_guard
+# ---------------------------------------------------------------------------
+
+
+def test_fix_queryshot_single_line():
+    src = 'if player then ApplyPlayerDamage(player, 2.0, "tool", p) end\n'
+    result = fix_queryshot_player_guard(src)
+    assert "player ~= 0" in result
+    assert "if player then" not in result
+
+
+def test_fix_queryshot_multi_line():
+    src = (
+        'if player then\n'
+        '    ApplyPlayerDamage(player, 2.0, "tool", p)\n'
+        'end\n'
+    )
+    result = fix_queryshot_player_guard(src)
+    assert "player ~= 0 then" in result
+
+
+def test_fix_queryshot_compound_condition():
+    src = (
+        'if player and not playerHit then\n'
+        '    ApplyPlayerDamage(player, 2.0, "tool", p)\n'
+        'end\n'
+    )
+    result = fix_queryshot_player_guard(src)
+    assert "player ~= 0 and" in result
+
+
+def test_fix_queryshot_already_safe():
+    src = 'if player ~= 0 then ApplyPlayerDamage(player, 2.0, "tool", p) end\n'
+    result = fix_queryshot_player_guard(src)
+    assert result == src  # No change
+
+
+def test_fix_queryshot_different_var():
+    src = 'if hookPlayer then ApplyPlayerDamage(hookPlayer, 0.5, "hook", p) end\n'
+    result = fix_queryshot_player_guard(src)
+    assert "hookPlayer ~= 0" in result
+
+
+def test_fix_queryshot_no_apply_no_change():
+    src = 'if player then SetPlayerHealth(1, player) end\n'
+    result = fix_queryshot_player_guard(src)
+    assert result == src  # No change — no ApplyPlayerDamage
+
+
+def test_fix_queryshot_safe_guard_on_outer_if():
+    """If player ~= 0 guard exists on outer if, don't touch inner if with player in function args."""
+    src = (
+        '\t\t\tif player ~= 0 then\n'
+        '\t\t\t\tif GetPlayerHealth(player) < 0.21 and GetPlayerHealth(player) > 0 then\n'
+        '\t\t\t\t\tApplyPlayerDamage(player, 1, "loc@DAMAGE_CAUSE_EXPLOSION", 0)\n'
+        '\t\t\t\tend\n'
+        '\t\t\tend\n'
+    )
+    result = fix_queryshot_player_guard(src)
+    assert result == src  # No change — outer guard is correct

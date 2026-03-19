@@ -70,11 +70,11 @@ python -m tools.lint --mod "ModName"
 | Command | When to use |
 |---------|-------------|
 | `python -m tools.status` | **EVERY session start** |
-| `python -m tools.lint` | Scan all mods for 25 known bugs (includes info.txt validation) |
+| `python -m tools.lint` | Scan all mods for 30 known bugs (includes info.txt validation) |
 | `python -m tools.lint --mod "X"` | After editing a specific mod |
 | `python -m tools.lint --tier 1` | Hard errors only (crashes/silent failures) |
 | `python -m tools.fix --dry-run` | Preview safe auto-fixes across all mods |
-| `python -m tools.fix` | Apply all 6 deterministic auto-fixes |
+| `python -m tools.fix` | Apply all 9 deterministic auto-fixes |
 | `python -m tools.fix --mod "X" --only ipairs-iterator` | Targeted fix |
 | `python -m tools.audit` | Feature matrix — what each mod has/needs |
 | `python -m tools.audit --output docs/AUDIT_REPORT.md` | Save audit to file |
@@ -82,7 +82,12 @@ python -m tools.lint --mod "ModName"
 | `python -m tools.logparse --mod "X"` | Filter errors to one mod |
 | `python tools/gun_v2_generator.py` | Generate complete v2 main.lua for standard gun mods (batch) |
 
-**Tests:** `python -m pytest tests/ -q` — 309 tests covering all tools.
+**Lint suppression annotations** (add to mod Lua files when findings are false positives):
+- `-- @lint-ok RULE-NAME` — suppress a specific finding on the current line
+- `-- @lint-ok-file RULE-NAME` — suppress a rule for the entire file (place at top of file)
+- `-- @audit-ok` — suppress audit false positives (e.g., tools using QueryShot instead of Shoot)
+
+**Tests:** `python -m pytest tests/ -q` — 458 tests covering all tools.
 
 ## Where Mods Live
 
@@ -108,7 +113,7 @@ python -m tools.lint --mod "ModName"
 10. NEVER use raw keys with player param: `InputPressed("rmb", p)` FAILS SILENTLY. Use `InputPressed("rmb")` with `isLocal` check + ServerCall
 11. `GetPlayerAimInfo` has two forms: simple `GetPlayerAimInfo(p)` or extended `GetPlayerAimInfo(muzzlePos, maxDist, p)`. Use extended for weapons — NOT manual `GetPlayerEyeTransform` + `QueryRaycast`
 12. Use `Shoot(pos, dir, "bullet", damage, range, p, "toolId")` for guns — NOT `MakeHole` (MakeHole can't damage players). The `"toolId"` enables kill attribution in the kill feed.
-13. Use `QueryShot(pos, dir, len, radius, p)` + `ApplyPlayerDamage(target, damage, "toolId", attacker)` for beam/melee weapons
+13. Use `QueryShot(pos, dir, len, radius, p)` + `ApplyPlayerDamage(target, damage, "toolId", attacker)` for beam/melee weapons. Always guard with `if player ~= 0` — QueryShot can return `player=0` (= host) for non-player hits. `if player then` is WRONG (Lua 0 is truthy). See Issue #47.
 14. Add `SetToolAmmoPickupAmount("id", amount)` for ammo crate integration — without it, mplib can't spawn your tool in loot crates (see `docs/MPLIB_INTERNALS.md`)
 15. Entity handles: check `~= 0` not `> 0` (v2 client handles can be negative)
 16. No goto/labels (Lua 5.1), no mousedx/mousedy (use camerax/cameray)
@@ -124,11 +129,15 @@ python -m tools.lint --mod "ModName"
 26. Client projectile physics MUST be gated with `IsPlayerLocal(p)` — never simulate projectiles for remote players
 27. Use registry sync (`SetFloat`/`SetBool` with `sync=true`) for continuous state — NEVER `ServerCall`/`ClientCall` every tick
 28. Throttle `FindShapes()`/`QueryAabb()` to ≤4Hz — never call per-tick per-player
-29. `PlaySound()`/`SpawnParticle()` are CLIENT-ONLY — never call on server
+29. `PlaySound()`/`SpawnParticle()`/`SetShapeEmissiveScale()` are CLIENT-ONLY — never call on server for visual/audio effects
 30. `QueryShot()` + `ApplyPlayerDamage()` must run on SERVER — client uses `QueryRaycast()` for visuals only
 31. `info.txt` MUST have `version = 2` for the mod to be recognized as MP-compatible
 32. Respawn API: `SetPlayerSpawnTransform(t, p)`, `SetPlayerSpawnHealth(h, p)`, `RespawnPlayer(p)` — server only
 33. ToolAnimator: `#include "script/toolanimation.lua"` for proper first/third-person tool poses. Call `tickToolAnimator(animator, dt, nil, p)` in client.tickPlayer
+34. **Player param is ALWAYS LAST** in `Set*`/`Get*` functions — the API page almost universally shows it first, which is WRONG. Examples: `SetPlayerColor(r, g, b, p)`, `SetPlayerWalkingSpeed(speed, p)`, `SetPlayerTool(tool, p)`, `SetPlayerRig(rig, p)`, `GetPlayerParam(param, p)`. See OFFICIAL_DEVELOPER_DOCS.md discrepancy table (30+ functions documented).
+35. `ServerCall("server.fn", p, ...)` — player ID `p` is REQUIRED as first param. The engine does NOT auto-inject it. Server functions receive exactly what the client sends. (Issue #51)
+36. `Explosion()` does NOT damage players — it destroys terrain + applies physics impulse but NO health damage. Weapons using Explosion MUST add explicit `ApplyPlayerDamage()` with distance falloff + tool ID for kill attribution. (Issue #56)
+37. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions visible to all players). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync). Wrong targeting = other players can't hear/see effects. (Issue #58)
 
 ## Known Subagent Bugs (agents ALWAYS make these)
 
@@ -136,7 +145,9 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 1. `Players()`/`PlayersAdded()`/`PlayersRemoved()` are ITERATORS — NO `ipairs()`
 2. Raw keys (`"rmb"`, `"r"`, etc.) do NOT take player param — use `InputPressed("rmb")` + ServerCall
 3. `SetToolEnabled("toolid", true, p)` — string first, bool second, player third
-4. ALWAYS run `python -m tools.lint --mod "ModName"` after writing any mod code
+4. After `QueryShot()`, guard with `player ~= 0` — NOT `if player then` (Lua 0 is truthy, damages host)
+5. `ServerCall("server.fn", p, ...)` — ALWAYS pass player ID `p` explicitly as first param. Engine does NOT auto-inject it. (Issue #51)
+6. ALWAYS run `python -m tools.lint --mod "ModName"` after writing any mod code
 
 ## Do NOT Use Agents to Write Mod Code
 
@@ -170,9 +181,10 @@ The tools automatically tell you which docs to read:
 | `docs/MP_DESYNC_PATTERNS.md` | 6 root causes of MP desync/lag: client projectile physics, per-tick RPC, FindShapes spam, server-side effects, raw key input, client QueryShot. Fix patterns for each. **Read before editing any mod.** | High |
 | `docs/MPLIB_INTERNALS.md` | How loot crates, weapon drops, and ammo pickup actually work inside mplib/tools.lua. Essential for understanding why SetToolAmmoPickupAmount matters. | High |
 | `docs/PER_TICK_RPC_FIX_GUIDE.md` | Decision tree + 4 fix patterns for the 69 PER-TICK-RPC lint warnings. **Read before fixing any PER-TICK-RPC finding.** | High |
+| `docs/UMF_TRANSLATION_GUIDE.md` | UMF framework API → v2 equivalents. Registry layer, tool patterns, input, UI, server/client split, 15-point conversion checklist. **Read before converting any UMF-blocked mod.** | High |
 | `docs/TEAM_PLUGINS.md` | All available plugins, agents, and skills with when-to-use decision table. **Every terminal should read this.** | High |
 | `docs/AUDIT_REPORT.md` | Generated feature matrix — which mods have/lack each feature. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` | Generated |
-| `ISSUES_AND_FIXES.md` | 46 resolved bugs with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
+| `ISSUES_AND_FIXES.md` | 58 resolved bugs with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
 | `MASTER_MOD_LIST.md` | All patched mods by batch with workshop IDs. Update after converting new mods. | Project |
 | `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` | Full v2 API (550+ functions). For exact function signatures. | Reference |
 

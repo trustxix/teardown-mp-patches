@@ -88,7 +88,7 @@ function ProjectileOperations(projectile, data, p)
 
 \t-- Player damage via QueryShot (server authoritative)
 \tlocal qhit, qdist, qshape, qplayer, qhitFactor = QueryShot(projectile.pos, dir, moveDist, 0, p)
-\tif qplayer then
+\tif qplayer ~= 0 then  -- Issue #47: Lua 0 is truthy, must use ~= 0
 \t\tApplyPlayerDamage(qplayer, data.damage * qhitFactor, "{tool_id}", p)
 \tend
 

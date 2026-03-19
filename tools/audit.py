@@ -12,10 +12,12 @@ from tools.common import discover_mods, read_lua_files
 _SHOOT_RE = re.compile(r"\bShoot\s*\(|\bQueryShot\s*\(")
 _AIM_INFO_RE = re.compile(r"\bGetPlayerAimInfo\s*\(")
 _AMMO_PICKUP_RE = re.compile(r"\bSetToolAmmoPickupAmount\s*\(")
+_REGISTER_TOOL_RE = re.compile(r"\bRegisterTool\s*\(")
+_REGISTER_TOOL_ID_RE = re.compile(r'\bRegisterTool\s*\(\s*"([^"]+)"')
 _OPTIONS_OPEN_RE = re.compile(r"optionsOpen|optionsopen|settingsOpen|showOptions|showSettings", re.IGNORECASE)
 _UI_INTERACTIVE_RE = re.compile(r"\bUiMakeInteractive\s*\(")
 _MENU_FRAMEWORK_RE = re.compile(r"\bmenu_draw\s*\(|\bmenu_init\s*\(|\bisMenuOpen\s*\(")
-_KEYBIND_REMAP_RE = re.compile(r'savegame\.mod\.keys')
+_KEYBIND_REMAP_RE = re.compile(r'savegame\.mod\.keys|BINDABLE_KEYS|rebindingAction')
 _AMMO_DISPLAY_RE = re.compile(r'SetString\s*\(.*ammo\.display')
 _MAKEHOLE_RE = re.compile(r"\bMakeHole\s*\(")
 _GUN_KEYWORDS_RE = re.compile(r"\b(bullet|ammo|magazine|reload)\b", re.IGNORECASE)
@@ -135,6 +137,7 @@ def detect_features(source: str) -> dict[str, bool]:
     has_shoot = bool(_SHOOT_RE.search(code))
     has_aim_info = bool(_AIM_INFO_RE.search(code))
     has_ammo_pickup = bool(_AMMO_PICKUP_RE.search(code))
+    has_register_tool = bool(_REGISTER_TOOL_RE.search(code))
     has_options_menu = (
         (bool(_OPTIONS_OPEN_RE.search(code)) and bool(_UI_INTERACTIVE_RE.search(code)))
         or bool(_MENU_FRAMEWORK_RE.search(code))
@@ -149,11 +152,13 @@ def detect_features(source: str) -> dict[str, bool]:
     has_keybind_hints = _keybind_hints(code, has_options_menu)
 
     suppressions = _audit_suppressions(source)
+    tool_ids = set(_REGISTER_TOOL_ID_RE.findall(code))
 
     return {
         "has_shoot": has_shoot,
         "has_aim_info": has_aim_info,
         "has_ammo_pickup": has_ammo_pickup,
+        "has_register_tool": has_register_tool,
         "has_options_menu": has_options_menu,
         "has_options_guard": has_options_guard,
         "has_keybind_hints": has_keybind_hints,
@@ -161,6 +166,7 @@ def detect_features(source: str) -> dict[str, bool]:
         "has_ammo_display_hidden": has_ammo_display_hidden,
         "is_gun_mod": is_gun_mod,
         "suppressions": suppressions,
+        "tool_ids": tool_ids,
     }
 
 
@@ -172,6 +178,7 @@ def audit_mod(mod_dir: Path) -> dict:
         "has_shoot": False,
         "has_aim_info": False,
         "has_ammo_pickup": False,
+        "has_register_tool": False,
         "has_options_menu": False,
         "has_options_guard": False,
         "has_keybind_hints": False,
@@ -180,14 +187,18 @@ def audit_mod(mod_dir: Path) -> dict:
         "is_gun_mod": False,
     }
     all_suppressions: set[str] = set()
+    all_tool_ids: set[str] = set()
     for _rel, source in read_lua_files(mod_dir):
         file_features = detect_features(source)
         for key, val in file_features.items():
             if key == "suppressions":
                 all_suppressions |= val
+            elif key == "tool_ids":
+                all_tool_ids |= val
             else:
                 merged[key] = merged[key] or val
     merged["suppressions"] = all_suppressions
+    merged["tool_ids"] = all_tool_ids
 
     return {"name": mod_dir.name, "features": merged}
 
@@ -254,6 +265,19 @@ def generate_report(audit_results: list[dict]) -> str:
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
+def check_duplicate_tool_ids(audit_results: list[dict]) -> list[str]:
+    """Detect tool IDs registered by multiple mods (Issues #38, #54)."""
+    id_to_mods: dict[str, list[str]] = {}
+    for result in audit_results:
+        for tid in result["features"].get("tool_ids", set()):
+            id_to_mods.setdefault(tid, []).append(result["name"])
+    warnings = []
+    for tid, mods in sorted(id_to_mods.items()):
+        if len(mods) > 1:
+            warnings.append(f'DUPLICATE TOOL ID "{tid}" registered by: {", ".join(mods)}')
+    return warnings
+
+
 @click.command("audit")
 @click.option("--mod", "mod_name", default=None, help="Single mod")
 @click.option("--output", "output_path", default=None, help="Write report to file")
@@ -263,6 +287,15 @@ def audit_cli(mod_name, output_path):
     results = [audit_mod(m) for m in mods]
     report = generate_report(results)
     click.echo(report)
+    # Cross-mod checks (only when auditing all mods)
+    if mod_name is None:
+        dups = check_duplicate_tool_ids(results)
+        if dups:
+            click.echo("\n⚠ CROSS-MOD WARNINGS:")
+            for w in dups:
+                click.echo(f"  {w}")
+        else:
+            click.echo("\nNo duplicate tool IDs found.")
     if output_path:
         Path(output_path).write_text(report, encoding="utf-8")
         click.echo(f"\nReport written to {output_path}")

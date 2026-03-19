@@ -92,6 +92,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
         missing_aim = 0
         missing_pickup = 0
         gun_count = 0
+        tool_count = 0
 
         for mod_dir in mods:
             combined: dict[str, bool] = {}
@@ -110,12 +111,14 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
                     missing_shoot += 1
                 if not combined.get("has_aim_info") and "aiminfo" not in all_suppressions:
                     missing_aim += 1
-            if not combined.get("has_ammo_pickup"):
-                missing_pickup += 1
+            if combined.get("has_register_tool"):
+                tool_count += 1
+                if not combined.get("has_ammo_pickup"):
+                    missing_pickup += 1
 
         lines.append(f"Missing features: {missing_shoot}/{gun_count} gun mods need Shoot(), "
                      f"{missing_aim}/{gun_count} need AimInfo, "
-                     f"{missing_pickup}/{len(mods)} need AmmoPickup")
+                     f"{missing_pickup}/{tool_count} tool mods need AmmoPickup")
     except Exception:
         lines.append("Missing features: N/A")
 

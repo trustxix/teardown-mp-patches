@@ -35,8 +35,8 @@ SetFloat("mymod."..p..".posZ", pos[3], true)
 For event-driven imperative actions:
 
 ```lua
--- Client → Server
-ServerCall("server.onPlayerReady")
+-- Client → Server (player ID is REQUIRED as first param — Issue #51)
+ServerCall("server.onPlayerReady", p)
 
 -- Server → One Client
 ClientCall(playerId, "client.showEffect", x, y, z)
@@ -46,6 +46,12 @@ ClientCall(0, "client.roundStarted", roundNumber)
 ```
 
 **Best for:** One-time events (scored, died, round started), camera animations, notifications.
+**CRITICAL:** `ServerCall` does NOT auto-inject the player ID. Always pass `p` explicitly as the first arg (CLAUDE.md Rule 35, Issue #51).
+
+**ClientCall targeting (Issue #58):**
+- `ClientCall(0, ...)` — **world-space effects** visible/audible to all players: gunfire sounds, explosion particles, magnet placement sounds, visual effects at positions. Use this when the effect occurs at a location in the world.
+- `ClientCall(p, ...)` — **personal feedback** for one player only: camera shake, recoil animation, HUD state sync, reload sounds. Use this when only the acting player needs to see/hear the effect.
+- **Wrong targeting = other players can't hear/see effects.** Three mods (Omni_Gun, Magnets, Explosive_Pack) had this bug — only the firing player heard their own shots.
 
 ### 3. `shared` Table
 

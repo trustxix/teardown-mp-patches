@@ -385,7 +385,7 @@
       "type": "doc_update",
       "description": "Fixed wrong signatures for 4 more critical API functions: ApplyPlayerDamage (added toolId + attackerId params), Shoot (fixed all 7 param names), QueryShot (fixed 5 params + 6 returns including player/hitFactor), GetPlayerAimInfo (fixed from 1 arg to 3 args + correct returns). Total 9 API functions corrected this session.",
       "timestamp": "2026-03-18T00:06:44.874946+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 44,
@@ -394,7 +394,7 @@
       "type": "conversion",
       "description": "Full v2 MP conversion from v1 workshop mod (ID 2497213038, 483 lines). Features: 3 ammo types (7.62mm/20mm/Mini nuke), 6-barrel rotation with wind-up/down state machine, per-player ammo management with belt-fed reload, recoil oscillation physics, PvP damage via QueryShot+ApplyPlayerDamage, options menu with unlimited ammo toggle, keybind hints, ammo display HUD. Server handles: projectile damage, state machine, ammo tracking. Client handles: barrel spin visual, tracers, sounds, recoil animation.",
       "timestamp": "2026-03-18T00:08:35.150721+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 45,
@@ -403,7 +403,7 @@
       "type": "bug_fix",
       "description": "Added direction, numBelts, reloadTimer, cooldownTimer, recoilStrength, strength, volume, intensity, temperature, frequency to _NON_HANDLE_NAMES. Also synced to fix.py. Updated _UI_KEYBIND_HINT_RE to match Reload/Options/Fire/Hold/Click patterns (was only matching LMB/RMB/key/bind/press).",
       "timestamp": "2026-03-18T00:08:38.236265+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 46,
@@ -412,7 +412,7 @@
       "type": "polish",
       "description": "Installed from workshop (ID 2531655676, already v2 by NLferdiNL). Fixed: added SetToolAmmoPickupAmount, SetString ammo.display, SetToolAmmo in PlayersAdded, tool group number. Fixed options_disabled.lua draw() \u2192 client.draw(). Added HANDLE-GT-ZERO exclusions for weather-specific variables.",
       "timestamp": "2026-03-18T00:12:45.436143+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 47,
@@ -421,7 +421,7 @@
       "type": "polish",
       "description": "Installed from workshop (ID 2643910768, already v2 by NLferdiNL). Fixed: 5 RAW-KEY-PLAYER bugs in textbox.lua (InputPressed with 0 player param \u2192 removed param), added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display, fixed draw() \u2192 client.draw() in dead options file, used string literal for SetToolEnabled.",
       "timestamp": "2026-03-18T00:15:05.749301+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 48,
@@ -430,7 +430,7 @@
       "type": "polish",
       "description": "Installed from workshop (ID 3628059485, v2 by Tortoise Work). Fixed: 3 GetAllPlayers()+ipairs bugs \u2192 proper PlayersAdded/PlayersRemoved/Players iterators, added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display, used string literal for SetToolEnabled, added PlayersRemoved cleanup, removed backup directory with old v1 code.",
       "timestamp": "2026-03-18T00:17:09.073309+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 49,
@@ -439,7 +439,7 @@
       "type": "polish",
       "description": "Installed from workshop (ID 2511805965, already v2 by NLferdiNL). Fixed: 3 RAW-KEY-PLAYER bugs (InputDown lmb/rmb with player param \u2192 removed param), added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display.",
       "timestamp": "2026-03-18T00:19:54.313676+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 50,
@@ -448,7 +448,7 @@
       "type": "tool_update",
       "description": "Refactored HANDLE-GT-ZERO detection: replaced growing _NON_HANDLE_NAMES set with _is_non_handle_name() function that checks exact names + suffix patterns (Timer, Count, Speed, Offset, etc.). Eliminates need to add specific variable names every time a new mod is installed. fix.py now imports from lint.py (single source of truth).",
       "timestamp": "2026-03-18T00:19:57.877406+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 51,
@@ -457,7 +457,7 @@
       "type": "polish",
       "description": "Installed from workshop (ID 2562082522, already v2 by NLferdiNL). Fixed: 5 RAW-KEY-PLAYER bugs in textbox.lua (InputPressed with 0 player param), draw() \u2192 client.draw() in options_disabled.lua, toolName variable \u2192 string literal in SetToolEnabled, added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display.",
       "timestamp": "2026-03-18T00:23:11.804333+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 52,
@@ -466,7 +466,7 @@
       "type": "polish",
       "description": "Installed from workshop (ID 2649954750, already v2 by NLferdiNL). Fixed: mousedx/mousedy \u2192 camerax/cameray (v2 API change), 5 RAW-KEY-PLAYER bugs in textbox.lua, draw() \u2192 client.draw(), toolName \u2192 string literal, added ammo setup.",
       "timestamp": "2026-03-18T00:24:46.709708+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 53,
@@ -475,7 +475,7 @@
       "type": "polish",
       "description": "Installed from workshop (ID 3656255489, already v2 by Mr.Baby). Fixed: replaced SetToolEnabled(id, true, 0) with proper PlayersAdded loop, added SetToolAmmoPickupAmount/SetToolAmmo/ammo.display.",
       "timestamp": "2026-03-18T00:26:03.791202+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 54,
@@ -484,7 +484,7 @@
       "type": "bug_fix",
       "description": "MP DESYNC FIX: Gated client-side missile physics (position updates, steering, effects) with isLocal. Was running for ALL players causing duplicate computation + desync. Also fixed InputValue(\"camerax\", p) \u2192 InputValue(\"camerax\") (no player param needed for camera input).",
       "timestamp": "2026-03-18T02:51:12.612954+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 55,
@@ -493,7 +493,7 @@
       "type": "doc_update",
       "description": "MP Desync Sprint docs complete: created docs/MP_DESYNC_PATTERNS.md (6 root causes with fix patterns), added CLAUDE.md rules 26-30, added ISSUES_AND_FIXES Issue #43, updated key rules (now 25), updated MASTER_MOD_LIST (63 mods, Batches 5-6), added MP_DESYNC_PATTERNS to reference docs table.",
       "timestamp": "2026-03-18T02:52:07.462433+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 56,
@@ -502,7 +502,7 @@
       "type": "bug_fix",
       "description": "MP desync fix: wrapped client projectile loop (ClientProjectileOperations) with IsPlayerLocal(p) guard. Was running QueryRaycast+DrawLine+SpawnParticle for every player's projectiles on every client \u2014 now only runs for local player.",
       "timestamp": "2026-03-18T02:55:03.771064+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 57,
@@ -511,7 +511,7 @@
       "type": "bug_fix",
       "description": "Fixed ApplyPlayerDamage(victim, 0.25) \u2192 ApplyPlayerDamage(victim, 0.25, \"jackhammer\", attacker) at line 165. Adds toolId for kill feed attribution and attacker param for kill tracking. Was the only mod in the project missing these params.",
       "timestamp": "2026-03-18T18:44:54.139108+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 58,
@@ -520,7 +520,7 @@
       "type": "tool_update",
       "description": "Fixed audit false negative: _AMMO_DISPLAY_RE in tools/audit.py now matches concatenated SetString keys (e.g., \"game.tool.\" .. toolName .. \".ammo.display\"). Shape_Collapsor already had AmmoDisplay but audit couldn't detect it. No mod code changed \u2014 audit regex broadened. 309 tests pass.",
       "timestamp": "2026-03-18T18:48:16.345883+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 59,
@@ -529,7 +529,7 @@
       "type": "bug_fix",
       "description": "Added playerId (p) and toolId (\"BarrageStrike\") to 5 Shoot() calls in server.executeStrike (lines 159, 169, 179, 196, 206). Airstrike kills now have proper kill feed attribution across all 5 modes (Barrage, Carpet Bomb, Napalm, Cluster, Precision).",
       "timestamp": "2026-03-18T18:50:38.768549+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 60,
@@ -538,7 +538,7 @@
       "type": "bug_fix",
       "description": "Added playerId (0) and toolId (\"bombattack\") to 2 Shoot() calls in server.tick (lines 101, 121). Bomb Attack kills from bullet mode now show in kill feed.",
       "timestamp": "2026-03-18T18:50:40.088801+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 61,
@@ -547,7 +547,7 @@
       "type": "rule_add",
       "description": "Added SHOOT-NO-ATTRIB lint rule (Check 22, INFO tier): flags Shoot() calls with fewer than 7 args (missing playerId/toolId for kill attribution). Uses negative lookbehind to skip user-defined qualified methods like server.Shoot(). Includes robust top-level comma counter for nested Vec() args. 309 tests pass, 0 findings (all fixed).",
       "timestamp": "2026-03-18T18:52:55.324596+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 62,
@@ -556,7 +556,7 @@
       "type": "tool_update",
       "description": "Added 9 tests for SHOOT-NO-ATTRIB lint rule (Check 22): full 7-param clean, missing player/toolId flagged, missing toolId only, nested Vec args, user-defined Shoot skip, qualified method skip (server.Shoot), comment ignore, severity check, multiple findings. Total tests: 318 (was 309).",
       "timestamp": "2026-03-18T18:57:11.579338+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 63,
@@ -565,7 +565,7 @@
       "type": "bug_fix",
       "description": "Fixed phantom host damage: QueryShot returns player=0 when debris triggers the beam (no player in path). GetPlayerHealth(0) returns host health, so ApplyPlayerDamage(0,...) would damage the host anywhere on the map. Added `if player ~= 0 then` guard. Removed DebugPrint. Kept ApplyPlayerDamage at 3 params (environmental damage, no attacker \u2014 correct for tripmines).",
       "timestamp": "2026-03-18T18:58:59.955942+00:00",
-      "documented": false
+      "documented": true
     },
     {
       "id": 64,
@@ -574,8 +574,539 @@
       "type": "polish",
       "description": "Added @lint-ok MANUAL-AIM to 18 QueryRaycast lines in 15 gun/weapon mods. All triaged as non-aim uses: projectile collision (6), targeting reticle (3), warhead impact detection (3), melee/blade visual (2), spread calculation (1), surface detection (1), tool animation (1), drone targeting (1). MANUAL-AIM findings: 18\u21920. Clean mods: 83\u2192101 of 102.",
       "timestamp": "2026-03-18T19:13:19.260503+00:00",
+      "documented": true
+    },
+    {
+      "id": 65,
+      "role": "qa_lead",
+      "mod": "Tripmine",
+      "type": "bug_fix",
+      "description": "Added missing 4th param (attacker=0) to ApplyPlayerDamage in script/tripmine.lua:46. Environmental hazard has no placer, so 0 is correct. Kill feed now shows explosion cause properly.",
+      "timestamp": "2026-03-18T19:32:09.446604+00:00",
+      "documented": true
+    },
+    {
+      "id": 66,
+      "role": "api_surgeon",
+      "mod": "Remote_Explosives",
+      "type": "bug_fix",
+      "description": "Throttled 2x FindShapes calls in server.tick from per-frame (~120/sec) to \u22644Hz cached. Shape cache refreshes every 0.25s, cache invalidates on detonation. Added IsHandleValid checks.",
+      "timestamp": "2026-03-18T19:38:43.137999+00:00",
+      "documented": true
+    },
+    {
+      "id": 67,
+      "role": "api_surgeon",
+      "mod": "Minigun",
+      "type": "bug_fix",
+      "description": "Moved server-side SpawnParticle impact smoke to ClientCall(0, \"client.onProjectileHit\") pattern. SpawnParticle is client-only (rule 29). Removed dead DrawLine tracer code.",
+      "timestamp": "2026-03-18T19:45:58.889484+00:00",
+      "documented": true
+    },
+    {
+      "id": 68,
+      "role": "mod_converter",
+      "mod": "Portal_Gun",
+      "type": "conversion",
+      "description": "Portal Gun v2 conversion complete \u2014 mod #103. 3208 lines v1 \u2192 ~850 lines v2. Per-player portal pairs, server-authoritative teleportation, client portal shader, options menu, keybind hints. Lint clean, audit all Y.",
+      "timestamp": "2026-03-18T19:51:04.029201+00:00",
+      "documented": true
+    },
+    {
+      "id": 69,
+      "role": "api_surgeon",
+      "mod": "Dual_Miniguns",
+      "type": "bug_fix",
+      "description": "Fixed invisible impact smoke: SpawnParticle in ProjectileOperations() server-only helper \u2192 ClientCall to client.onProjectileHit. Removed dead DrawLine tracer. Same pattern as Minigun fix.",
+      "timestamp": "2026-03-18T19:51:23.273964+00:00",
+      "documented": true
+    },
+    {
+      "id": 70,
+      "role": "mod_converter",
+      "mod": "Telekinesis",
+      "type": "conversion",
+      "description": "Telekinesis v2 conversion \u2014 mod #104. 796\u2192630 lines. State-driven input: client batches 8 raw key states + camera into one ServerCall per tick, server runs body physics. 11 abilities: grab/push/pull/rotate/implode/explode/freeze/float/liquify/cut/detach. Lint clean. Audit: IsGun false positive (LMB=grab, not shoot).",
+      "timestamp": "2026-03-18T19:59:03.186995+00:00",
+      "documented": true
+    },
+    {
+      "id": 71,
+      "role": "api_surgeon",
+      "mod": "Gasoline_Flamethrower",
+      "type": "conversion",
+      "description": "Gasoline Flamethrower v2 conversion \u2014 mod #105. 590 lines (11 files OOP) \u2192 ~290 lines v2. SpawnFire server physics, multi-layer client particles, adjustable nozzle velocity via registry sync, OptionsMenu, KeybindHints. Lint clean.",
+      "timestamp": "2026-03-18T20:04:50.642782+00:00",
+      "documented": true
+    },
+    {
+      "id": 72,
+      "role": "mod_converter",
+      "mod": "G17_Framework",
+      "type": "conversion",
+      "description": "G17 Framework v2 conversion \u2014 mod #106. 2638\u2192470 lines. Replaced custom projectile system with Shoot() API. Server: shooting, reload, fire mode, grenade. Client: 12+ raw key inputs, ADS, recoil, muzzle flash, sounds, HUD. Template for 8+ framework guns. Plan saved.",
+      "timestamp": "2026-03-18T20:05:12.632337+00:00",
+      "documented": true
+    },
+    {
+      "id": 73,
+      "role": "mod_converter",
+      "mod": "Kriss_Vector",
+      "type": "conversion",
+      "description": "Kriss Vector v2 \u2014 cloned from G17 template in <5 min. Full auto SMG, 25-round mag. Template pattern validated: only tool ID/name/vox/fire mode/magsize/reload differ.",
+      "timestamp": "2026-03-18T20:08:11.176101+00:00",
+      "documented": true
+    },
+    {
+      "id": 74,
+      "role": "qa_lead",
+      "mod": "Multiplayer_C4",
+      "type": "conversion",
+      "description": "Mod #124. Already v2 from workshop (author: Slippy, ID: 3621598329). Fixed 5 bugs: GetRemovedPlayers typo, 2 raw-key-with-player-param on server (detonation silently failed for non-host), 2 raw-key-with-player-param on client (click sound broken). Detonation rearchitected with ServerCall pattern. Lint clean (0 FAIL/WARN, 5 INFO).",
+      "timestamp": "2026-03-18T21:35:16.940200+00:00",
+      "documented": true
+    },
+    {
+      "id": 75,
+      "role": "qa_lead",
+      "mod": "_tools",
+      "type": "tool_update",
+      "description": "Fixed status.py false-positive AmmoPickup count \u2014 now only counts mods with RegisterTool (was counting all 123 mods). Added has_register_tool feature detection to audit.py. Added 2 new tests (334\u2192336). Status now shows 0/122 tool mods need AmmoPickup instead of 1/123.",
+      "timestamp": "2026-03-18T21:35:18.678233+00:00",
+      "documented": true
+    },
+    {
+      "id": 76,
+      "role": "mod_converter",
+      "mod": "Multiplayer_C4",
+      "type": "bug_fix",
+      "description": "Added keybind hints (client.draw). Modernized player loops to use iterator wrappers. Fixed SetShapeEmissiveScale server\u2192client (was host-only, now all players see C4 glow).",
+      "timestamp": "2026-03-18T21:39:58.551268+00:00",
+      "documented": true
+    },
+    {
+      "id": 77,
+      "role": "mod_converter",
+      "mod": "tools",
+      "type": "tool_update",
+      "description": "status.py: AmmoPickup metric now only counts mods with RegisterTool (fixes false positive for non-tool mods). audit.py: added has_register_tool feature detection.",
+      "timestamp": "2026-03-18T21:39:59.297070+00:00",
+      "documented": true
+    },
+    {
+      "id": 78,
+      "role": "qa_lead",
+      "mod": "Mjolner",
+      "type": "conversion",
+      "description": "Mod #125. Full v2 conversion of Mj\u00f6lner (author: My Cresta, ID: 2401593417). Thor's hammer melee weapon with lightning visual effects. Key changes: server/client split (Explosion/BigSmack/SetBodyVelocity/SetPlayerVelocity/SetPlayerHealth on server, DrawLine/PointLight/PlaySound on client), ServerCall pattern for heavy strike and boost jump, per-player state, GetPlayerAimInfo replacing manual QueryRaycast aim, keybind system with rebinding, options menu with UiMakeInteractive, keybind hints. Lint 100% clean (0 findings at all tiers).",
+      "timestamp": "2026-03-18T21:41:20.499912+00:00",
+      "documented": true
+    },
+    {
+      "id": 79,
+      "role": "mod_converter",
+      "mod": "Remote_Explosives",
+      "type": "bug_fix",
+      "description": "Fixed SetShapeEmissiveScale server\u2192client: C4 glow animation was host-only (server.tick), moved to client.tick so all players see pulsing. Removed unused server shape cache (cachedC4Server, serverShapeCacheTimer). Added IsShapeBroken cleanup to server. Client already had cached shapes for sounds \u2014 added emissive there.",
+      "timestamp": "2026-03-18T21:41:30.617297+00:00",
+      "documented": true
+    },
+    {
+      "id": 80,
+      "role": "qa_lead",
+      "mod": "C4",
+      "type": "conversion",
+      "description": "New mod (author: Punished Bernadetta, ID: 2415643616). Full v2 conversion of C4 explosive tool. Dual tool system (plant + detonate), timed detonation sequencing, configurable explosion size, keybind system. Server/client split: Spawn/Explosion/Delete on server, PlaySound/UI on client. Lint 100% clean.",
+      "timestamp": "2026-03-18T21:44:02.923494+00:00",
+      "documented": true
+    },
+    {
+      "id": 81,
+      "role": "qa_lead",
+      "mod": "AWP",
+      "type": "conversion",
+      "description": "New mod (author: My Cresta, ID: 2401577826). Full v2 conversion of AWP sniper rifle. 4 ammo types (N/AP/IC/EX), custom magazine/reload system, zoom scope with mousewheel zoom control, projectile physics. Key fixes: mousedx/mousedy replaced with camerax/cameray, client projectile physics gated with IsPlayerLocal, server handles MakeHole/Explosion/SpawnFire, Shoot() for bullet damage, keybind system, options menu. Lint 100% clean.",
+      "timestamp": "2026-03-18T21:45:44.527655+00:00",
+      "documented": true
+    },
+    {
+      "id": 82,
+      "role": "qa_lead",
+      "mod": "Predator_Missile_MP",
+      "type": "feature_add",
+      "description": "Added SetToolAmmoPickupAmount for loot crate integration. Added @audit-ok suppressions for shoot/aiminfo (guided missile uses camera-steered flight, not hitscan). Status now shows 0/104 need Shoot, 0/104 need AimInfo, 0/123 need AmmoPickup.",
+      "timestamp": "2026-03-18T21:52:55.788826+00:00",
+      "documented": true
+    },
+    {
+      "id": 83,
+      "role": "mod_converter",
+      "mod": "tools",
+      "type": "tool_update",
+      "description": "lint.py HANDLE-GT-ZERO: Added non-handle exclusions (removed, limit, active, result + Removed/Before/Limit/Time suffixes). Reduced false positives from 95 to 80 total findings.",
+      "timestamp": "2026-03-18T21:54:33.155285+00:00",
+      "documented": true
+    },
+    {
+      "id": 84,
+      "role": "qa_lead",
+      "mod": "MrRandoms_Vehicles",
+      "type": "bug_fix",
+      "description": "Installed and fixed MrRandoms Vehicles (2616379809). Fixed 5 Tier 1 bugs: 2 RAW-KEY-PLAYER (InputPressed(\"g\", p) in policelights-vc.lua + firetruck-eu.lua \u2192 IsPlayerLocal guard), 3 DRAW-NOT-CLIENT (function draw() \u2192 function client.draw() in anti-tank.lua, insurgent-turret.lua, mrap_turret.lua). Added #version 2 headers to 3 turret sub-scripts. Lint Tier 1 clean.",
+      "timestamp": "2026-03-18T21:59:36.944684+00:00",
+      "documented": true
+    },
+    {
+      "id": 85,
+      "role": "qa_lead",
+      "mod": "Multiplayer_Spawnable_Pack",
+      "type": "bug_fix",
+      "description": "Installed and fixed Multiplayer Spawnable Pack (3497952769). Fixed 2 DRAW-NOT-CLIENT (empty function draw() \u2192 client.draw() in bounce.lua). Added #version 2 headers. Lint Tier 1 clean.",
+      "timestamp": "2026-03-18T22:02:01.376955+00:00",
+      "documented": true
+    },
+    {
+      "id": 86,
+      "role": "api_surgeon",
+      "mod": "ARM_Glock",
+      "type": "bug_fix",
+      "description": "Fixed 7 FAILs: 5 RAW-KEY-PLAYER (r/shift/mmb with player param), 1 TOOL-ENABLED-ORDER (lint-ok), 1 MISSING-VERSION2 (projectile.lua). Added server.onReload/server.onChangeMode RPC handlers + registry sync for sprint.",
+      "timestamp": "2026-03-18T22:03:14.137624+00:00",
+      "documented": true
+    },
+    {
+      "id": 87,
+      "role": "api_surgeon",
+      "mod": "ARM_M4A4",
+      "type": "bug_fix",
+      "description": "Fixed 7 FAILs: identical ARM framework pattern as ARM_Glock. Added server.onReload/server.onChangeMode RPC handlers + registry sync for sprint + #version 2 to projectile.lua.",
+      "timestamp": "2026-03-18T22:03:15.415600+00:00",
+      "documented": true
+    },
+    {
+      "id": 88,
+      "role": "api_surgeon",
+      "mod": "ARM_NOVA",
+      "type": "bug_fix",
+      "description": "Fixed 7 FAILs: identical ARM framework pattern. NOVA variant includes cancelReload logic in server.onReload handler. Added server.onReload/server.onChangeMode RPC handlers + registry sync for sprint + #version 2 to projectile.lua.",
+      "timestamp": "2026-03-18T22:03:16.267503+00:00",
+      "documented": true
+    },
+    {
+      "id": 89,
+      "role": "mod_converter",
+      "mod": "Toyota_Supra_MP",
+      "type": "bug_fix",
+      "description": "Fixed 34 SERVER-EFFECT warnings in door-lock.lua and door-lockbac.lua: moved all PlaySound/PlayLoop from server to client via ClientCall(0, \"client.playDoorSound\") pattern. Added client.init with sound loading, client.playDoorSound and client.playChime handlers. Door open/close/chime sounds now audible to all players, not just host.",
+      "timestamp": "2026-03-18T22:03:50.517994+00:00",
+      "documented": true
+    },
+    {
+      "id": 90,
+      "role": "mod_converter",
+      "mod": "MrRandoms_Vehicles",
+      "type": "bug_fix",
+      "description": "Fixed elevator click sounds server\u2192client (ClientCall pattern), fixed mountedmissile fire effects server\u2192client (same pattern as Armored_Vehicles_MP). Annotated tank projectile trail effects and motor loops as needing registry sync for full fix. Added AimInfo audit suppression (vehicle turrets). 22\u219212 findings.",
+      "timestamp": "2026-03-18T22:07:20.765346+00:00",
+      "documented": true
+    },
+    {
+      "id": 91,
+      "role": "mod_converter",
+      "mod": "Predator_Missile_MP",
+      "type": "bug_fix",
+      "description": "Added SetString ammo.display hide + SetToolAmmo in PlayersAdded. Annotated PER-TICK-RPC for missile guidance sync (acceptable) and collision detection. 8\u21923 findings.",
+      "timestamp": "2026-03-18T22:08:29.493525+00:00",
+      "documented": true
+    },
+    {
+      "id": 92,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "Lint rule improvements: (1) CLIENT-SERVER-FUNC regex uses negative lookbehind to skip method calls like client.Shoot()/server.Shoot() \u2014 eliminates 14 false positives per ARM mod. (2) HANDLE-GT-ZERO: added \"t\" to non-handle names for interpolation/time variables. (3) TOOL-ENABLED-ORDER: accepts UPPER_CASE constants (TOOL_ID, WEAPON_ID). Total findings 79\u219241, 8 new tests (350 total).",
+      "timestamp": "2026-03-18T23:29:50.804131+00:00",
+      "documented": true
+    },
+    {
+      "id": 93,
+      "role": "mod_converter",
+      "mod": "VectorRazor",
+      "type": "bug_fix",
+      "description": "Fixed 7 MP bugs in VectorRazor (workshop 3578552621, mod #133): All keybind inputs broken (raw keys with player param fail silently on server) \u2014 moved radius/depth/shape/delay/detonate inputs to client.tick with ServerCall pattern. Added 6 ServerCall handlers. Fixed F1 toggle and key capture (same raw key bug). Added PlayersAdded loop with SetToolEnabled/SetToolAmmo. Added SetToolAmmoPickupAmount for loot crate integration. Moved PointLight from server.updateMines to client.drawVisuals for MP visibility. Added optionsOpen\u2192server sync via server.setOptionsOpen. Added player.lua include. Lint: 0 FAIL 0 WARN 3 INFO (valid).",
+      "timestamp": "2026-03-18T23:31:29.907925+00:00",
+      "documented": true
+    },
+    {
+      "id": 94,
+      "role": "mod_converter",
+      "mod": "Easy_Admin_Menu",
+      "type": "polish",
+      "description": "Installed Easy_Admin_Menu (workshop 3623360646, mod #134). Already v2 from workshop. All 4 lint findings were false positives: TOOL-ENABLED-ORDER and MISSING-TOOL-AMMO (admin menu toggles other mods' tools, not its own), PER-TICK-RPC (ClientCall guarded by secretUpdate flag, fires once), CLIENT-SERVER-FUNC (Delete in CLEAR_DEBRIS admin action, host-only by design). Added @lint-ok annotations. Lint clean.",
+      "timestamp": "2026-03-18T23:34:48.487933+00:00",
+      "documented": true
+    },
+    {
+      "id": 95,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "TOOL-ENABLED-ORDER rule rewritten: now detects player-like first arg (p, player, playerId, etc.) instead of rejecting all non-string-literals. Generic variables (key, toolName) and UPPER_CASE constants are accepted. Eliminates false positives for table iteration patterns (Easy_Admin_Menu) and constant-based patterns (VectorRazor). 353 tests (+3 new).",
+      "timestamp": "2026-03-18T23:35:16.216988+00:00",
+      "documented": true
+    },
+    {
+      "id": 96,
+      "role": "mod_converter",
+      "mod": "Bunker_Buster_MP",
+      "type": "polish",
+      "description": "Installed Bunker_Buster_MP (workshop 3629456835, mod #135). Already v2 from workshop, 0 FAIL. Added SetToolAmmoPickupAmount(\"bunkerbustermissile\", 3) and SetString ammo.display. Annotated 3 HANDLE-GT-ZERO false positives (siren volume and cooldown seconds, not handles). 31 SERVER-EFFECT WARNs accepted (sounds/particles in server functions \u2014 host-only, functional).",
+      "timestamp": "2026-03-18T23:37:16.456353+00:00",
+      "documented": true
+    },
+    {
+      "id": 97,
+      "role": "api_surgeon",
+      "mod": "tools/fix.py",
+      "type": "tool_update",
+      "description": "fix_handle_gt now respects @lint-ok HANDLE-GT-ZERO annotations and captures # prefix for length checks (#table > 0). Dry-run false positives: 9\u21921 (only real Tripmine fix remains). 2 new tests for annotation respect and length check skip.",
+      "timestamp": "2026-03-18T23:39:11.636012+00:00",
+      "documented": true
+    },
+    {
+      "id": 98,
+      "role": "api_surgeon",
+      "mod": "tools/fix.py",
+      "type": "bug_fix",
+      "description": "CRITICAL: fix_queryshot_player_guard would mutate GetPlayerHealth(player) \u2192 GetPlayerHealth(player ~= 0) when outer if already had correct guard \u2014 reintroducing Issue #55 pattern. Fixed by breaking out of j-loop once a safe guard is found. Also fixed #table length check capture in handle_gt regex. 0 false-positive fixes now.",
+      "timestamp": "2026-03-18T23:41:35.032565+00:00",
+      "documented": true
+    },
+    {
+      "id": 99,
+      "role": "mod_converter",
+      "mod": "Jetpack",
+      "type": "polish",
+      "description": "Installed Jetpack (workshop 3684366389, mod #136). Official Tuxedo Labs gameplay mod, 46 lines. Uses proper action names (InputDown(\"jump\", p)) \u2014 fully MP-compatible. Added standard `name = Jetpack` field to localized info.txt format. Lint clean.",
+      "timestamp": "2026-03-18T23:41:44.175450+00:00",
+      "documented": true
+    },
+    {
+      "id": 100,
+      "role": "mod_converter",
+      "mod": "Vehicle_Pack_Remastered_MP",
+      "type": "bug_fix",
+      "description": "Installed Vehicle_Pack_Remastered_MP (workshop 3625284752, mod #138). Fixed 8 FAIL: rewrote steering_wheel.lua \u2014 moved raw key input (a/d/g with player param) to client.tick + ServerCall(\"server.handleSteerInput\") pattern. Fixed mousedx\u2192camerax in aircraft.lua. Fixed draw()\u2192client.draw() in lights.lua and license-plate.lua. Added #version 2 headers to 2 entity scripts. Lint tier 1 clean.",
+      "timestamp": "2026-03-18T23:48:51.744371+00:00",
+      "documented": true
+    },
+    {
+      "id": 101,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "SERVER-EFFECT severity differentiation: effects in server.init/destroy are now INFO (one-time, cosmetic) instead of WARN (per-frame). Bunker_Buster_MP 31 WARN\u21920 WARN. Also added recoil/life/dist2 to HANDLE-GT-ZERO non-handle names, updated fix.py CLI help text. 369 tests (+2 new severity tests).",
+      "timestamp": "2026-03-18T23:53:01.738119+00:00",
+      "documented": true
+    },
+    {
+      "id": 102,
+      "role": "mod_converter",
+      "mod": "FELL_TITAN",
+      "type": "polish",
+      "description": "Installed FELL_TITAN (workshop 3324149490, mod #146). Content/map mod. Auto-fixed draw()\u2192client.draw() in rotscreen.lua, added #version 2 header. Lint tier 1 clean.",
+      "timestamp": "2026-03-18T23:57:17.060008+00:00",
+      "documented": true
+    },
+    {
+      "id": 103,
+      "role": "mod_converter",
+      "mod": "PPAN_Vehicle_Pack",
+      "type": "polish",
+      "description": "Installed PPAN_Vehicle_Pack (workshop 2417100319, mod #147). Vehicle pack with YLVF framework, 21 lua files. Auto-fixed 8 issues (mousedx\u2192camerax, draw\u2192client.draw x5, handle>0\u2192~=0). Added #version 2 headers to 6 entity scripts. Lint tier 1 clean.",
+      "timestamp": "2026-03-18T23:59:27.671219+00:00",
+      "documented": true
+    },
+    {
+      "id": 104,
+      "role": "mod_converter",
+      "mod": "American_High_School",
+      "type": "polish",
+      "description": "Installed American_High_School (workshop 3543507771, mod #148). Content/map mod with 15 lua files. Auto-fixed 9 issues (draw\u2192client.draw, handle>0, raw-key-player). Added #version 2 to computers.lua + scoreboardscreens.lua, fixed draw\u2192client.draw in map.lua. Lint tier 1 clean.",
+      "timestamp": "2026-03-19T00:00:16.861557+00:00",
+      "documented": true
+    },
+    {
+      "id": 105,
+      "role": "mod_converter",
+      "mod": "Service_Vehicles_MP",
+      "type": "polish",
+      "description": "Installed Service_Vehicles_MP (workshop 3624449716, mod #149). Vehicle pack with siren + steering wheel entity scripts. Auto-fixed 2 raw-key-player issues. Lint tier 1 clean.",
+      "timestamp": "2026-03-19T00:01:03.225525+00:00",
+      "documented": true
+    },
+    {
+      "id": 106,
+      "role": "api_surgeon",
+      "mod": "Bunker_Buster_MP",
+      "type": "bug_fix",
+      "description": "Issue #56 completion: Added ApplyPlayerDamage with distance falloff after all Explosion() calls in warhead.lua and cluster.lua. Propagated owner player ID through shared.spawnHandleTargets (main.lua) and shared.spawnTargets extraction in entity scripts. Kill attribution uses toolId \"bunkerbustermissile\".",
+      "timestamp": "2026-03-19T11:17:51.505683+00:00",
+      "documented": false
+    },
+    {
+      "id": 107,
+      "role": "api_surgeon",
+      "mod": "Bombard",
+      "type": "bug_fix",
+      "description": "Issue #56 completion: Added environmental ApplyPlayerDamage (attacker=0) with distance falloff after Explosion() in ball.lua cannonball impact. Uses toolId \"lightning_stick\", damageRadius=6.",
+      "timestamp": "2026-03-19T11:17:53.011470+00:00",
+      "documented": false
+    },
+    {
+      "id": 108,
+      "role": "api_surgeon",
+      "mod": "Explosive_Pack",
+      "type": "bug_fix",
+      "description": "Issue #56 miss: C4 and Landmine Explosion() calls had NO player damage. Added applyExplosionDamage() helper with distance falloff after all 3 Explosion() calls (C4 detonation, landmine detonation, landmine trip). Claymore already had directional shrapnel damage. Fixed incorrect @audit-ok annotation.",
+      "timestamp": "2026-03-19T11:24:19.627308+00:00",
+      "documented": false
+    },
+    {
+      "id": 109,
+      "role": "api_surgeon",
+      "mod": "_project",
+      "type": "doc_update",
+      "description": "Created docs/UMF_TRANSLATION_GUIDE.md \u2014 practical reference for converting Geneosis UMF mods to standalone v2. Covers registry layer, tool layer, input, UI widgets, UMF features to drop, server/client split, 15-point checklist, complexity estimates.",
+      "timestamp": "2026-03-19T11:41:30.438569+00:00",
+      "documented": false
+    },
+    {
+      "id": 110,
+      "role": "api_surgeon",
+      "mod": "Omni_Gun",
+      "type": "bug_fix",
+      "description": "ClientCall(p, ...) \u2192 ClientCall(0, ...) for shoot effects (sound + particles). Other players couldn't hear/see shots.",
+      "timestamp": "2026-03-19T12:12:00.919012+00:00",
+      "documented": false
+    },
+    {
+      "id": 111,
+      "role": "api_surgeon",
+      "mod": "Magnets",
+      "type": "bug_fix",
+      "description": "ClientCall(p, ...) \u2192 ClientCall(0, ...) for place/remove/polarity-flip sounds (3 fixes). Other players couldn't hear magnet interactions.",
+      "timestamp": "2026-03-19T12:12:01.843888+00:00",
+      "documented": false
+    },
+    {
+      "id": 112,
+      "role": "api_surgeon",
+      "mod": "Explosive_Pack",
+      "type": "bug_fix",
+      "description": "Landmine auto-trigger: ClientCall(p, ...) \u2192 ClientCall(0, ...) for explosion effects. Manual detonation was already correct. Other players couldn't see landmine explosion effects.",
+      "timestamp": "2026-03-19T12:12:02.580246+00:00",
+      "documented": false
+    },
+    {
+      "id": 113,
+      "role": "api_surgeon",
+      "mod": "Multiple_Grenade_Launcher",
+      "type": "bug_fix",
+      "description": "Issue #56 miss: Added applyExplosionDamage() with distance falloff after all 4 weapon Explosion() calls (HE, Cluster initial, Cluster continuation, Frag). Grenade explosions can now damage players with kill attribution via tool ID \"Launcher\".",
+      "timestamp": "2026-03-19T12:21:52.118753+00:00",
+      "documented": false
+    },
+    {
+      "id": 114,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "EXPLOSION-NO-DAMAGE lint rule: removed Shoot() from skip condition. Shoot() handles direct-hit projectile damage, NOT Explosion() splash damage \u2014 having Shoot() doesn't mean Explosion() is covered. This fixes the false negative that missed Multiple_Grenade_Launcher (Issue #56 miss). Updated 1 test, added 1 new test (438\u2192439).",
+      "timestamp": "2026-03-19T12:26:20.168201+00:00",
+      "documented": false
+    },
+    {
+      "id": 115,
+      "role": "api_surgeon",
+      "mod": "Tripmine",
+      "type": "bug_fix",
+      "description": "Client-side QueryShot() \u2192 QueryRaycast() for laser beam visualization. QueryShot is server-only; client only needs geometry hit distance for beam drawing, not player detection. Found by new lint rule addition.",
+      "timestamp": "2026-03-19T12:29:01.019215+00:00",
+      "documented": false
+    },
+    {
+      "id": 116,
+      "role": "api_surgeon",
+      "mod": "tools/lint.py",
+      "type": "tool_update",
+      "description": "Added QueryShot and Spawn to CLIENT-SERVER-FUNC server-only function list. Both are documented server-only in official API. Caught real bug in Tripmine (client-side QueryShot for laser visual).",
+      "timestamp": "2026-03-19T12:29:03.601686+00:00",
+      "documented": false
+    },
+    {
+      "id": 117,
+      "role": "api_surgeon",
+      "mod": "Light_Katana_MP",
+      "type": "bug_fix",
+      "description": "ApplyPlayerDamage missing toolId + attacker. Added \"FlameKat\" tool ID and attacker param (both available in scope). Katana kills now show properly in kill feed.",
+      "timestamp": "2026-03-19T12:37:23.992072+00:00",
+      "documented": false
+    },
+    {
+      "id": 118,
+      "role": "api_surgeon",
+      "mod": "FPV_Drone_Tool",
+      "type": "bug_fix",
+      "description": "ApplyPlayerDamage missing attacker param. Added attacker=0 (environmental \u2014 drone owner not tracked in damage_system).",
+      "timestamp": "2026-03-19T12:37:24.937222+00:00",
+      "documented": false
+    },
+    {
+      "id": 119,
+      "role": "api_surgeon",
+      "mod": "Hurricanes_and_Blizzards",
+      "type": "bug_fix",
+      "description": "ApplyPlayerDamage missing attacker param. Added attacker=0 (environmental weather damage).",
+      "timestamp": "2026-03-19T12:37:25.811237+00:00",
+      "documented": false
+    },
+    {
+      "id": 120,
+      "role": "api_surgeon",
+      "mod": "DAM_Helis",
+      "type": "bug_fix",
+      "description": "ApplyPlayerDamage missing attacker param in 2 multi-line calls. Added attacker=0 (vehicle entity script \u2014 owner not tracked).",
+      "timestamp": "2026-03-19T12:37:26.866297+00:00",
+      "documented": false
+    },
+    {
+      "id": 121,
+      "role": "api_surgeon",
+      "mod": "DAM_Helis",
+      "type": "bug_fix",
+      "description": "Issue #47: QueryShot player guard \u2014 changed `if shotPlayer then` and `if fragPlayer then` to `~= 0` in rpg_projectile.lua. Lua 0 is truthy, so the old guard would damage the host when QueryShot returned player=0 for non-player hits.",
+      "timestamp": "2026-03-19T12:39:03.587448+00:00",
+      "documented": false
+    },
+    {
+      "id": 122,
+      "role": "api_surgeon",
+      "mod": "Armour_Framework_MP",
+      "type": "bug_fix",
+      "description": "Issue #47: QueryShot player guard \u2014 changed 2x `if shotPlayer then` and 2x `if fragPlayer then` to `~= 0` in TankMain.lua. Prevented phantom host damage from non-player QueryShot hits.",
+      "timestamp": "2026-03-19T12:39:33.812866+00:00",
+      "documented": false
+    },
+    {
+      "id": 123,
+      "role": "api_surgeon",
+      "mod": "Solid_Sphere_Summoner",
+      "type": "bug_fix",
+      "description": "Issue #58: ClientCall(p, ...) \u2192 ClientCall(0, ...) for spawn and shoot sounds. Other players couldn't hear sphere spawn/launch effects. Grab sound correctly targeted (uses GetLocalPlayer position).",
+      "timestamp": "2026-03-19T12:46:34.621919+00:00",
       "documented": false
     }
   ],
-  "next_id": 65
+  "next_id": 124
 }

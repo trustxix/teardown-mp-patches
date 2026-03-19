@@ -29,6 +29,12 @@ from tools.lint import (
     check_missing_version2,
     check_info_txt,
     check_shoot_missing_attribution,
+    check_queryshot_player_guard,
+    check_explosion_no_player_damage,
+    check_missing_interactive,
+    check_per_tick_spatial,
+    check_setplayer_arg_order,
+    check_damage_no_attacker,
     lint_source,
 )
 
@@ -185,6 +191,38 @@ class TestToolEnabledOrder:
         src = "local x = 1\nSetToolEnabled(p, \"gun\", true)\nlocal y = 2"
         findings = check_tool_enabled_order(src)
         assert findings[0]["line"] == 2
+
+    def test_upper_case_constant_clean(self):
+        """UPPER_CASE constants like TOOL_ID are accepted as valid string args."""
+        src = 'SetToolEnabled(TOOL_ID, true, p)'
+        assert check_tool_enabled_order(src) == []
+
+    def test_upper_case_weapon_id_clean(self):
+        src = 'SetToolEnabled(WEAPON_ID, false, p)'
+        assert check_tool_enabled_order(src) == []
+
+    def test_generic_variable_clean(self):
+        """Generic variables (loop vars, table keys) are not flagged."""
+        src = 'SetToolEnabled(key, value, playerId)'
+        assert check_tool_enabled_order(src) == []
+
+    def test_tool_name_variable_clean(self):
+        src = 'SetToolEnabled(toolName, true, p)'
+        assert check_tool_enabled_order(src) == []
+
+    def test_playerid_first_flagged(self):
+        src = 'SetToolEnabled(playerId, "gun", true)'
+        findings = check_tool_enabled_order(src)
+        assert len(findings) == 1
+
+    def test_toolid_variable_clean(self):
+        """toolId is a tool identifier, not a player — should not be flagged."""
+        src = 'SetToolEnabled(toolId, true, p)'
+        assert check_tool_enabled_order(src) == []
+
+    def test_weaponid_variable_clean(self):
+        src = 'SetToolEnabled(weaponId, true, p)'
+        assert check_tool_enabled_order(src) == []
 
 
 # ===========================================================================
@@ -478,7 +516,7 @@ class TestLintSource:
             "    end\n"
             "    for p in Players() do\n"
             '        if GetBool("game.tool.gun.trigger." .. p) then\n'
-            "            SetPlayerTransform(p, Transform())\n"
+            "            SetPlayerTransform(Transform(), p)\n"
             "        end\n"
             "    end\n"
             "end\n"
@@ -593,6 +631,47 @@ class TestLintSource:
 
     def test_lint_ok_case_insensitive(self):
         src = "for i, p in ipairs(Players()) do end -- @lint-ok ipairs-iterator"
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_file_suppresses_all_lines(self):
+        src = (
+            "-- @lint-ok-file IPAIRS-ITERATOR\n"
+            "for i, p in ipairs(Players()) do end\n"
+            "for j, q in ipairs(PlayersAdded()) do end\n"
+        )
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_file_does_not_suppress_other_checks(self):
+        src = (
+            "-- @lint-ok-file RAW-KEY-PLAYER\n"
+            "for i, p in ipairs(Players()) do end\n"
+        )
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_file_multiple_checks(self):
+        src = (
+            "-- @lint-ok-file IPAIRS-ITERATOR, DRAW-NOT-CLIENT\n"
+            "for i, p in ipairs(Players()) do end\n"
+        )
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_file_case_insensitive(self):
+        src = (
+            "-- @lint-ok-file ipairs-iterator\n"
+            "for i, p in ipairs(Players()) do end\n"
+        )
+        findings = lint_source(src, "foo.lua", tier="1")
+        assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
+
+    def test_lint_ok_file_anywhere_in_file(self):
+        src = (
+            "for i, p in ipairs(Players()) do end\n"
+            "-- @lint-ok-file IPAIRS-ITERATOR\n"
+        )
         findings = lint_source(src, "foo.lua", tier="1")
         assert not any(f["check"] == "IPAIRS-ITERATOR" for f in findings)
 
@@ -778,6 +857,56 @@ class TestMissingOptionsGuard:
         findings = check_missing_options_guard(src)
         assert len(findings) == 1
 
+    def test_function_level_early_return_guard(self):
+        """Function-level 'if optionsOpen then return end' guards all usetool calls."""
+        src = (
+            "local optionsOpen = false\n"
+            "function clientLocalInput(p, data, dt)\n"
+            "    if data.optionsOpen then return end\n"
+            "    local cam = GetPlayerCameraTransform(p)\n"
+            "    local a = 1\n"
+            "    local b = 2\n"
+            "    local c = 3\n"
+            "    local d = 4\n"
+            "    local e = 5\n"
+            "    local f = 6\n"
+            '    if InputPressed("usetool") then\n'
+            "    end\n"
+            "end\n"
+        )
+        assert check_missing_options_guard(src) == []
+
+    def test_function_level_guard_no_return_still_flagged(self):
+        """optionsOpen without return at function entry is not a guard."""
+        src = (
+            "local optionsOpen = false\n"
+            "function clientLocalInput(p, data, dt)\n"
+            "    local x = data.optionsOpen\n"
+            "    local a = 1\n"
+            "    local b = 2\n"
+            "    local c = 3\n"
+            "    local d = 4\n"
+            '    if InputPressed("usetool") then\n'
+            "    end\n"
+            "end\n"
+        )
+        findings = check_missing_options_guard(src)
+        assert len(findings) == 1
+
+    def test_guard_on_next_line_multi_line_if(self):
+        """optionsOpen on the next line of a multi-line if condition is valid."""
+        src = (
+            "local optionsOpen = false\n"
+            "function server.tickPlayer(p)\n"
+            "    local data = players[p]\n"
+            '    if data.fireMode == 1 and InputDown("usetool", p)\n'
+            "        and not data.optionsOpen and data.timer <= 0 then\n"
+            "        server.doShoot(p)\n"
+            "    end\n"
+            "end\n"
+        )
+        assert check_missing_options_guard(src) == []
+
 
 # ---------------------------------------------------------------------------
 # check_missing_options_sync
@@ -841,18 +970,58 @@ class TestHandleGtZero:
         findings = check_handle_gt_zero(src)
         assert findings[0]["line"] == 2
 
+    def test_arm_framework_names_excluded(self):
+        """ARM framework variables: mag, blend, smoke, decays are numeric."""
+        for name in ("mag", "blend", "blendout", "smoke", "decays"):
+            src = f"if {name} > 0 then\nend"
+            assert check_handle_gt_zero(src) == [], f"{name} should be excluded"
+
+    def test_arm_framework_suffixes_excluded(self):
+        """Suffixes like Remaining, Damage, Frame, Temp, Executions are numeric."""
+        for var in ("BurstShotsRemaining", "finalDamage", "endFrame", "MagTemp", "shotCombo"):
+            src = f"if {var} > 0 then\nend"
+            assert check_handle_gt_zero(src) == [], f"{var} should be excluded"
+
+    def test_underscore_prefix_stripped(self):
+        """Leading underscores should be stripped for suffix matching."""
+        src = "if _thirdExecutions > 0 then\nend"
+        assert check_handle_gt_zero(src) == []
+
+    def test_interpolation_t_excluded(self):
+        """Single-letter t is a common time/interpolation variable."""
+        src = "if t > 0 then\nend"
+        assert check_handle_gt_zero(src) == []
+
 
 # ---------------------------------------------------------------------------
 # check_manual_aim
 # ---------------------------------------------------------------------------
 
 class TestManualAim:
-    def test_query_raycast_alone_flagged(self):
+    def test_query_raycast_alone_no_weapon_clean(self):
+        """QueryRaycast without weapon APIs is suppressed (non-aim use)."""
         src = "local hit, dist, normal = QueryRaycast(pos, dir, 100)"
+        assert check_manual_aim(src) == []
+
+    def test_query_raycast_with_weapon_api_flagged(self):
+        """QueryRaycast in a file with weapon APIs is flagged."""
+        src = (
+            "local hit, dist, normal = QueryRaycast(pos, dir, 100)\n"
+            "Shoot(pos, dir, 'bullet', 1, 100, p, 'gun')\n"
+        )
         findings = check_manual_aim(src)
         assert len(findings) == 1
         assert findings[0]["check"] == "MANUAL-AIM"
         assert findings[0]["severity"] == "info"
+
+    def test_query_raycast_audit_ok_clean(self):
+        """QueryRaycast with @audit-ok aiminfo is suppressed."""
+        src = (
+            "-- @audit-ok aiminfo\n"
+            "local hit = QueryRaycast(pos, dir, 100)\n"
+            "Shoot(pos, dir, 'bullet', 1, 100, p, 'gun')\n"
+        )
+        assert check_manual_aim(src) == []
 
     def test_get_player_aim_info_present_clean(self):
         src = (
@@ -951,6 +1120,28 @@ class TestServerSideEffects:
         findings = check_server_side_effects(src)
         assert len(findings) == 1
         assert "PlayLoop" in findings[0]["detail"]
+
+    def test_server_init_is_info_severity(self):
+        """Effects in server.init are INFO (one-time) not WARN (per-frame)."""
+        src = (
+            "function server.init()\n"
+            '    PlaySound(LoadSound("startup.ogg"), pos, 1.0)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert findings[0]["severity"] == "info"
+
+    def test_server_tick_is_warn_severity(self):
+        """Effects in server.tick are WARN (per-frame)."""
+        src = (
+            "function server.tick(dt)\n"
+            '    PlaySound(shootSnd, pos, 1.0)\n'
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert findings[0]["severity"] == "warn"
 
     def test_playsound_in_client_clean(self):
         src = (
@@ -1193,6 +1384,24 @@ class TestServerOnlyInClient:
         src = 'Shoot(pos, dir, "bullet", 1, 100, p, "gun")'
         assert check_server_only_in_client(src) == []
 
+    def test_method_call_not_api(self):
+        """client.Shoot() and server.Shoot() are custom methods, not the Shoot() API."""
+        src = (
+            "function client.tickPlayer(p, dt)\n"
+            "    client.Shoot(data, sharedData, mt, p, WeaponLoc)\n"
+            "end"
+        )
+        assert check_server_only_in_client(src) == []
+
+    def test_method_definition_not_api(self):
+        """function client.Shoot() definition should not be flagged."""
+        src = (
+            "function client.Shoot(data, sharedData, mt, p, WeaponLoc)\n"
+            "    PlaySound(shootSnd, pos, 0.6)\n"
+            "end"
+        )
+        assert check_server_only_in_client(src) == []
+
     def test_multiple_findings(self):
         src = (
             "function client.tick(dt)\n"
@@ -1239,6 +1448,77 @@ class TestServerOnlyInClient:
         findings = check_server_only_in_client(src)
         assert len(findings) == 1
         assert "SpawnFire" in findings[0]["detail"]
+
+    def test_set_player_health_in_client(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    SetPlayerHealth(1.0, p)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "SetPlayerHealth" in findings[0]["detail"]
+
+    def test_apply_player_damage_in_client(self):
+        src = (
+            "function client.tickPlayer(p, dt)\n"
+            '    ApplyPlayerDamage(target, 0.5, "sword", p)\n'
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "ApplyPlayerDamage" in findings[0]["detail"]
+
+    def test_set_tool_enabled_in_client(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    SetToolEnabled("gun", true, p)\n'
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "SetToolEnabled" in findings[0]["detail"]
+
+    def test_respawn_player_in_client(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    RespawnPlayer(p)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "RespawnPlayer" in findings[0]["detail"]
+
+    def test_queryshot_in_client_flagged(self):
+        """QueryShot() is server-only — flagged in client code."""
+        src = (
+            "function client.tick(dt)\n"
+            "    local hit, dist, shape, player = QueryShot(pos, dir, 100)\n"
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "QueryShot" in findings[0]["detail"]
+
+    def test_spawn_in_client_flagged(self):
+        """Spawn() is server-only — flagged in client code."""
+        src = (
+            "function client.tick(dt)\n"
+            '    Spawn("<voxbox/>", Transform())\n'
+            "end"
+        )
+        findings = check_server_only_in_client(src)
+        assert len(findings) == 1
+        assert "Spawn" in findings[0]["detail"]
+
+    def test_queryshot_in_server_clean(self):
+        """QueryShot() in server code — correct."""
+        src = (
+            "function server.tick(dt)\n"
+            "    local hit, dist, shape, player = QueryShot(pos, dir, 100, 0, p)\n"
+            "end"
+        )
+        assert check_server_only_in_client(src) == []
 
 
 # ===========================================================================
@@ -1330,6 +1610,69 @@ class TestPerTickRpc:
         )
         findings = check_per_tick_rpc(src)
         assert findings[0]["severity"] == "warn"
+
+    def test_input_guard_clean(self):
+        src = (
+            "function client.tick(dt)\n"
+            '    if InputPressed("usetool") then\n'
+            '        ServerCall("server.onFire", p, x, y, z)\n'
+            "    end\n"
+            "end"
+        )
+        assert check_per_tick_rpc(src) == []
+
+    def test_one_time_event_clean(self):
+        src = (
+            "function server.tick(dt)\n"
+            '    ClientCall(0, "client.onExplode", pos)\n'
+            "    already_exploded = true\n"
+            "end"
+        )
+        assert check_per_tick_rpc(src) == []
+
+    def test_makehole_nearby_clean(self):
+        """MakeHole within ±10 lines means impact event, not per-tick RPC."""
+        src = (
+            "function server.tick(dt)\n"
+            "    MakeHole(hitPos, 0.5, 0.5, 0.5)\n"
+            '    ClientCall(0, "client.onHitSparks", hitPos)\n'
+            "end"
+        )
+        assert check_per_tick_rpc(src) == []
+
+    def test_explosion_nearby_clean(self):
+        """Explosion within ±10 lines means impact event, not per-tick RPC."""
+        src = (
+            "function server.tick(dt)\n"
+            "    Explosion(hitPos, 2.5)\n"
+            '    ClientCall(0, "client.onBigBoom", hitPos)\n'
+            "end"
+        )
+        assert check_per_tick_rpc(src) == []
+
+    def test_commented_makehole_still_flags(self):
+        """Commented-out MakeHole should NOT suppress the finding."""
+        src = (
+            "function server.tick(dt)\n"
+            "    --MakeHole(hitPos, 0.5, 0.5, 0.5)\n"
+            '    ClientCall(0, "client.onEffect", hitPos)\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert len(findings) == 1
+
+    def test_makehole_far_away_still_flags(self):
+        """MakeHole >10 lines away should NOT suppress the finding."""
+        padding = "\n".join(f"    local x{i} = {i}" for i in range(15))
+        src = (
+            "function server.tick(dt)\n"
+            "    MakeHole(pos, 1, 1, 1)\n"
+            f"{padding}\n"
+            '    ClientCall(0, "client.onEffect", pos)\n'
+            "end"
+        )
+        findings = check_per_tick_rpc(src)
+        assert len(findings) == 1
 
 
 # ===========================================================================
@@ -1510,3 +1853,575 @@ class TestShootMissingAttribution:
         )
         findings = check_shoot_missing_attribution(src)
         assert len(findings) == 2
+
+
+# ===========================================================================
+# T1-11: QueryShot player=0 truthy guard (Issue #47)
+# ===========================================================================
+
+class TestQueryShotPlayerGuard:
+    """Detect `if player then ApplyPlayerDamage` without ~= 0 guard."""
+
+    def test_single_line_truthy_guard_flagged(self):
+        src = 'if player then ApplyPlayerDamage(player, 2.0, "tool", p) end'
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "QUERYSHOT-PLAYER-GUARD"
+
+    def test_multi_line_truthy_guard_flagged(self):
+        src = (
+            'if hit then\n'
+            '    if player then\n'
+            '        ApplyPlayerDamage(player, damage, "tool", p)\n'
+            '    end\n'
+            'end\n'
+        )
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 1
+
+    def test_neq_zero_guard_clean(self):
+        src = 'if player ~= 0 then ApplyPlayerDamage(player, 2.0, "tool", p) end'
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 0
+
+    def test_multi_line_neq_zero_clean(self):
+        src = (
+            'if hit then\n'
+            '    if player ~= 0 then\n'
+            '        ApplyPlayerDamage(player, damage, "tool", p)\n'
+            '    end\n'
+            'end\n'
+        )
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 0
+
+    def test_different_variable_names(self):
+        src = 'if shotPlayer then ApplyPlayerDamage(shotPlayer, 1.0, "beam", p) end'
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 1
+
+    def test_hookplayer_variable(self):
+        src = 'if hookPlayer then ApplyPlayerDamage(hookPlayer, 0.5, "hook", p) end'
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 1
+
+    def test_gt_zero_guard_clean(self):
+        src = 'if player > 0 then ApplyPlayerDamage(player, 2.0, "tool", p) end'
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 0
+
+    def test_no_apply_player_damage_clean(self):
+        src = 'if player then SetPlayerHealth(1, player) end'
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 0
+
+    def test_severity_is_error(self):
+        src = 'if player then ApplyPlayerDamage(player, 2.0, "tool", p) end'
+        findings = check_queryshot_player_guard(src)
+        assert findings[0]["severity"] == "error"
+
+    def test_and_condition_truthy_flagged(self):
+        src = (
+            'if player and not playerHit then\n'
+            '    ApplyPlayerDamage(player, 2.0, "tool", p)\n'
+            'end\n'
+        )
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 1
+
+    def test_nested_condition_with_proper_outer_guard(self):
+        """player used as func arg in nested if, but outer if has ~= 0 guard."""
+        src = (
+            'if player ~= 0 then\n'
+            '    if GetPlayerHealth(player) < 0.21 and GetPlayerHealth(player) > 0 then\n'
+            '        ApplyPlayerDamage(player, 1, "loc@DAMAGE_CAUSE_EXPLOSION", 0)\n'
+            '    end\n'
+            'end\n'
+        )
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 0
+
+    def test_function_arg_not_flagged_as_truthy(self):
+        """player inside GetPlayerHealth(player) is a function arg, not a truthy check."""
+        src = (
+            'if GetPlayerHealth(player) > 0 then\n'
+            '    ApplyPlayerDamage(player, 1, "tool", p)\n'
+            'end\n'
+        )
+        findings = check_queryshot_player_guard(src)
+        assert len(findings) == 0
+
+
+# ===========================================================================
+# check_explosion_no_player_damage
+# ===========================================================================
+
+class TestExplosionNoPlayerDamage:
+    def test_explosion_without_damage_in_weapon_mod_flagged(self):
+        """Weapon mod using Explosion() without ApplyPlayerDamage → flagged."""
+        src = (
+            'function server.init()\n'
+            '    RegisterTool("bomb", "Bomb", "MOD/bomb.xml")\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    Explosion(pos, 3)\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "EXPLOSION-NO-DAMAGE"
+        assert findings[0]["line"] == 5
+
+    def test_explosion_with_apply_player_damage_clean(self):
+        """Weapon mod with Explosion + ApplyPlayerDamage → clean."""
+        src = (
+            'function server.init()\n'
+            '    RegisterTool("bomb", "Bomb", "MOD/bomb.xml")\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    Explosion(pos, 3)\n'
+            '    ApplyPlayerDamage(target, 1.0, "bomb", p)\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 0
+
+    def test_explosion_with_shoot_still_flags(self):
+        """Weapon mod with Explosion + Shoot but no ApplyPlayerDamage → flags.
+
+        Shoot() handles direct-hit projectile damage but NOT splash damage
+        from Explosion(). ApplyPlayerDamage with distance falloff is needed
+        for area-of-effect damage (Issue #56 miss in Multiple_Grenade_Launcher).
+        """
+        src = (
+            'function server.init()\n'
+            '    RegisterTool("rpg", "RPG", "MOD/rpg.xml")\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    Explosion(pos, 3)\n'
+            '    Shoot(pos, dir, "rocket", 1, 100, p, "rpg")\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "EXPLOSION-NO-DAMAGE"
+
+    def test_explosion_with_shoot_and_damage_clean(self):
+        """Weapon mod with Explosion + Shoot + ApplyPlayerDamage → clean."""
+        src = (
+            'function server.init()\n'
+            '    RegisterTool("rpg", "RPG", "MOD/rpg.xml")\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    Explosion(pos, 3)\n'
+            '    Shoot(pos, dir, "rocket", 1, 100, p, "rpg")\n'
+            '    ApplyPlayerDamage(target, dmg, "rpg", p)\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 0
+
+    def test_no_register_tool_clean(self):
+        """Non-weapon script (no RegisterTool) with Explosion → clean."""
+        src = (
+            'function server.tick(dt)\n'
+            '    Explosion(pos, 3)\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 0
+
+    def test_audit_ok_suppression_clean(self):
+        """@audit-ok explosion annotation suppresses the check."""
+        src = (
+            '-- @audit-ok explosion (weather effect, not weapon)\n'
+            'function server.init()\n'
+            '    RegisterTool("weather", "Weather", "MOD/weather.xml")\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    Explosion(pos, 1)\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 0
+
+    def test_explosion_in_comment_ignored(self):
+        """Explosion in a comment should not be flagged."""
+        src = (
+            'function server.init()\n'
+            '    RegisterTool("bomb", "Bomb", "MOD/bomb.xml")\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    -- Explosion(pos, 3)\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 0
+
+    def test_multiple_explosions_flagged(self):
+        """Multiple Explosion calls → multiple findings."""
+        src = (
+            'function server.init()\n'
+            '    RegisterTool("bomb", "Bomb", "MOD/bomb.xml")\n'
+            'end\n'
+            'function server.tick(dt)\n'
+            '    Explosion(pos, 3)\n'
+            '    Explosion(pos2, 5)\n'
+            'end\n'
+        )
+        findings = check_explosion_no_player_damage(src)
+        assert len(findings) == 2
+        assert findings[0]["line"] == 5
+        assert findings[1]["line"] == 6
+
+
+# ===========================================================================
+# check_missing_interactive
+# ===========================================================================
+
+class TestMissingInteractive:
+    def test_options_button_without_interactive_flagged(self):
+        """optionsOpen + UiTextButton but no UiMakeInteractive → flagged."""
+        src = (
+            'if data.optionsOpen then\n'
+            '    UiPush()\n'
+            '    UiTextButton("Close")\n'
+            '    UiPop()\n'
+            'end\n'
+        )
+        findings = check_missing_interactive(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-INTERACTIVE"
+
+    def test_options_button_with_interactive_clean(self):
+        """optionsOpen + UiMakeInteractive + UiTextButton → clean."""
+        src = (
+            'if data.optionsOpen then\n'
+            '    UiMakeInteractive()\n'
+            '    UiPush()\n'
+            '    UiTextButton("Close")\n'
+            '    UiPop()\n'
+            'end\n'
+        )
+        findings = check_missing_interactive(src)
+        assert len(findings) == 0
+
+    def test_no_options_open_clean(self):
+        """No optionsOpen reference → clean."""
+        src = (
+            'UiTextButton("Click me")\n'
+        )
+        findings = check_missing_interactive(src)
+        assert len(findings) == 0
+
+    def test_no_button_clean(self):
+        """optionsOpen but no UiTextButton → clean."""
+        src = (
+            'if data.optionsOpen then\n'
+            '    UiPush()\n'
+            '    UiText("Info only")\n'
+            '    UiPop()\n'
+            'end\n'
+        )
+        findings = check_missing_interactive(src)
+        assert len(findings) == 0
+
+    def test_settings_open_variant_flagged(self):
+        """settingsOpen variant also detected."""
+        src = (
+            'if data.settingsOpen then\n'
+            '    UiPush()\n'
+            '    UiTextButton("Save")\n'
+            '    UiPop()\n'
+            'end\n'
+        )
+        findings = check_missing_interactive(src)
+        assert len(findings) == 1
+
+    def test_reports_first_button_line(self):
+        """Finding should report the first UiTextButton line."""
+        src = (
+            'if data.optionsOpen then\n'
+            '    UiPush()\n'
+            '    UiText("Title")\n'
+            '    UiTextButton("Option A")\n'
+            '    UiTextButton("Option B")\n'
+            '    UiPop()\n'
+            'end\n'
+        )
+        findings = check_missing_interactive(src)
+        assert len(findings) == 1
+        assert findings[0]["line"] == 4
+
+    def test_commented_interactive_still_flagged(self):
+        """Commented-out UiMakeInteractive should NOT suppress the warning."""
+        src = (
+            'if data.optionsOpen then\n'
+            '    -- UiMakeInteractive()\n'
+            '    UiPush()\n'
+            '    UiTextButton("Close")\n'
+            '    UiPop()\n'
+            'end\n'
+        )
+        findings = check_missing_interactive(src)
+        assert len(findings) == 1
+
+
+# ===========================================================================
+# check_per_tick_spatial
+# ===========================================================================
+
+class TestPerTickSpatial:
+    def test_find_shapes_in_server_tick_flagged(self):
+        """FindShapes inside server.tick → flagged."""
+        src = (
+            'function server.tick(dt)\n'
+            '    local shapes = FindShapes("tag", true)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "PER-TICK-SPATIAL"
+        assert findings[0]["line"] == 2
+
+    def test_find_shapes_in_client_tick_flagged(self):
+        """FindShapes inside client.tick → flagged."""
+        src = (
+            'function client.tick(dt)\n'
+            '    local shapes = FindShapes("tag", true)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 1
+
+    def test_find_shapes_in_server_update_flagged(self):
+        """FindShapes inside server.update (60Hz) → flagged."""
+        src = (
+            'function server.update(dt)\n'
+            '    local shapes = FindShapes("tag", true)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 1
+
+    def test_find_shapes_in_server_init_clean(self):
+        """FindShapes in server.init (one-time) → clean."""
+        src = (
+            'function server.init()\n'
+            '    local shapes = FindShapes("tag", true)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 0
+
+    def test_find_shapes_at_top_level_clean(self):
+        """FindShapes at top level (not in a function) → clean."""
+        src = (
+            'local shapes = FindShapes("tag", true)\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 0
+
+    def test_query_aabb_bodies_flagged(self):
+        """QueryAabbBodies in server.tick → flagged."""
+        src = (
+            'function server.tick(dt)\n'
+            '    local bodies = QueryAabbBodies(min, max)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 1
+
+    def test_query_aabb_shapes_flagged(self):
+        """QueryAabbShapes in server.tick → flagged."""
+        src = (
+            'function server.tick(dt)\n'
+            '    local s = QueryAabbShapes(min, max)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 1
+
+    def test_find_bodies_flagged(self):
+        """FindBodies in client.update → flagged."""
+        src = (
+            'function client.update(dt)\n'
+            '    local bodies = FindBodies("tag", true)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 1
+
+    def test_throttled_with_timer_clean(self):
+        """FindShapes with nearby throttle timer → clean."""
+        src = (
+            'function server.tick(dt)\n'
+            '    shapeTimer = shapeTimer + dt\n'
+            '    if shapeTimer > 0.25 then\n'
+            '        shapeTimer = 0\n'
+            '        local shapes = FindShapes("tag", true)\n'
+            '    end\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 0
+
+    def test_throttled_with_cache_keyword_clean(self):
+        """FindShapes with nearby cache keyword → clean."""
+        src = (
+            'function server.tick(dt)\n'
+            '    if not cached then\n'
+            '        cached = true\n'
+            '        local shapes = FindShapes("tag", true)\n'
+            '    end\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 0
+
+    def test_in_comment_ignored(self):
+        """FindShapes in a comment → clean."""
+        src = (
+            'function server.tick(dt)\n'
+            '    -- FindShapes("tag", true)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 0
+
+    def test_tick_player_flagged(self):
+        """FindShapes in server.tickPlayer → flagged."""
+        src = (
+            'function server.tickPlayer(p, dt)\n'
+            '    local shapes = FindShapes("tag", true)\n'
+            'end\n'
+        )
+        findings = check_per_tick_spatial(src)
+        assert len(findings) == 1
+
+
+# ---------------------------------------------------------------------------
+# SETPLAYER-ARG-ORDER
+# ---------------------------------------------------------------------------
+
+
+class TestSetPlayerArgOrder:
+
+    def test_correct_order_clean(self):
+        """SetPlayerVelocity(vel, p) — correct order, no findings."""
+        src = 'SetPlayerVelocity(vel, p)\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 0
+
+    def test_swapped_velocity(self):
+        """SetPlayerVelocity(p, vel) — player first = swapped."""
+        src = 'SetPlayerVelocity(p, vel)\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "SETPLAYER-ARG-ORDER"
+
+    def test_swapped_transform(self):
+        """SetPlayerTransform(player, tr) — player first = swapped."""
+        src = 'SetPlayerTransform(player, Transform())\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 1
+
+    def test_swapped_color(self):
+        """SetPlayerColor(playerId, r, g, b) — player first = swapped."""
+        src = 'SetPlayerColor(playerId, 1, 0, 0)\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 1
+
+    def test_correct_color_clean(self):
+        """SetPlayerColor(1, 0, 0, p) — correct order."""
+        src = 'SetPlayerColor(1, 0, 0, p)\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 0
+
+    def test_non_player_name_clean(self):
+        """SetPlayerVelocity(vel, p) where first arg is not player-like."""
+        src = 'SetPlayerVelocity(thrust, p)\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 0
+
+    def test_swapped_walking_speed(self):
+        """SetPlayerWalkingSpeed(pid, 1.5) — player first = swapped."""
+        src = 'SetPlayerWalkingSpeed(pid, 1.5)\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 1
+
+    def test_comment_ignored(self):
+        """Commented-out line should not trigger."""
+        src = '-- SetPlayerVelocity(p, vel)\n'
+        findings = check_setplayer_arg_order(src)
+        assert len(findings) == 0
+
+
+# ---------------------------------------------------------------------------
+# DAMAGE-NO-ATTACKER
+# ---------------------------------------------------------------------------
+
+
+class TestDamageNoAttacker:
+
+    def test_4_args_clean(self):
+        """ApplyPlayerDamage(target, dmg, toolId, attacker) — correct."""
+        src = 'ApplyPlayerDamage(target, 0.5, "gun", p)\n'
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 0
+
+    def test_3_args_missing_attacker(self):
+        """ApplyPlayerDamage(target, dmg, toolId) — missing attacker."""
+        src = 'ApplyPlayerDamage(target, 0.5, "gun")\n'
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "DAMAGE-NO-ATTACKER"
+
+    def test_2_args_missing_both(self):
+        """ApplyPlayerDamage(target, dmg) — missing toolId and attacker."""
+        src = 'ApplyPlayerDamage(target, 0.5)\n'
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 1
+
+    def test_nested_function_call(self):
+        """ApplyPlayerDamage with nested fn call shouldn't miscount commas."""
+        src = 'ApplyPlayerDamage(target, math.max(0.1, dmg), "gun", p)\n'
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 0
+
+    def test_environmental_attacker_zero(self):
+        """ApplyPlayerDamage(t, d, "env", 0) — attacker=0 is valid."""
+        src = 'ApplyPlayerDamage(player, 1, "loc@DAMAGE_CAUSE_EXPLOSION", 0)\n'
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 0
+
+    def test_comment_ignored(self):
+        """Commented-out line should not trigger."""
+        src = '-- ApplyPlayerDamage(target, 0.5)\n'
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 0
+
+    def test_multiline_4_args_clean(self):
+        """Multi-line ApplyPlayerDamage with 4 args → clean."""
+        src = (
+            'ApplyPlayerDamage(\n'
+            '    shotPlayer,\n'
+            '    1 * 0.25 * factor,\n'
+            '    "Fragmentation",\n'
+            '    p.owner\n'
+            ')\n'
+        )
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 0
+
+    def test_multiline_3_args_flagged(self):
+        """Multi-line ApplyPlayerDamage with 3 args → missing attacker."""
+        src = (
+            'ApplyPlayerDamage(\n'
+            '    shotPlayer,\n'
+            '    1 * 0.25,\n'
+            '    "Fragmentation"\n'
+            ')\n'
+        )
+        findings = check_damage_no_attacker(src)
+        assert len(findings) == 1

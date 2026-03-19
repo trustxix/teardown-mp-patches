@@ -2,7 +2,7 @@
 
 All resolved bugs and the rules derived from them. Consult before making changes. Append after fixing new issues.
 
-## Key Rules (condensed from all 46 issues)
+## Key Rules (condensed from all 58 issues)
 
 1. NEVER use `goto` or `::label::` (Lua 5.1 only)
 2. NEVER use raw key names with player parameter - use ServerCall pattern
@@ -29,7 +29,11 @@ All resolved bugs and the rules derived from them. Consult before making changes
 23. Throttle `FindShapes()`/`QueryAabb()` to ≤4Hz — never per-tick per-player
 24. `PlaySound()`/`SpawnParticle()` are CLIENT-ONLY — never call on server
 25. `QueryShot()` + `ApplyPlayerDamage()` on SERVER — client uses `QueryRaycast()` for visuals
-26. Always guard `ApplyPlayerDamage()` with `player ~= 0` after `QueryShot()` — player 0 = host
+26. Always guard `ApplyPlayerDamage()` with `player ~= 0` after `QueryShot()` — player 0 = host. `if player then` is WRONG (Lua 0 is truthy)
+27. Always use 4-param `ApplyPlayerDamage(target, damage, toolId, attacker)` — for environmental hazards, pass `0` as attacker
+28. `ServerCall("server.fn", p, ...)` — player ID is REQUIRED, NOT auto-injected by engine
+29. `Explosion()` does NOT damage players — add explicit `ApplyPlayerDamage()` with distance falloff + tool ID for kill attribution
+30. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync)
 
 > **Note:** Issues #1-19 were resolved in earlier sessions. Their rules are captured above. Detailed entries for #1-19 are no longer available but all patterns are encoded in the lint tool (`python -m tools.lint`).
 
@@ -518,19 +522,315 @@ if hit and player ~= 0 then
 end
 ```
 
-**Applied to:** Tripmine
+**Applied to:** Tripmine (original fix), then 34 more mods via QA Lead systemic sweep (2026-03-18): 7 manual fixes (Sith_Saber, Final_Flash, Dual_Miniguns, Dual_Berettas, Guided_Missile, Hook_Shotgun, Exploding_Star), then 27 auto-fixed via `python -m tools.fix --only queryshot-guard` (500_Magnum, AC130_Airstrike_MP, AK-47, AWP, Acid_Gun, Attack_Drone, Bee_Gun, Charge_Shotgun, Desert_Eagle, Dragonslayer, HADOUKEN, Laser_Cutter, Lava_Gun, Lightning_Gun, M1_Garand, M249, M2A1_Flamethrower, M4A1, MEGAGUN, Minigun, Nova_Shotgun, P90, RMW_RPG7, RMW_SMAW, SCAR-20, SG553, Scorpion). **Additional fixes (2026-03-19):** DAM_Helis (2x in rpg_projectile.lua `if shotPlayer then` → `~= 0`), Armour_Framework_MP (4x in TankMain.lua `if shotPlayer/fragPlayer then` → `~= 0`).
 
-**Investigation (API Surgeon):** The 5-param form `QueryShot(pos, dir, dist, radius, attacker_p)` — used by all weapon mods — excludes the attacker and returns `nil` for non-player hits. The `if player then` guard is safe. The 3-param form `QueryShot(origin, dir, dist)` — used only by Tripmine — has no attacker exclusion and can return `player=0`. Only the 3-param form was vulnerable.
+**Tooling added:** Lint rule `QUERYSHOT-PLAYER-GUARD` (Tier 1, tools/lint.py) detects the pattern. Auto-fix `queryshot-guard` (tools/fix.py) patches it deterministically.
 
-**RULE: The 5-param `QueryShot(pos, dir, dist, radius, p)` returns nil for no-player-hit — `if player then` is safe. The 3-param form may return 0 — use `player ~= 0`. When in doubt, `player ~= 0` is always the safer guard (0 is truthy in Lua).**
+**Investigation (API Surgeon):** The 5-param form `QueryShot(pos, dir, dist, radius, attacker_p)` — used by all weapon mods — excludes the attacker and returns `nil` for non-player hits. However, `if player then` is WRONG because Lua treats `0` as truthy. Must use `if player ~= 0 then`. The 3-param form `QueryShot(origin, dir, dist)` — used only by Tripmine — has no attacker exclusion and can return `player=0`. Both forms require `~= 0` guard.
+
+**Tooling fix (2026-03-19):** gun_v2_generator.py also had this bug — generated code used `if qplayer then` instead of `if qplayer ~= 0 then`. Any future generated mod would have phantom host damage. Fixed + 14 regression tests added (tests/test_generator.py).
+
+**RULE: ALWAYS use `player ~= 0` after QueryShot, regardless of param count. `if player then` is WRONG — Lua 0 is truthy. The 5-param form may return nil or 0; the 3-param form returns 0 for non-player hits. `player ~= 0` is universally safe.**
 
 **Date fixed:** 2026-03-18
 
 ---
 
+## Issue #48: Tripmine ApplyPlayerDamage missing attacker param
+
+**Symptom:** `ApplyPlayerDamage(player, 1, "loc@DAMAGE_CAUSE_EXPLOSION")` in Tripmine used only 3 params. Missing 4th param (attackerPlayer) means kill feed shows no attacker for tripmine kills.
+
+**Root cause:** The correct signature is `ApplyPlayerDamage(targetPlayer, damage, toolId, attackerPlayer)`. Tripmine is an environmental hazard with no tracked placer, so attacker was simply omitted.
+
+**Fix:** Added `0` as the 4th param (no attacker / environment kill):
+```lua
+ApplyPlayerDamage(player, 1, "loc@DAMAGE_CAUSE_EXPLOSION", 0)
+```
+
+**Applied to:** Tripmine (`script/tripmine.lua:46`)
+
+**RULE: Always use the full 4-param `ApplyPlayerDamage(target, damage, toolId, attacker)`. For environmental hazards without a tracked placer, pass `0` as attacker.**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #49: Remote_Explosives FindShapes per-frame spam
+
+**Symptom:** Remote_Explosives called `FindShapes()` twice in `server.tick()` every frame (~120 calls/sec), causing unnecessary server load and potential network overhead in multiplayer.
+
+**Root cause:** Shape lookups for explosive proximity detection ran every tick instead of being cached and throttled.
+
+**Fix:** Throttled FindShapes calls to ≤4Hz with a 0.25s shape cache. Cache refreshes periodically; invalidates on detonation. Added `IsHandleValid` checks for stale handles.
+
+**Applied to:** Remote_Explosives
+
+**RULE: Throttle `FindShapes()`/`QueryAabb()` to ≤4Hz — cache results and refresh periodically. See CLAUDE.md rule 28.**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #50: Minigun invisible impact smoke in multiplayer
+
+**Symptom:** Minigun bullet impacts produced no visible smoke/particle effects for other players. Impact was invisible despite hitting surfaces.
+
+**Root cause:** `SpawnParticle` was called on the server for impact effects. `SpawnParticle` is CLIENT-ONLY — server calls are silently ignored, so only the host saw effects.
+
+**Fix:** Replaced server-side `SpawnParticle` with `ClientCall` to `client.onProjectileHit`, which spawns the particle effect on all clients. Also removed dead `DrawLine` tracer code.
+
+**Applied to:** Minigun, Hook_Shotgun, M1_Garand, M249, M4A1, Nova_Shotgun, P90, SCAR-20, SG553 (9 mods total)
+
+**RULE: SpawnParticle/PlaySound are CLIENT-ONLY (rule 29). For multiplayer-visible effects triggered by server events, use `ClientCall(0, "client.effectFunc", ...)` to broadcast to all clients.**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #51: ServerCall does NOT auto-inject player ID
+
+**Symptom:** Artillery_Barrage_RELOADED server functions received `nil` for player ID, causing errors when trying to use player-specific state.
+
+**Root cause:** The Teardown engine passes ServerCall parameters exactly as given. Server functions receive `(p, ...)` where `p` must be explicitly sent by the client — it is NOT auto-injected by the engine. The client must always pass the player ID as the first parameter.
+
+**Fix:** Always pass player ID as first param: `ServerCall("server.fn", p, arg1, arg2)`. Fixed 5 call sites in Artillery_Barrage_RELOADED.
+
+**Verified:** Official minigun mod confirms the pattern: `ServerCall("server.setOptionsOpen", p, data.optionsOpen)`.
+
+**Expanded scope (systemic sweep — COMPLETE):** Mod Converter swept all 122 mods. Fixed setOptionsOpen across ALL mods (batch sed fix), 9 framework gun clones (onShootSemi, onReload, onSelectFire, onMelee, onShootGrenade), Telekinesis (onInputUpdate + 9 onAction calls), Portal_Gun (onShootOrange, onResetPortals), Magnetizer_V2, Spells. Verified ~10 remaining no-p ServerCalls are legitimate (server funcs don't take p: DeleteAllBullets, createStormCloudGroupAbove, collapseShape, etc.). Result: 122 mods, 0 tier 1 findings. All ServerCall patterns now match official minigun reference.
+
+**RULE: `ServerCall("server.fn", p, ...)` — player ID `p` is REQUIRED as the first param. The engine does NOT auto-inject it. Server functions receive exactly what the client sends.**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #52: Hurricanes_and_Blizzards raw key bugs (community v2 mod)
+
+**Symptom:** Hurricanes_and_Blizzards (workshop 3669298473, author: Riv) was already v2 from workshop but had 6 FAIL-level raw key bugs causing silent input failures in multiplayer.
+
+**Root cause:** UI textbox code used `InputDown("shift", 0)`, `InputPressed("lmb", 0)`, `InputPressed("rmb", 0)` — raw keys with player param. Raw key names do NOT accept a player parameter; the extra `0` is silently ignored, causing the input to fail for non-host players.
+
+**Fix:** Removed the player parameter from all 6 raw key calls. Also annotated 2 false-positive PER-TICK-RPC and 1 false-positive HANDLE-GT-ZERO. 4 remaining INFO findings are weather raycasts (not weapons), acceptable.
+
+**Applied to:** Hurricanes_and_Blizzards (mod #123)
+
+**RULE: Raw key names ("rmb", "lmb", "shift", etc.) NEVER take a player parameter. Use `InputPressed("rmb")` with `isLocal` check + ServerCall. (Existing CLAUDE.md Rule 10)**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #53: SetShapeEmissiveScale server-only = host-only visual
+
+**Symptom:** C4 explosive glow animation (SetShapeEmissiveScale pulsing) only visible to host player, invisible to other clients.
+
+**Root cause:** `SetShapeEmissiveScale` was called in `server.tick`. Like `PlaySound`/`SpawnParticle`, shape visual functions only affect the local machine. Server-side calls only render for the host — other clients never see the effect.
+
+**Fix:** Move `SetShapeEmissiveScale` calls from `server.tick` to `client.tick` so all players see the glow animation.
+
+**Applied to:** Remote_Explosives (SetShapeEmissiveScale moved from server.tick to client.tick, also removed unused server shape cache, throttled IsShapeBroken to 4Hz). Originally found in Multiplayer_C4 (duplicate — see Issue #54).
+
+**RULE: `SetShapeEmissiveScale` is effectively CLIENT-ONLY for visual effects. Expand Rule 29: PlaySound/SpawnParticle/SetShapeEmissiveScale are client-only — never call on server for visual effects.**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #54: Multiplayer_C4 and Remote_Explosives tool ID conflict
+
+**Symptom:** Two mod directories (`Multiplayer_C4/` and `Remote_Explosives/`) both register tool ID `"slippy_remote_explosive"`. Identical info.txt (author: Slippy, workshop 3621598329). Same Issue #38 pattern.
+
+**Root cause:** `Remote_Explosives` is our Batch 4 v2 conversion of this workshop mod. `Multiplayer_C4` was freshly installed from the same workshop item under its actual name. Two copies of the same mod coexist.
+
+**Fix:** Delete `Multiplayer_C4/` — `Remote_Explosives` is the superior version (0 lint findings vs 4, more thorough polishing including FindShapes throttling). Mod count returns to 123.
+
+**RULE: Before installing a workshop mod, verify its workshop ID isn't already in MASTER_MOD_LIST.md. (Reaffirms Issue #38 rule)**
+
+**Status:** RESOLVED — QA Lead deleted Multiplayer_C4. Remote_Explosives retained. 123 mods.
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #55: Tripmine GetPlayerHealth(player ~= 0) boolean-as-player-ID
+
+**Symptom:** Tripmine tripwire laser health checks could malfunction — `GetPlayerHealth(player ~= 0)` was passing boolean `true` instead of the actual player ID, potentially returning incorrect health values.
+
+**Root cause:** At `tripmine.lua:45`, the expression `GetPlayerHealth(player ~= 0)` evaluates the comparison first, producing `true` (since `player` is nonzero), then passes `true` to `GetPlayerHealth`. The `player ~= 0` guard was already correct on the outer `if` at line 44, so the inner call just needed the raw variable.
+
+**Fix:** Changed `GetPlayerHealth(player ~= 0)` to `GetPlayerHealth(player)`. The `~= 0` guard is on the enclosing `if` block, not inside the function call.
+
+**Applied to:** Tripmine (`script/tripmine.lua:45`)
+
+**RULE: Never embed comparison expressions inside function calls as arguments. `fn(var ~= 0)` passes a boolean, not the variable. Use the guard in an `if` block, then pass the variable directly: `if var ~= 0 then fn(var) end`.**
+
+**Date fixed:** 2026-03-18
+
+---
+
+## Issue #56: Explosion() does NOT damage players in v2 MP
+
+**Symptom:** Explosive weapons (C4, grenades, missiles, orbital strikes) create spectacular explosions that destroy terrain and push objects but deal ZERO health damage to other players in multiplayer. Weapons appear to work (terrain destruction, physics impulse) but opponents are unharmed.
+
+**Root cause:** `Explosion(pos, radius)` is auto-replicated deterministic destruction — it destroys voxels and applies physics impulse to bodies, but does NOT call player health damage. This parallels `MakeHole()` (Issue #4). Player health damage requires explicit `ApplyPlayerDamage()` or `Shoot()` calls. In singleplayer, explosion proximity damage was handled by the engine differently; in v2 MP, it must be explicit.
+
+**Fix pattern:** After every `Explosion()` call in a weapon context, add distance-based player damage:
+```lua
+Explosion(pos, radius)
+local damageRadius = radius * 3
+for target in Players() do
+    if target ~= attacker then
+        local dist = VecLength(VecSub(pos, GetPlayerPos(target)))
+        if dist < damageRadius then
+            ApplyPlayerDamage(target, 1.0 * (1.0 - dist / damageRadius), "toolId", attacker)
+        end
+    end
+end
+```
+
+**Applied to (23 mods):** Predator_Missile_MP, C4, Holy_Grenade, Mjolner, Multi_Grenade_Launcher, Multiple_Grenade_Launcher (4 Explosion() calls: HE, Cluster initial+continuation, Frag — added applyExplosionDamage helper with "Launcher" toolId), Asteroid_Strike, Ion_Cannon_Beacon, Spells (lightning spell), AK105, AK12, AK74, Dragunov_SVU, G17, G36K, Kriss_Vector, M4A1, SCAR, Saiga12 (all underslung grenade launcher), Airstrike_Arsenal (MOAB + World Buster modes), Bunker_Buster_MP (entity script owner propagation), Bombard (environmental damage), Explosive_Pack (C4 + Landmine — added applyExplosionDamage helper with distance falloff)
+
+**Fixed (2026-03-19 — previously deferred):** Bunker_Buster_MP (owner player ID propagated through shared.spawnHandleTargets/spawnTargets into warhead.lua + cluster.lua, full kill attribution with toolId "bunkerbustermissile"), Bombard (environmental damage attacker=0 on cannonball Explosion in ball.lua — map hazard, not direct weapon)
+
+**Not applicable (3 — non-weapon tools):** CnC_Weather_Machine, Drivable_Plane, Object_Possession
+
+**Remaining (not fixable as focused API swaps):** 8 vehicle entity scripts in 4 mods (Armour_Framework_MP, Legacy_Tank_MP, Dumb_Stupid_Fast_Cars, MrRandoms_Vehicles) use hybrid v1/v2 callbacks — needs dedicated restructuring. Also: Koenigsegg_Agera_MP flying car (visual effect), Minecraft_Building_Tool firecharge (minor). 8 other files confirmed disabled in MP (no #version 2 header): DAM_Helis aircraft weapons, Multiplayer_Spawnable_Pack bombs, Spawnable_Missiles_MP fuel/cookoff scripts — no fix needed.
+
+**RULE: `Explosion()` destroys terrain and pushes objects but does NOT damage players. Any weapon that relies on Explosion for damage MUST add explicit `ApplyPlayerDamage()` with distance falloff and kill attribution (`toolId` + `attacker`).**
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #57: goto/::label:: not supported in Lua 5.1
+
+**Bug:** Infinity_Technique v2 conversion used `goto continuec` / `::continuec::` as a `continue` statement in a `for p in Players()` loop. Lua 5.1 (Teardown's runtime) does not support `goto` or labels — these were added in Lua 5.2. The mod would crash at runtime on the `goto` line.
+
+**Root cause:** The converter used a modern Lua pattern (`goto` as `continue`) that isn't available in Teardown's embedded Lua 5.1 interpreter.
+
+**Fix:** Convert `if not data then goto continuec end ... ::continuec::` to `if data then ... end` — wrap the loop body in a conditional instead of using goto to skip it.
+
+**Affected mod:** Infinity_Technique (2 occurrences, both in `client.tick` player loop)
+
+**RULE: Never use `goto` or `::label::` in Teardown mods. Lua 5.1 does not support them. Use `if-then-end` wrapping instead of `goto` as `continue`. The GOTO-LABEL lint rule (Tier 1 FAIL) catches this.**
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #58: ClientCall(p, ...) sends positional effects only to acting player
+
+**Bug:** Three mods used `ClientCall(p, "client.onEffect", ...)` to send sound/visual effects at world positions, but targeted only the acting player (`p`) instead of broadcasting to all clients (`0`). Other players couldn't hear shots, magnet placement sounds, or see landmine explosion effects.
+
+**Root cause:** Confusion between `ClientCall(p, ...)` (sends to one player — correct for personal HUD/recoil feedback) and `ClientCall(0, ...)` (broadcasts to all — correct for world-space positional effects like sounds and particles).
+
+**Fix:** Changed `ClientCall(p, ...)` to `ClientCall(0, ...)` for all world-space effect callbacks.
+
+**Affected mods:**
+- Omni_Gun: `client.onShootFX` (shoot sound + muzzle particles) — 1 fix
+- Magnets: `client.onPlaceFX`, `client.onRemoveFX`, `client.onPolarityFX` — 3 fixes
+- Explosive_Pack: `client.onExplosion` for landmine auto-trigger — 1 fix (manual detonation already used `ClientCall(0, ...)`)
+
+**NOT affected (verified correct):**
+- Framework gun mods (G17, AK series, SCAR, etc.): handlers use `GetLocalPlayer()` for camera shake + recoil — personal feedback. `Shoot()` handles deterministic effects for all clients via engine pipeline.
+- Predator_Missile_MP, Light_Katana_MP: Already broadcast via `for-loop over GetAllPlayers()`.
+- Portal_Gun, ODM_Gear, Telekinesis, Magnetizer_V2: Personal action feedback, correctly targeted.
+
+**RULE: Use `ClientCall(0, ...)` for world-space sound/visual effects (explosions, gunfire, placement sounds). Use `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync). Not lint-checkable — requires understanding handler semantics.**
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Tooling: PER-TICK-RPC destruction event guard (2026-03-19)
+
+**Improvement:** Added a 4th guard pattern to the PER-TICK-RPC lint rule. RPC calls (ServerCall/ClientCall) inside tick/update are now auto-suppressed if `MakeHole()` or `Explosion()` appears within ±10 lines — indicating the RPC is part of a destruction impact event, not continuous per-tick spam.
+
+**Impact:** 11 `@lint-ok PER-TICK-RPC` annotations became stale and were removed from: Armour_Framework_MP, Explosive_Pack, Legacy_Tank_MP, Sith_Saber. PER-TICK-RPC suppressions reduced 134 → 123.
+
+**Also improved:** Audit KeybindRemap regex broadened to detect `BINDABLE_KEYS`/`rebindingAction` patterns (+5 mods detected). MCP `generate_tasks_from_lint` timeout 60→180s.
+
+**Tests:** 6 new tests added (432 → 438): MakeHole nearby clean, Explosion nearby clean, commented MakeHole still flags, far-away MakeHole still flags, input guard clean, one-time event clean.
+
+---
+
+## Milestone: Workshop Exhausted — 161 Mods (2026-03-19)
+
+**Achievement:** 161 mods installed, 438 tests, LINT ZERO (0 findings across 161 mods), 0 missing features (0/117 Shoot, 0/117 AimInfo, 0/134 AmmoPickup). Workshop fully exhausted.
+
+**This session (3 new mods):**
+- Infinity_Technique (#159) — first Very High conversion, 3505→~950 lines, full v2 rewrite with 12 abilities
+- ARM_AK47 (#160) — workshop v2 install, auto-fixed 7→0 findings, keybind hints added
+- GYM_Ragdoll (#161) — second Very High conversion, 294→320 lines v2, 9 backup files removed
+
+**Tooling improvements:**
+- MISSING-OPTIONS-GUARD: function-level early return + multi-line if detection → 12 @lint-ok suppressions removed
+- gun_v2_generator.py: Issue #47 bug fixed (QueryShot guard), 14 regression tests added
+- Cross-mod duplicate tool ID detection added to audit tool
+- check_missing_interactive: comment stripping fix (false negatives eliminated)
+- FPV_Drone_Tool: 3 server PlaySound→ClientCall pattern fix
+- HANDLE-GT-ZERO: expanded suffix list (Sum, Value, Total)
+
+**Remaining convertible (2 — both HIGH/DEFERRED):** GLARE (LnL framework), Lockonauts Toolbox (custom UI). ProBallistics closed (17,447 lines — DO NOT CONVERT). 16 UMF-blocked.
+
+---
+
+## Milestone: UMF Bypass — 164 Mods (2026-03-19)
+
+**Achievement:** 164 mods installed. 438 tests. LINT ZERO. 0 missing features. First 3 UMF-blocked mods converted via bypass strategy.
+
+**UMF bypass conversions (3 mods, Batch 13):**
+- Omni_Gun (#162) — 370 lines standalone v2 (replaces ~11K UMF framework). Physics projectile spawner.
+- Magnets (#163) — ~330 lines standalone v2. N/S polarity magnet physics simulation.
+- Ultimate_Jetpack (#164) — ~310 lines standalone v2. Omnidirectional jetpack, zero per-tick RPC.
+
+**Key resource:** `docs/UMF_TRANSLATION_GUIDE.md` — all UMF API→v2 equivalents (237 lines). 14 UMF-blocked mods remaining, next targets: Shards Summoner (LOW-MEDIUM), Poltergeists (MEDIUM).
+
+---
+
+## Milestone: UMF Bypass Complete — 171 Mods (2026-03-19)
+
+**Achievement:** 171 mods installed. 458 tests. LINT ZERO (0 findings across 171 mods, all tiers). 0 missing features (0/120 Shoot, 0/120 AimInfo, 0/142 AmmoPickup). UMF bypass sprint complete — 10 UMF-blocked mods converted in Batch 13.
+
+**UMF bypass conversions (mods #165–#171, completing Batch 13):**
+- Poltergeists (#165) — 580 lines. Possessed objects attack players.
+- Melt (#166) — 350 lines. Voxel-by-voxel melt tool, 3 modes.
+- Bouncepad (#167) — 500 lines. Trampolines/bouncepads/jumppads.
+- Corrupted_Crystal (#168) — 400 lines. Auto-growing crystals.
+- Singularity (#169) — 530 lines. 10 singularity physics effects.
+- Solid_Sphere_Summoner (#170) — 460 lines. Sphere summoning/launching.
+- Control (#171) — 430 lines. Telekinetic powers (grab/throw/jump/slam/dash/hover).
+
+**Bug fixes this session:**
+- Issue #58: ClientCall targeting — 5 fixes across 3 mods (world-space effects → `ClientCall(0, ...)`)
+- Issue #47: 6 additional QueryShot player guards (DAM_Helis 2x, Armour_Framework_MP 4x)
+- T80: 10 DAMAGE-NO-ATTACKER fixes across 5 mods (kill attribution restored)
+- EXPLOSION-NO-DAMAGE lint rule refined (Shoot no longer suppresses)
+
+**Tooling:**
+- 2 new lint rules: DAMAGE-NO-ATTACKER, SETPLAYER-ARG-ORDER (30 total)
+- CLIENT-SERVER-FUNC expanded: +QueryShot, +Spawn
+- 20 new tests (438→458)
+- 9 auto-fixers
+
+**Remaining unconverted:** GLARE (LnL framework), Lockonauts Toolbox (custom UI), 7 UMF-blocked (BHL-X42, Hungry Slimes, Blight Gun, Thermite Cannon, Ascended Sword Master, Enchanter, AI Trainer) + Shards Summoner (DEFERRED). Tameable Dragon deferred (5037 lines AI). ProBallistics/Synthetic Swarm permanently deferred. Note: Hungry Slimes (2695893023) and Poltergeists (2744169679) are DIFFERENT mods by same author.
+
+---
+
+## Milestone: Sprint Complete — 123 Mods (2026-03-18)
+
+**Achievement:** 123 mods installed. 0 FAIL, 0 WARN across all lint tiers. 342 tests passing. Sprint exceeded target of 120 by 3.
+
+**Session totals:** 21 new conversions (102→123), 59+ bug fixes (39 QueryShot guard + 20 handle fixes), 2 new lint rules (QUERYSHOT-PLAYER-GUARD, PER-TICK-SPATIAL), 1 new auto-fix (queryshot-guard), 20 new tests (318→338). Issues documented: #47 expanded (39 mods), #50 (invisible smoke), #51 (ServerCall param sweep complete), #52 (community v2 raw key bugs).
+
+**Remaining convertible (3 — all require dedicated sessions):** GLARE (6100+ lines, LnL framework), Infinity Technique (4004 lines, messy), Lockonauts Toolbox (8412 lines, multi-tool). 16 mods UMF-blocked.
+
+---
+
 ## Milestone: Zero Warnings — All Tiers Clean (2026-03-18)
 
-**Achievement:** 102 mods installed. 0 FAIL, 0 WARN across all lint tiers (25 checks). 0 X flags in audit. 86 gun mods fully compliant. 309 tests passing.
+**Achievement:** 102 mods installed. 0 FAIL, 0 WARN across all lint tiers (25 checks). 0 X flags in audit. 86 gun mods fully compliant. 318 tests passing.
 
 **What was resolved to reach this point (from 65→102 mods, 88 warnings→0):**
 - PER-TICK-RPC sprint: 85 warnings triaged. QA Lead improved lint (state-change guard detection, 8-line window, user-defined func exclusion) → eliminated 50 false positives. API Surgeon (T40) converted real per-tick ServerCall/ClientCall to registry sync in 7 mods. Mod Converter (T41) applied @lint-ok suppressions on verified false positives.

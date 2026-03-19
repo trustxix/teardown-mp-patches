@@ -126,7 +126,9 @@ end
 ```
 
 **Server does:** `MakeHole`, `Explosion`, `Shoot`, `ApplyPlayerDamage`, `Spawn`, `Delete`, `SetBodyVelocity`, `SpawnFire`.
-**Client does:** `PlaySound`, `SpawnParticle`, `DrawLine`, `DrawSprite`, `PointLight`, `SetToolTransform`.
+**Client does:** `PlaySound`, `SpawnParticle`, `DrawLine`, `DrawSprite`, `PointLight`, `SetToolTransform`, `SetShapeEmissiveScale`.
+
+> **Note:** `SetShapeEmissiveScale()` is also effectively client-only for visual effects. Server calls only render for the host — other clients never see the emissive glow. Move to client code. (Issue #53)
 
 ---
 
@@ -177,7 +179,7 @@ end
 function server.tickPlayer(p, dt)
     if data.firing then
         local hit, dist, shape, player, hitFactor = QueryShot(startPos, dir, range, radius, p)
-        if player then
+        if player ~= 0 then  -- NOT "if player then" (Lua 0 is truthy)
             ApplyPlayerDamage(player, damage * hitFactor, "toolid", p)
         end
         if shape then
@@ -212,6 +214,7 @@ end
 | `SpawnFire()` | Server | Fire propagation |
 | `PlaySound()` | Client | Local audio |
 | `SpawnParticle()` | Client | Local visual |
+| `SetShapeEmissiveScale()` | Client | Visual glow (Issue #53) |
 | `DrawLine()`, `DrawSprite()` | Client | Local rendering |
 | `PointLight()` | Client | Local lighting |
 | `SetToolTransform()` | Client | Local tool position |

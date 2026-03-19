@@ -79,7 +79,7 @@ Shoot(pos, dir, "bullet", damage, range, p, "toolid")
 ```lua
 local hit, dist, shape, player, hitFactor, normal = QueryShot(startPoint, dir, len, radius, p)
 if hit then
-    if player then
+    if player ~= 0 then  -- MUST use ~= 0, NOT "if player then" (Lua 0 is truthy, Issue #47)
         ApplyPlayerDamage(player, damage * dt * hitFactor, "toolid", attackingPlayer)
     end
     if shape then
@@ -88,14 +88,15 @@ if hit then
 end
 ```
 - `QueryShot` — like `QueryRaycast` but also detects player hits
-- Returns `player` (player ID if a player was hit) and `hitFactor` (damage multiplier based on where hit)
+- Returns `player` (player ID if a player was hit, 0 if no player hit) and `hitFactor` (damage multiplier based on where hit)
+- **CRITICAL:** Guard with `player ~= 0`, NOT `if player then` — Lua treats 0 as truthy, so `player=0` (no player hit) passes the truthiness check and damages the host (Issue #47)
 - `ApplyPlayerDamage(targetPlayer, damage, "toolid", attackerPlayer)` — deals damage with proper kill attribution
 
 **Where used:** Official lasergun
 
 **Impact:** Beam/continuous weapons (Laser Cutter, Lightning Gun, Lava Gun, etc.) can't damage players at all.
 
-**Action:** ~~Replace `QueryRaycast` with `QueryShot` for all weapons.~~ **DONE (2026-03-17)** — All beam/melee weapons now use QueryShot + ApplyPlayerDamage. 28 gun mods have player damage enabled.
+**Action:** ~~Replace `QueryRaycast` with `QueryShot` for all weapons.~~ **DONE (2026-03-17)** — All beam/melee weapons now use QueryShot + ApplyPlayerDamage. All gun mods across 159 installed mods have player damage enabled.
 
 ---
 
@@ -136,7 +137,7 @@ end
 
 **Impact:** Players can't replenish custom weapon ammo from crates on multiplayer maps.
 
-**Action:** ~~Add `SetToolAmmoPickupAmount` to `server.init()` for all weapon mods.~~ **DONE (2026-03-17)** — All 101 mods have AmmoPickup=Y in audit.
+**Action:** ~~Add `SetToolAmmoPickupAmount` to `server.init()` for all weapon mods.~~ **DONE (2026-03-17)** — All 159 installed mods with RegisterTool have AmmoPickup=Y in audit.
 
 ---
 
@@ -283,7 +284,7 @@ Key patterns to copy:
 - `ApplyPlayerDamage(player, damage, "lasergun", p)` for player damage
 - `SpawnFire(hitPos)` + `MakeHole(hitPos, size, size, size, true)` for environment damage
 - Full particle API: `ParticleReset()`, `ParticleType()`, `ParticleRadius()`, etc.
-- `SetShapeEmissiveScale(shape, value)` for tool glow effects
+- `SetShapeEmissiveScale(shape, value)` for tool glow effects — **effectively client-only** for visual effects; server calls only render for host (Issue #53)
 - `SetToolHandPoseLocalTransform()` for third-person/VR hand positioning
 
 ---
@@ -443,7 +444,7 @@ From API parsing, important functions we're not using:
 | `GetPlayerInteractBody(p)` | What body player can interact with | Both |
 | `ShakeCamera(pos, intensity, radius)` | Shake nearby players' cameras | Client |
 | `SetCameraDof(near, far, blur)` | Depth of field effect | Client |
-| `SetPlayerColor(color, p)` | Set player character color | Server |
+| `SetPlayerColor(r, g, b, p)` | Set player character color | Server |
 | `IsPlayerGrounded(p)` | Check if on ground | Both |
 | `GetPlayerGroundContact(p)` | Get ground surface info | Both |
 
@@ -583,7 +584,7 @@ The **mpclassics** game mode (deathmatch, TDM, CTF) + **mplib** is the most comp
 Additional patterns from CTF:
 - **`toolsPreventToolDrop("flag1")`** — prevents specific tools from dropping on death
 - **Team-specific spawn locations** — `spawnSetSpawnTransforms(team1spawns, 1)`
-- **`SetPlayerColor(color, p)`** — colors players by team
+- **`SetPlayerColor(r, g, b, p)`** — colors players by team
 - **Flag tools registered AFTER adding mod tools to loot** — order matters for loot table
 
 ---
@@ -910,7 +911,7 @@ Shoot(pos, dir, "bullet", damage, maxDist, p, "toolId")
 local _, start, end_ = GetPlayerAimInfo(muzzlePos, maxDist, p)
 local dir = VecNormalize(VecSub(end_, start))
 local hit, dist, shape, player, hitFactor, normal = QueryShot(start, dir, len, 0, p)
-if player then ApplyPlayerDamage(player, dmg * dt * hitFactor, "tool", p) end
+if player ~= 0 then ApplyPlayerDamage(player, dmg * dt * hitFactor, "tool", p) end
 if shape then MakeHole(hitPos, r1, r2, r3, true); SpawnFire(hitPos) end
 ```
 

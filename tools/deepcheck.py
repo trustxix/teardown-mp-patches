@@ -215,31 +215,51 @@ _EXPLOSION_RE = re.compile(r'\bExplosion\s*\(')
 def _extract_functions(source: str) -> dict[str, str]:
     """Extract function name -> body mapping from Lua source.
 
-    Uses simple depth tracking: counts 'function/if/for/while/repeat' as openers,
-    'end/until' as closers.
+    Uses depth tracking with Lua block counting from lint.py approach.
+    Handles the tricky case where 'if x then return end' is a single-line
+    block (opens and closes on the same line).
     """
     funcs: dict[str, str] = {}
     lines = source.splitlines()
 
+    # Find all top-level function definitions and their line numbers
+    func_starts: list[tuple[str, int]] = []
     for m in _FUNC_DEF_RE.finditer(source):
         func_name = m.group(1)
-        start_offset = m.start()
-        start_line = source[:start_offset].count('\n')
+        start_line = source[:m.start()].count('\n')
+        func_starts.append((func_name, start_line))
+
+    for idx, (func_name, start_line) in enumerate(func_starts):
+        # The function body ends either at the next top-level function or at a matching 'end'
+        # Use the next function's line as a hard stop
+        if idx + 1 < len(func_starts):
+            max_line = func_starts[idx + 1][1]
+        else:
+            max_line = len(lines)
+
         depth = 1
         body_lines = []
-        for i in range(start_line + 1, len(lines)):
+        for i in range(start_line + 1, max_line):
             line = lines[i]
             stripped = line.strip()
-            # Count openers (keywords that open a block)
-            for kw in ['function', 'if', 'for', 'while', 'repeat']:
-                if re.search(rf'\b{kw}\b', stripped):
-                    depth += 1
-                    break
-            # Count closers
-            if re.search(r'\bend\b', stripped):
-                depth -= 1
-            elif re.search(r'\buntil\b', stripped):
-                depth -= 1
+            # Skip empty lines and comments for block counting
+            code = stripped.split('--')[0].strip() if '--' in stripped else stripped
+
+            # Count openers on this line
+            opens = 0
+            opens += len(re.findall(r'\bfunction\b', code))
+            opens += len(re.findall(r'\bif\b', code))
+            opens += len(re.findall(r'\bfor\b', code))
+            opens += len(re.findall(r'\bwhile\b', code))
+            opens += len(re.findall(r'\brepeat\b', code))
+
+            # Count closers on this line
+            closes = 0
+            closes += len(re.findall(r'\bend\b', code))
+            closes += len(re.findall(r'\buntil\b', code))
+
+            depth += opens - closes
+
             if depth <= 0:
                 break
             body_lines.append(line)

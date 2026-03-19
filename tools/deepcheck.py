@@ -433,3 +433,130 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
             ))
 
     return findings
+
+
+# ---------------------------------------------------------------------------
+# 1.3 HUD Validator
+# ---------------------------------------------------------------------------
+
+_CLIENT_DRAW_RE = re.compile(r'function\s+client\.draw\s*\(')
+_UITEXT_RE = re.compile(r'\bUiText\s*\(')
+
+
+def check_hud(mod_dir: Path) -> list[Finding]:
+    """Check that client.draw() exists and has a tool guard."""
+    findings: list[Finding] = []
+    all_source = ""
+    for _, source in read_lua_files(mod_dir):
+        all_source += source + "\n"
+
+    # Only relevant for tool mods
+    if not _REGISTER_TOOL_ID_RE.search(all_source):
+        return []
+
+    funcs = _extract_functions(all_source)
+
+    # Check client.draw exists
+    if "client.draw" not in funcs:
+        findings.append(Finding(
+            validator="HUD", status="WARN",
+            detail="No client.draw() found — tool mod has no HUD",
+        ))
+        return findings
+
+    draw_body = funcs["client.draw"]
+
+    # Check for GetPlayerTool guard
+    has_tool_guard = _GET_PLAYER_TOOL_ID_RE.search(draw_body)
+    if not has_tool_guard:
+        findings.append(Finding(
+            validator="HUD", status="WARN",
+            detail="client.draw() has no GetPlayerTool guard — HUD may show for all tools",
+        ))
+    else:
+        findings.append(Finding(
+            validator="HUD", status="PASS",
+            detail="client.draw() has GetPlayerTool guard",
+        ))
+
+    # Check for UiText (has visible content)
+    if _UITEXT_RE.search(draw_body):
+        findings.append(Finding(
+            validator="HUD", status="PASS",
+            detail="client.draw() renders UiText",
+        ))
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# 1.6 ServerCall Parameter Validator
+# ---------------------------------------------------------------------------
+
+_SERVERCALL_FULL_RE = re.compile(r'ServerCall\s*\(\s*"([^"]+)"\s*([^)]*)\)')
+
+
+def check_servercall_params(mod_dir: Path) -> list[Finding]:
+    """Verify ServerCall targets exist and argument counts match."""
+    findings: list[Finding] = []
+    all_source = ""
+    for _, source in read_lua_files(mod_dir):
+        all_source += source + "\n"
+
+    funcs = _extract_functions(all_source)
+
+    for m in _SERVERCALL_FULL_RE.finditer(all_source):
+        target = m.group(1)
+        args_str = m.group(2).strip()
+
+        # Count args (split by comma, accounting for nested parens)
+        if args_str:
+            # Simple comma split — good enough for most cases
+            call_args = [a.strip() for a in args_str.split(",") if a.strip()]
+        else:
+            call_args = []
+
+        if target not in funcs:
+            findings.append(Finding(
+                validator="SERVERCALL-PARAMS", status="FAIL",
+                detail=f'ServerCall target "{target}" does not exist',
+            ))
+            continue
+
+        # Count function params
+        func_match = re.search(
+            rf'function\s+{re.escape(target)}\s*\(([^)]*)\)',
+            all_source
+        )
+        if func_match:
+            params_str = func_match.group(1).strip()
+            if params_str:
+                func_params = [p.strip() for p in params_str.split(",") if p.strip()]
+            else:
+                func_params = []
+
+            if len(call_args) != len(func_params):
+                findings.append(Finding(
+                    validator="SERVERCALL-PARAMS", status="FAIL",
+                    detail=f'ServerCall("{target}") passes {len(call_args)} args '
+                           f'but function expects {len(func_params)} params ({", ".join(func_params)})',
+                ))
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Orchestrator
+# ---------------------------------------------------------------------------
+
+def run_deepcheck(mod_dir: Path, is_weapon: bool = True) -> DeepcheckReport:
+    """Run all deepcheck validators on a mod and return a report."""
+    report = DeepcheckReport(mod_name=mod_dir.name)
+    report.assets = check_assets(mod_dir)
+    report.id_xref = check_id_xref(mod_dir)
+    report.servercall_params = check_servercall_params(mod_dir)
+    if is_weapon:
+        report.firing_chain = check_firing_chain(mod_dir)
+        report.effect_chain = check_effect_chain(mod_dir)
+        report.hud = check_hud(mod_dir)
+    return report

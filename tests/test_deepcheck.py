@@ -5,7 +5,8 @@ from pathlib import Path
 
 from tools.deepcheck import (
     check_assets, check_id_xref, check_firing_chain, check_effect_chain,
-    AssetFinding, ChainFinding, Finding,
+    check_hud, check_servercall_params, run_deepcheck,
+    AssetFinding, ChainFinding, Finding, DeepcheckReport,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures" / "deepcheck"
@@ -183,3 +184,109 @@ class TestEffectChain:
         (mod / "main.lua").write_text('#version 2\nfunction server.init()\nend\n')
         findings = check_effect_chain(mod)
         assert findings == []
+
+
+# ===========================================================================
+# check_hud
+# ===========================================================================
+
+class TestHudValidator:
+    def test_complete_gun_passes(self):
+        mod_dir = FIXTURES / "complete_gun"
+        findings = check_hud(mod_dir)
+        passes = [f for f in findings if f.status == "PASS"]
+        assert len(passes) >= 1
+
+    def test_no_draw_warns(self, tmp_path):
+        mod = tmp_path / "no_draw"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = NoDraw\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.init()\n'
+            '    RegisterTool("gun", "Gun", "MOD/vox/g.vox", 5)\n'
+            'end\n'
+        )
+        findings = check_hud(mod)
+        warns = [f for f in findings if f.status == "WARN"]
+        assert any("client.draw" in f.detail.lower() for f in warns)
+
+    def test_no_tool_guard_warns(self, tmp_path):
+        mod = tmp_path / "no_guard"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = NoGuard\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.init()\n'
+            '    RegisterTool("gun", "Gun", "MOD/vox/g.vox", 5)\n'
+            'end\n'
+            'function client.draw()\n'
+            '    UiText("always shown")\n'
+            'end\n'
+        )
+        findings = check_hud(mod)
+        warns = [f for f in findings if f.status == "WARN"]
+        assert any("GetPlayerTool" in f.detail for f in warns)
+
+
+# ===========================================================================
+# check_servercall_params
+# ===========================================================================
+
+class TestServerCallParams:
+    def test_complete_gun_passes(self):
+        mod_dir = FIXTURES / "complete_gun"
+        findings = check_servercall_params(mod_dir)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert len(fails) == 0
+
+    def test_missing_target_fails(self):
+        mod_dir = FIXTURES / "broken_chain"
+        findings = check_servercall_params(mod_dir)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert any("server.shoot" in f.detail for f in fails)
+
+    def test_param_count_mismatch(self, tmp_path):
+        mod = tmp_path / "bad_params"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = BadParams\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.shoot(p, pos, dir)\n'
+            '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
+            'end\n'
+            'function client.tick(dt)\n'
+            '    ServerCall("server.shoot", pos, dir)\n'
+            'end\n'
+        )
+        findings = check_servercall_params(mod)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert any("param" in f.detail.lower() or "argument" in f.detail.lower() for f in fails)
+
+
+# ===========================================================================
+# run_deepcheck orchestrator
+# ===========================================================================
+
+class TestRunDeepcheck:
+    def test_complete_gun_no_fails(self):
+        mod_dir = FIXTURES / "complete_gun"
+        report = run_deepcheck(mod_dir, is_weapon=True)
+        assert report.mod_name == "complete_gun"
+        # May have WARNs (e.g., onRecoil has ShakeCamera but not PlaySound) but no FAILs
+        assert report.overall_status in ("PASS", "WARN")
+
+    def test_non_weapon_skips_chains(self, tmp_path):
+        mod = tmp_path / "env_mod"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = Env\nversion = 2")
+        (mod / "main.lua").write_text('#version 2\nfunction server.init()\nend\n')
+        report = run_deepcheck(mod, is_weapon=False)
+        assert report.firing_chain == []
+        assert report.effect_chain == []
+        assert report.hud == []
+
+    def test_broken_mod_fails(self):
+        mod_dir = FIXTURES / "broken_chain"
+        report = run_deepcheck(mod_dir, is_weapon=True)
+        assert report.overall_status == "FAIL"

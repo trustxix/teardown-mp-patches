@@ -3,7 +3,10 @@
 import pytest
 from pathlib import Path
 
-from tools.deepcheck import check_assets, check_id_xref, AssetFinding, Finding
+from tools.deepcheck import (
+    check_assets, check_id_xref, check_firing_chain,
+    AssetFinding, ChainFinding, Finding,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures" / "deepcheck"
 
@@ -99,3 +102,35 @@ class TestIdCrossRef:
         (mod / "main.lua").write_text('#version 2\nfunction server.init()\nend\n')
         findings = check_id_xref(mod)
         assert findings == []
+
+
+# ===========================================================================
+# check_firing_chain
+# ===========================================================================
+
+class TestFiringChain:
+    def test_complete_chain_passes(self):
+        mod_dir = FIXTURES / "complete_gun"
+        findings = check_firing_chain(mod_dir)
+        assert all(f.status == "PASS" for f in findings)
+
+    def test_missing_server_target_fails(self):
+        mod_dir = FIXTURES / "broken_chain"
+        findings = check_firing_chain(mod_dir)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert any("server.shoot" in f.detail.lower() for f in fails)
+
+    def test_shoot_on_client_fails(self):
+        mod_dir = FIXTURES / "wrong_side"
+        findings = check_firing_chain(mod_dir)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert any("client" in f.detail.lower() for f in fails)
+
+    def test_non_weapon_mod_no_fails(self, tmp_path):
+        mod = tmp_path / "util_mod"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = Util\nversion = 2")
+        (mod / "main.lua").write_text('#version 2\nfunction server.init()\nend\n')
+        findings = check_firing_chain(mod)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert len(fails) == 0

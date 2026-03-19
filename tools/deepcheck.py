@@ -193,3 +193,153 @@ def check_id_xref(mod_dir: Path) -> list[Finding]:
                 ))
 
     return findings
+
+
+# ---------------------------------------------------------------------------
+# Lua function extraction helpers
+# ---------------------------------------------------------------------------
+
+_FUNC_DEF_RE = re.compile(r'^\s*function\s+([\w.]+)\s*\(([^)]*)\)', re.MULTILINE)
+_SERVERCALL_RE = re.compile(r'ServerCall\s*\(\s*"([^"]+)"')
+_CLIENTCALL_RE = re.compile(r'ClientCall\s*\(\s*([^,]+),\s*"([^"]+)"')
+_SHOOT_CALL_RE = re.compile(r'\bShoot\s*\(')
+_QUERYSHOT_CALL_RE = re.compile(r'\bQueryShot\s*\(')
+_APPLY_DAMAGE_RE = re.compile(r'\bApplyPlayerDamage\s*\(')
+_USETOOL_INPUT_RE = re.compile(r'Input(?:Pressed|Down)\s*\(\s*"usetool"')
+_PLAYSOUND_RE = re.compile(r'\bPlaySound\s*\(')
+_SPAWNPARTICLE_RE = re.compile(r'\bSpawnParticle\s*\(')
+_POINTLIGHT_RE = re.compile(r'\bPointLight\s*\(')
+_EXPLOSION_RE = re.compile(r'\bExplosion\s*\(')
+
+
+def _extract_functions(source: str) -> dict[str, str]:
+    """Extract function name -> body mapping from Lua source.
+
+    Uses simple depth tracking: counts 'function/if/for/while/repeat' as openers,
+    'end/until' as closers.
+    """
+    funcs: dict[str, str] = {}
+    lines = source.splitlines()
+
+    for m in _FUNC_DEF_RE.finditer(source):
+        func_name = m.group(1)
+        start_offset = m.start()
+        start_line = source[:start_offset].count('\n')
+        depth = 1
+        body_lines = []
+        for i in range(start_line + 1, len(lines)):
+            line = lines[i]
+            stripped = line.strip()
+            # Count openers (keywords that open a block)
+            for kw in ['function', 'if', 'for', 'while', 'repeat']:
+                if re.search(rf'\b{kw}\b', stripped):
+                    depth += 1
+                    break
+            # Count closers
+            if re.search(r'\bend\b', stripped):
+                depth -= 1
+            elif re.search(r'\buntil\b', stripped):
+                depth -= 1
+            if depth <= 0:
+                break
+            body_lines.append(line)
+        funcs[func_name] = '\n'.join(body_lines)
+
+    return funcs
+
+
+def _is_client_context(func_name: str) -> bool:
+    return func_name.startswith('client.')
+
+
+def _is_server_context(func_name: str) -> bool:
+    return func_name.startswith('server.')
+
+
+# ---------------------------------------------------------------------------
+# 1.1 Firing Chain Validator
+# ---------------------------------------------------------------------------
+
+def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
+    """Trace input -> ServerCall -> server handler -> Shoot/damage."""
+    findings: list[ChainFinding] = []
+    all_source = ""
+    for _, source in read_lua_files(mod_dir):
+        all_source += source + "\n"
+
+    if not _USETOOL_INPUT_RE.search(all_source):
+        return []  # Not a weapon mod
+
+    funcs = _extract_functions(all_source)
+
+    # Find ServerCall targets from client functions that handle usetool
+    servercall_targets: list[str] = []
+    for func_name, body in funcs.items():
+        if _is_client_context(func_name) and _USETOOL_INPUT_RE.search(body):
+            targets = _SERVERCALL_RE.findall(body)
+            servercall_targets.extend(targets)
+
+    # Check for Shoot() in client context (wrong side)
+    for func_name, body in funcs.items():
+        if _is_client_context(func_name):
+            if _SHOOT_CALL_RE.search(body) and _USETOOL_INPUT_RE.search(body):
+                findings.append(ChainFinding(
+                    validator="FIRING-CHAIN", status="FAIL",
+                    detail=f"Shoot() called in client function {func_name} — must be on server",
+                    chain=[func_name, "Shoot()"],
+                ))
+
+    # If no ServerCall targets found
+    if not servercall_targets:
+        has_client_shoot = any(
+            _SHOOT_CALL_RE.search(body) for fn, body in funcs.items() if _is_client_context(fn)
+        )
+        if not has_client_shoot:
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="FAIL",
+                detail="usetool input detected but no ServerCall to server — weapon won't fire",
+                chain=["usetool", "???"],
+            ))
+        return findings
+
+    # Verify each ServerCall target exists and calls Shoot/damage
+    for target in servercall_targets:
+        if target not in funcs:
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="FAIL",
+                detail=f'ServerCall target "{target}" not found — function does not exist',
+                chain=["usetool", f"ServerCall:{target}", "MISSING"],
+            ))
+            continue
+
+        body = funcs[target]
+        has_shoot = _SHOOT_CALL_RE.search(body)
+        has_queryshot = _QUERYSHOT_CALL_RE.search(body)
+        has_damage = _APPLY_DAMAGE_RE.search(body)
+
+        if has_shoot:
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="PASS",
+                detail=f"Complete chain: usetool -> ServerCall -> {target} -> Shoot()",
+                chain=["usetool", f"ServerCall:{target}", "Shoot()"],
+            ))
+        elif has_queryshot and has_damage:
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="PASS",
+                detail=f"Complete chain: usetool -> ServerCall -> {target} -> QueryShot+ApplyPlayerDamage",
+                chain=["usetool", f"ServerCall:{target}", "QueryShot()", "ApplyPlayerDamage()"],
+            ))
+        elif has_queryshot:
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="WARN",
+                detail=f'{target} calls QueryShot but no ApplyPlayerDamage — may not deal damage',
+                chain=["usetool", f"ServerCall:{target}", "QueryShot()", "???"],
+            ))
+        else:
+            findings.append(ChainFinding(
+                validator="FIRING-CHAIN", status="WARN",
+                detail=f'{target} exists but has no Shoot/QueryShot — may not deal damage',
+                chain=["usetool", f"ServerCall:{target}", "???"],
+            ))
+
+    return findings

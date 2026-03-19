@@ -177,12 +177,57 @@ def get_focus() -> str:
 
 @mcp.tool()
 def check_inbox(role: str) -> list[dict] | str:
-    """Read all inbox messages."""
+    """Read inbox messages. Auto-archives messages older than 60 minutes (except critical priority)."""
     inbox = COMMS_DIR / role / "inbox"
     if not inbox.exists():
         return "Inbox empty"
-    msgs = [{"filename": f.name, "content": f.read_text(encoding="utf-8", errors="replace")} for f in sorted(inbox.glob("*.md"))]
+    archive = COMMS_DIR / role / "archive"
+    now = datetime.now(timezone.utc)
+    msgs = []
+    for f in sorted(inbox.glob("*.md")):
+        # Parse age from filename: YYYYMMDD_HHMMSS_...
+        try:
+            ts_str = f.name[:15]  # "20260319_154635"
+            file_time = datetime.strptime(ts_str, "%Y%m%d_%H%M%S").replace(tzinfo=timezone.utc)
+            age_minutes = (now - file_time).total_seconds() / 60
+        except (ValueError, IndexError):
+            age_minutes = 0
+
+        content = f.read_text(encoding="utf-8", errors="replace")
+
+        # Archive stale non-critical messages
+        if age_minutes > 60 and "priority: critical" not in content[:500].lower():
+            archive.mkdir(parents=True, exist_ok=True)
+            f.rename(archive / f.name)
+            continue
+
+        msgs.append({"filename": f.name, "content": content})
     return msgs if msgs else "Inbox empty"
+
+
+@mcp.tool()
+def archive_stale_messages(role: str, max_age_minutes: int = 60) -> dict:
+    """Manually archive messages older than max_age_minutes. Critical-priority messages are exempt."""
+    inbox = COMMS_DIR / role / "inbox"
+    if not inbox.exists():
+        return {"archived": 0}
+    archive = COMMS_DIR / role / "archive"
+    now = datetime.now(timezone.utc)
+    count = 0
+    for f in inbox.glob("*.md"):
+        try:
+            ts_str = f.name[:15]
+            file_time = datetime.strptime(ts_str, "%Y%m%d_%H%M%S").replace(tzinfo=timezone.utc)
+            if (now - file_time).total_seconds() / 60 > max_age_minutes:
+                content = f.read_text(encoding="utf-8", errors="replace")
+                if "priority: critical" in content[:500].lower():
+                    continue  # Never archive critical messages
+                archive.mkdir(parents=True, exist_ok=True)
+                f.rename(archive / f.name)
+                count += 1
+        except (ValueError, IndexError):
+            pass
+    return {"archived": count}
 
 
 @mcp.tool()

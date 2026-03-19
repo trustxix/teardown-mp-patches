@@ -13,6 +13,9 @@ from tools.gamerunner import (
     acquire_test_lock,
     release_test_lock,
     parse_savegame_diagnostics,
+    is_black_frame,
+    install_test_harness,
+    GameTestResult,
 )
 
 
@@ -25,7 +28,8 @@ class TestFindTeardownExe:
 
     def test_returns_none_when_not_found(self):
         with patch("tools.gamerunner.TEARDOWN_EXE_PATHS", [Path("/nonexistent/teardown.exe")]):
-            assert find_teardown_exe() is None
+            with patch("tools.gamerunner.re.findall", return_value=[]):
+                assert find_teardown_exe() is None
 
     def test_returns_first_found(self, tmp_path):
         exe1 = tmp_path / "first" / "teardown.exe"
@@ -119,3 +123,48 @@ class TestSavegameDiagnostics:
 </registry>''')
         data = parse_savegame_diagnostics(xml)
         assert data["tool_ids"] == ["pistol", "shotgun", "rifle"]
+
+
+class TestScreenCapture:
+    def test_is_black_frame_black(self):
+        from PIL import Image
+        black = Image.new("RGB", (100, 100), (0, 0, 0))
+        assert is_black_frame(black) is True
+
+    def test_is_black_frame_normal(self):
+        from PIL import Image
+        normal = Image.new("RGB", (100, 100), (128, 128, 128))
+        assert is_black_frame(normal) is False
+
+    def test_is_black_frame_near_black(self):
+        from PIL import Image
+        dark = Image.new("RGB", (100, 100), (5, 5, 5))
+        assert is_black_frame(dark) is True
+
+
+class TestInstallHarness:
+    def test_installs_files(self, tmp_path):
+        harness_dir = tmp_path / "__test_harness"
+        with patch("tools.gamerunner.TEST_HARNESS_DIR", harness_dir):
+            install_test_harness()
+            assert (harness_dir / "info.txt").exists()
+            assert (harness_dir / "main.lua").exists()
+            assert (harness_dir / "main.xml").exists()
+            assert (harness_dir / "wall.vox").exists()
+            assert (harness_dir / "floor.vox").exists()
+
+    def test_vox_magic_bytes(self, tmp_path):
+        harness_dir = tmp_path / "__test_harness"
+        with patch("tools.gamerunner.TEST_HARNESS_DIR", harness_dir):
+            install_test_harness()
+            wall = (harness_dir / "wall.vox").read_bytes()
+            assert wall[:4] == b"VOX "
+
+
+class TestGameTestResult:
+    def test_default_values(self):
+        r = GameTestResult()
+        assert r.mod_loaded is False
+        assert r.crashed is False
+        assert r.session_duration == 0.0
+        assert r.screenshot_paths == []

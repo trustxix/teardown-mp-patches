@@ -10,13 +10,14 @@ Usage:
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
 import click
 
-from tools.common import LIVE_MODS_DIR, discover_mods, TEST_RESULTS_DIR
+from tools.common import LIVE_MODS_DIR, discover_mods, TEST_RESULTS_DIR, TEST_CONFIG_PATH, TEST_HARNESS_DIR
 from tools.deepcheck import run_deepcheck, DeepcheckReport, Finding
 
 
@@ -210,7 +211,8 @@ def _detect_is_weapon(mod_dir: Path) -> bool:
         return False
 
 
-def run_test(mod_name: str, static_only: bool = False, verbose: bool = False) -> TestReport:
+def run_test(mod_name: str, static_only: bool = False, no_input: bool = False,
+             verbose: bool = False) -> TestReport:
     """Run the full test pipeline on a mod."""
     mod_dirs = discover_mods(mod_name=mod_name)
     if not mod_dirs:
@@ -226,17 +228,46 @@ def run_test(mod_name: str, static_only: bool = False, verbose: bool = False) ->
     if not static_only:
         try:
             from tools.injector import inject_diagnostics, restore_from_backup
-            from tools.gamerunner import GameRunnerConfig
+            from tools.gamerunner import (
+                GameRunnerConfig, acquire_test_lock, release_test_lock,
+                run_game_test,
+            )
 
             config = GameRunnerConfig.load()
             if not config.teardown_exe or not config.teardown_exe.exists():
                 click.echo("WARN: Teardown.exe not configured. Run: python -m tools.test --setup")
                 click.echo("      Skipping runtime test, showing static results only.")
+            elif not acquire_test_lock():
+                click.echo("WARN: Another test is running. Skipping runtime test.")
             else:
-                # TODO: implement full game launch sequence (Task 8)
-                click.echo("WARN: Runtime testing not yet implemented. Showing static results only.")
-        except ImportError:
-            click.echo("WARN: Runtime dependencies not installed. Run: python -m tools.test --setup")
+                try:
+                    # Layer 2: Inject diagnostics
+                    click.echo(f"Injecting diagnostics into {mod_name}...")
+                    inject_diagnostics(mod_dir)
+
+                    # Layer 3: Launch game and test
+                    click.echo("Launching Teardown...")
+                    game_result = run_game_test(mod_name, config, no_input=no_input)
+
+                    # Convert GameTestResult to dict for report
+                    runtime = {
+                        "mod_loaded": game_result.mod_loaded,
+                        "compile_errors": game_result.compile_errors,
+                        "runtime_errors": game_result.runtime_errors,
+                        "diagnostic_data": game_result.diagnostic_data,
+                        "session_duration": game_result.session_duration,
+                        "crashed": game_result.crashed,
+                        "screenshot_count": len(game_result.screenshot_paths),
+                        "screenshots": [str(p) for p in game_result.screenshot_paths],
+                    }
+                    click.echo(f"Game session: {game_result.session_duration:.1f}s, "
+                              f"{len(game_result.screenshot_paths)} screenshots captured")
+                finally:
+                    # Always restore mod and release lock
+                    restore_from_backup(mod_dir)
+                    release_test_lock()
+        except ImportError as e:
+            click.echo(f"WARN: Runtime dependencies not installed ({e}). Run: python -m tools.test --setup")
 
     report = generate_report(
         mod_name=mod_name,
@@ -308,15 +339,33 @@ def test_cli(mod_name, static_only, batch, no_input, verbose, setup):
     if not mod_name:
         raise click.ClickException("Specify --mod or --batch")
 
-    report = run_test(mod_name, static_only=static_only, verbose=verbose)
+    report = run_test(mod_name, static_only=static_only, no_input=no_input, verbose=verbose)
     click.echo(report.to_text())
 
 
 def _run_setup():
-    """First-time setup: find exe, install harness, save config."""
-    from tools.gamerunner import find_teardown_exe, GameRunnerConfig
+    """First-time setup: find exe, install harness, check deps, save config."""
+    from tools.gamerunner import find_teardown_exe, install_test_harness, GameRunnerConfig
 
     click.echo("=== Teardown Test Platform Setup ===\n")
+
+    # Check runtime deps
+    missing = []
+    for pkg in ["mss", "pyautogui", "pygetwindow", "PIL"]:
+        try:
+            __import__(pkg)
+        except ImportError:
+            missing.append(pkg)
+    if missing:
+        click.echo(f"Missing packages: {', '.join(missing)}")
+        click.echo("Installing...")
+        import subprocess
+        subprocess.run([sys.executable, "-m", "pip", "install",
+                       "mss", "pyautogui", "PyGetWindow", "Pillow"],
+                      check=True)
+        click.echo("Dependencies installed.\n")
+    else:
+        click.echo("Dependencies: all installed\n")
 
     # Find exe
     exe = find_teardown_exe()
@@ -324,17 +373,21 @@ def _run_setup():
         click.echo(f"Found Teardown: {exe}")
     else:
         click.echo("Teardown.exe not found in standard Steam locations.")
-        click.echo("Skipping exe configuration — runtime tests unavailable until configured.")
-        click.echo("Static analysis (--static) works without it.\n")
+        click.echo("Runtime tests unavailable until configured. Static analysis works without it.\n")
+
+    # Install test harness mod
+    install_test_harness()
+    click.echo(f"Test harness mod installed: {TEST_HARNESS_DIR}")
 
     # Save config
     config = GameRunnerConfig(teardown_exe=exe)
     config.save()
-    click.echo(f"Config saved to {config.teardown_exe}")
+    click.echo(f"Config saved: {TEST_CONFIG_PATH}\n")
 
-    click.echo("\nSetup complete!")
-    click.echo("  Static test: python -m tools.test --mod \"ModName\" --static")
-    click.echo("  Batch test:  python -m tools.test --batch all --static")
+    click.echo("Setup complete!")
+    click.echo("  Static test:  python -m tools.test --mod \"ModName\" --static")
+    click.echo("  Runtime test: python -m tools.test --mod \"ModName\"")
+    click.echo("  Batch test:   python -m tools.test --batch all --static")
 
 
 if __name__ == "__main__":

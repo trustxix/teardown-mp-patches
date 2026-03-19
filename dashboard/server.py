@@ -31,7 +31,16 @@ LINT_CACHE_SECONDS = 60
 
 def get_inboxes():
     """Get inbox/outbox counts for each role."""
-    roles = ["qa_lead", "api_surgeon", "mod_converter", "docs_keeper"]
+    # Try roles.json first (fast-path), fall back to hardcoded list
+    roles_file = PROJECT / "roles.json"
+    if roles_file.exists():
+        try:
+            roles = json.loads(roles_file.read_text(encoding="utf-8")).get("roles", [])
+        except (json.JSONDecodeError, OSError):
+            roles = ["qa_lead", "api_surgeon", "mod_converter", "docs_keeper"]
+    else:
+        roles = ["qa_lead", "api_surgeon", "mod_converter", "docs_keeper"]
+    # Also scan for any additional roles in .comms/
     if COMMS.exists():
         for d in COMMS.iterdir():
             if d.is_dir() and (d / "inbox").is_dir() and d.name not in roles and d.name != "__pycache__":

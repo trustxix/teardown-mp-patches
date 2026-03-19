@@ -4,6 +4,7 @@ Instead of 5 separate MCP servers (20 Python processes across 4 terminals),
 this runs everything in 1 process per terminal (4 total).
 """
 
+import json
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -29,7 +30,27 @@ mcp = FastMCP(
 )
 
 COMMS_DIR = PROJECT_ROOT / ".comms"
-VALID_ROLES = {"api_surgeon", "mod_converter", "qa_lead", "docs_keeper", "maintainer"}
+
+
+def _load_roles() -> set[str]:
+    """Discover roles from ROLE_*.md files and .comms/ inbox directories."""
+    roles = set()
+    for f in PROJECT_ROOT.glob("ROLE_*.md"):
+        roles.add(f.stem.replace("ROLE_", "").lower())
+    if COMMS_DIR.exists():
+        for d in COMMS_DIR.iterdir():
+            if d.is_dir() and (d / "inbox").is_dir() and d.name != "__pycache__":
+                roles.add(d.name)
+    return roles
+
+
+VALID_ROLES = _load_roles()
+
+
+def _write_roles_json():
+    """Write roles.json for other systems to read."""
+    data = {"roles": sorted(VALID_ROLES), "last_scanned": datetime.now(timezone.utc).isoformat()}
+    (PROJECT_ROOT / "roles.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
 def _ts():
@@ -274,6 +295,7 @@ def spawn_terminal(role_name: str, display_name: str, role_file_content: str) ->
         (COMMS_DIR / role_name / "inbox").mkdir(parents=True, exist_ok=True)
         (COMMS_DIR / role_name / "outbox").mkdir(parents=True, exist_ok=True)
         VALID_ROLES.add(role_name)
+        _write_roles_json()
         prompt = f"Read {rf} and start your autonomous work loop. You are {role_name}. Run tools.status first, then get_focus, check_inbox, and get_task. Keep working forever."
         bat = f'@echo off\nstart "{display_name}" "C:\\Program Files\\PowerShell\\7\\pwsh.exe" -NoExit -Command "cd C:\\Users\\trust\\teardown-mp-patches; claude --dangerously-skip-permissions \'{prompt}\'"\n'
         lp = Path(f"C:/Users/trust/Desktop/launch_{role_name}.bat")
@@ -449,6 +471,17 @@ def get_mod_registry_diff(mod_name: str) -> dict | str:
     return _gmd(mod_name)
 
 
+# ── ROLE MANAGEMENT ───────────────────────────────────
+
+@mcp.tool()
+def refresh_roles() -> dict:
+    """Re-scan for roles and update roles.json."""
+    global VALID_ROLES
+    VALID_ROLES = _load_roles()
+    _write_roles_json()
+    return {"roles": sorted(VALID_ROLES)}
+
+
 # ── TASK SERVER TOOLS (delegated) ─────────────────────
 
 @mcp.tool()
@@ -520,6 +553,9 @@ def check_handoff(role: str) -> dict | str:
     handoff.unlink()
     return {"found": True, "content": content}
 
+
+# Write roles.json on startup
+_write_roles_json()
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

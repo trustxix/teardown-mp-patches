@@ -88,6 +88,28 @@ def _recover_stale(data):
     return recovered
 
 
+def _find_duplicate_in_data(data: dict, mods: list[str], title_substring: str) -> str | None:
+    """Find an open/in-progress task with overlapping mods and matching title. Called inside _with_lock."""
+    search_mods = set(mods)
+    sub = title_substring.lower()
+    for t in data["tasks"]:
+        if t["status"] not in ("open", "in_progress"):
+            continue
+        if sub not in t.get("title", "").lower():
+            continue
+        task_mods = set(t.get("mods", []))
+        if search_mods & task_mods:  # any overlap
+            return t["id"]
+    return None
+
+
+def find_duplicate(mods: list[str], title_substring: str) -> str | None:
+    """Find an open/in-progress task with overlapping mods and matching title."""
+    def _op(data):
+        return _find_duplicate_in_data(data, mods, title_substring)
+    return _with_lock(_op)
+
+
 def get_next_task(role: str) -> dict | None:
     """Get next OPEN task for role, mark it IN_PROGRESS. Auto-recovers stale tasks."""
     def _op(data):
@@ -131,9 +153,17 @@ def complete_task(task_id: str, summary: str) -> bool:
     return _with_lock(_op)
 
 
-def create_task(title: str, role: str, priority: str, description: str, mods: list[str] | None = None) -> str:
-    """Create a new task, return its ID."""
+def create_task(title: str, role: str, priority: str, description: str,
+                mods: list[str] | None = None, deduplicate: bool = False) -> str:
+    """Create a new task, return its ID. If deduplicate=True, returns existing task ID if found."""
     def _op(data):
+        # Atomic dedup check inside the same lock as creation
+        if deduplicate and mods:
+            sub = title.split(":")[0] if ":" in title else title
+            existing = _find_duplicate_in_data(data, mods, sub)
+            if existing:
+                return existing  # Return existing task ID, no new task created
+
         task_id = f"T{data['next_id']}"
         data["next_id"] += 1
         task = {

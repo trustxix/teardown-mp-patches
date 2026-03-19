@@ -59,9 +59,10 @@ def complete_task(task_id: str, summary: str) -> dict:
 
 
 @mcp.tool()
-def create_task(title: str, role: str, priority: str, description: str, mods: list[str] | None = None) -> dict:
-    """Create a new task."""
-    tid = task_store.create_task(title, role, priority, description, mods)
+def create_task(title: str, role: str, priority: str, description: str,
+                mods: list[str] | None = None, deduplicate: bool = False) -> dict:
+    """Create a new task. Set deduplicate=True to avoid creating duplicates."""
+    tid = task_store.create_task(title, role, priority, description, mods, deduplicate=deduplicate)
     return {"success": True, "task_id": tid}
 
 

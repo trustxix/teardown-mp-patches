@@ -343,3 +343,93 @@ def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
             ))
 
     return findings
+
+
+# ---------------------------------------------------------------------------
+# 1.2 Effect Chain Validator
+# ---------------------------------------------------------------------------
+
+_EFFECT_APIS = [
+    ("PlaySound", _PLAYSOUND_RE),
+    ("SpawnParticle", _SPAWNPARTICLE_RE),
+    ("PointLight", _POINTLIGHT_RE),
+]
+
+
+def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
+    """Trace damage -> ClientCall -> PlaySound/SpawnParticle on client."""
+    findings: list[ChainFinding] = []
+    all_source = ""
+    for _, source in read_lua_files(mod_dir):
+        all_source += source + "\n"
+
+    # Check if mod has damage calls at all
+    has_shoot = _SHOOT_CALL_RE.search(all_source)
+    has_explosion = _EXPLOSION_RE.search(all_source)
+    has_queryshot = _QUERYSHOT_CALL_RE.search(all_source)
+    if not (has_shoot or has_explosion or has_queryshot):
+        return []  # Not a damage-dealing mod
+
+    funcs = _extract_functions(all_source)
+
+    # Check for effect APIs called in server functions (wrong side)
+    for func_name, body in funcs.items():
+        if _is_server_context(func_name):
+            for api_name, api_re in _EFFECT_APIS:
+                if api_re.search(body):
+                    findings.append(ChainFinding(
+                        validator="EFFECT-CHAIN", status="FAIL",
+                        detail=f"{api_name}() called in server function {func_name} — "
+                               f"effects must be on client (other players won't see/hear them)",
+                        chain=[func_name, f"{api_name}()"],
+                    ))
+
+    # Find ClientCall targets from server functions that have damage
+    clientcall_targets: list[tuple[str, str]] = []  # (target_player, func_name)
+    for func_name, body in funcs.items():
+        if _is_server_context(func_name):
+            if _SHOOT_CALL_RE.search(body) or _EXPLOSION_RE.search(body) or _QUERYSHOT_CALL_RE.search(body):
+                for m in _CLIENTCALL_RE.finditer(body):
+                    target_player = m.group(1).strip()
+                    target_func = m.group(2)
+                    clientcall_targets.append((target_player, target_func))
+
+    # If server has damage but no ClientCall → silent weapon
+    if not clientcall_targets:
+        # Only warn if there are no FAIL findings (server-side effects already reported)
+        server_fails = [f for f in findings if f.status == "FAIL"]
+        if not server_fails:
+            findings.append(ChainFinding(
+                validator="EFFECT-CHAIN", status="WARN",
+                detail="Server has Shoot/Explosion but no ClientCall — weapon may be silent (no sound/particles for other players)",
+                chain=["Shoot()", "no ClientCall"],
+            ))
+        return findings
+
+    # Verify ClientCall targets exist and have effects
+    for target_player, target_func in clientcall_targets:
+        if target_func not in funcs:
+            findings.append(ChainFinding(
+                validator="EFFECT-CHAIN", status="FAIL",
+                detail=f'ClientCall target "{target_func}" not found — effects function missing',
+                chain=[f"ClientCall:{target_func}", "MISSING"],
+            ))
+            continue
+
+        body = funcs[target_func]
+        has_effects = any(api_re.search(body) for _, api_re in _EFFECT_APIS)
+
+        if has_effects:
+            findings.append(ChainFinding(
+                validator="EFFECT-CHAIN", status="PASS",
+                detail=f"Effect chain: damage -> ClientCall -> {target_func} -> effects",
+                chain=[f"ClientCall:{target_func}", "effects"],
+            ))
+        else:
+            findings.append(ChainFinding(
+                validator="EFFECT-CHAIN", status="WARN",
+                detail=f'{target_func} exists but has no PlaySound/SpawnParticle/PointLight',
+                chain=[f"ClientCall:{target_func}", "no effects"],
+            ))
+
+    return findings

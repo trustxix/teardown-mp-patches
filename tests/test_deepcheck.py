@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 
 from tools.deepcheck import (
-    check_assets, check_id_xref, check_firing_chain,
+    check_assets, check_id_xref, check_firing_chain, check_effect_chain,
     AssetFinding, ChainFinding, Finding,
 )
 
@@ -134,3 +134,52 @@ class TestFiringChain:
         findings = check_firing_chain(mod)
         fails = [f for f in findings if f.status == "FAIL"]
         assert len(fails) == 0
+
+
+# ===========================================================================
+# check_effect_chain
+# ===========================================================================
+
+class TestEffectChain:
+    def test_complete_gun_passes(self):
+        mod_dir = FIXTURES / "complete_gun"
+        findings = check_effect_chain(mod_dir)
+        assert all(f.status in ("PASS", "WARN") for f in findings)
+        assert any(f.status == "PASS" for f in findings)
+
+    def test_server_side_effects_fail(self, tmp_path):
+        mod = tmp_path / "srvfx"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = SrvFx\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.shoot(p, pos, dir)\n'
+            '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
+            '    PlaySound(LoadSound("MOD/snd/bang.ogg"), pos)\n'
+            'end\n'
+        )
+        findings = check_effect_chain(mod)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert any("server" in f.detail.lower() and "PlaySound" in f.detail for f in fails)
+
+    def test_silent_weapon_warns(self, tmp_path):
+        mod = tmp_path / "silent"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = Silent\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.shoot(p, pos, dir)\n'
+            '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
+            'end\n'
+        )
+        findings = check_effect_chain(mod)
+        warns = [f for f in findings if f.status == "WARN"]
+        assert any("no ClientCall" in f.detail.lower() or "silent" in f.detail.lower() for f in warns)
+
+    def test_non_weapon_empty(self, tmp_path):
+        mod = tmp_path / "env"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = Env\nversion = 2")
+        (mod / "main.lua").write_text('#version 2\nfunction server.init()\nend\n')
+        findings = check_effect_chain(mod)
+        assert findings == []

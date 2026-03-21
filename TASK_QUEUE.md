@@ -2,6 +2,12 @@
 
 > Other terminals: pick up tasks assigned to your role, mark them `IN PROGRESS` with your terminal name, and `DONE` when complete. Run `python -m tools.lint --mod "ModName"` after every edit.
 
+> **Active task tracking has moved to the MCP task system.** Use `get_task(role)` / `complete_task(id)` / `create_task(...)` for current work. This file is kept as historical record.
+
+## Current State (2026-03-21)
+
+**112 mods installed** (was 125 on 2026-03-20). Mod set changed — user removed some mods and installed ~34 new ones from workshop backlog. **All 112 mods lint clean (0 tier-1 errors)** — QA Lead resolved all 38 findings from new installs (framework FP suppressions, backup cleanup, entity script v2 conversion, RAW-KEY-PLAYER fixes). Active MCP tasks: T150 (clean stale test dirs), T167-T176 (current batch — deepcheck fixes, AmmoPickup, GLARE firing chain). See `.comms/FOCUS.md` for current batch plan.
+
 ---
 
 ## Terminal 1 (API Surgeon) — Queue
@@ -211,7 +217,7 @@ New tooling: QUERYSHOT-PLAYER-GUARD lint rule (Tier 1) + queryshot-guard auto-fi
 - 127/138 mods lint clean. VectorRazor fully patched (#133) — 7 MP bugs fixed by mod_converter, TOOL-ENABLED-ORDER lint improved
 - Lint noise reduction: CLIENT-SERVER-FUNC negative lookbehind, HANDLE-GT-ZERO ARM exclusions + "t" non-handle, TOOL-ENABLED-ORDER uppercase constants
 - Only 5 WARNs remain: all in Spawnable_Missiles_MP CRJ-200 FUEL system (needs client/server split, low priority)
-- 5 convertible mods remaining (all Very High difficulty): GLARE, Infinity Technique, Lockonauts Toolbox, [PB] ProBallistics, [GLaD] GYM Ragdoll
+- 5 convertible mods remaining (all Very High difficulty): GLARE, Infinity Technique, Lockonauts Toolbox, [GLaD] GYM Ragdoll
 - 23 UMF-blocked (16 original + 7 workshop v2+UMF)
 - All tasks complete
 
@@ -238,7 +244,6 @@ New tooling: QUERYSHOT-PLAYER-GUARD lint rule (Tier 1) + queryshot-guard auto-fi
 
 **Remaining (all low priority):**
 - ~~5~~ **2 convertible mods** (both HIGH/DEFERRED): GLARE (LnL framework), Lockonauts Toolbox (custom UI rewrite)
-- ~~ProBallistics~~ — **DO NOT CONVERT** (17,447 lines across 54 files, 3.5x estimated)
 - ~~Infinity Technique~~ — **DONE** #159 (full v2 rewrite 2026-03-19)
 - ~~GYM Ragdoll~~ — **DONE** #161 (v2 conversion 2026-03-19)
 - 16 UMF-blocked (confirmed genuine — need UMF v2 port)
@@ -250,7 +255,6 @@ New tooling: QUERYSHOT-PLAYER-GUARD lint rule (Tier 1) + queryshot-guard auto-fi
 
 **This session (3 new mods):** Infinity_Technique #159, ARM_AK47 #160, GYM_Ragdoll #161.
 **Tooling:** MISSING-OPTIONS-GUARD improved (12 suppressions removed), gun_v2_generator Issue #47 fix + 14 tests, cross-mod duplicate tool ID detection, check_missing_interactive comment fix, FPV_Drone_Tool PlaySound→ClientCall.
-**ProBallistics closed:** 17,447 lines across 54 files — DO NOT CONVERT (plan doc available).
 **Remaining convertible (2):** GLARE, Lockonauts Toolbox (both HIGH/DEFERRED). 16 UMF-blocked. All tasks complete.
 
 ## Active Focus: UMF Bypass — Converting Blocked Mods Without Framework Port (2026-03-19)
@@ -320,7 +324,7 @@ New tooling: QUERYSHOT-PLAYER-GUARD lint rule (Tier 1) + queryshot-guard auto-fi
 
 **Session conversions (#172-#177):** BHL-X42 (api_surgeon), TABS_Effect, Adjustable_Fire, Enchanter (api_surgeon), Always_Up, Hungry_Slimes (all mod_converter).
 
-**Deferred (12):** GLARE, Lockonauts Toolbox, ProBallistics (DO NOT CONVERT), Chaos_Mod (8,100 lines), Player_Scaler (MP-incompatible), Ascended Sword Master, Shards Summoner, AI Trainer, Blight Gun, Thermite Cannon, Tameable Dragon, Synthetic Swarm (DO NOT CONVERT).
+**Deferred (11):** GLARE, Lockonauts Toolbox, Chaos_Mod (8,100 lines), Player_Scaler (MP-incompatible), Ascended Sword Master, Shards Summoner, AI Trainer, Blight Gun, Thermite Cannon, Tameable Dragon, Synthetic Swarm (DO NOT CONVERT).
 
 ~~All tasks complete.~~ New tasks from deep analysis (deepcheck.py batch run).
 
@@ -349,9 +353,20 @@ New tooling: QUERYSHOT-PLAYER-GUARD lint rule (Tier 1) + queryshot-guard auto-fi
 **T101 compile error fixes:** ARM_M4A4 (Issue #64 — orphaned code), ARM_NOVA (Issue #64), Hurricanes_and_Blizzards (Issue #65 — annotation placement).
 **Deepcheck improvements:** All 7→5→0 WARNs resolved as false positives via broadened effect chain analysis.
 
-**Deferred (12):** Ascended Sword Master, Shards Summoner, GLARE, Lockonauts Toolbox, AI Trainer, Blight Gun, Thermite Cannon, Chaos_Mod, Player_Scaler, ProBallistics (DO NOT CONVERT), Tameable Dragon, Synthetic Swarm (DO NOT CONVERT).
+**Deferred (11):** Ascended Sword Master, Shards Summoner, GLARE, Lockonauts Toolbox, AI Trainer, Blight Gun, Thermite Cannon, Chaos_Mod, Player_Scaler, Tameable Dragon, Synthetic Swarm (DO NOT CONVERT).
 
 All tasks complete. Queue empty.
+
+## MILESTONE: 125 Mods — Zero Lint, 100% Entity Scripts, Zero Desync (2026-03-20)
+
+**125 mods** installed (53 removed 2026-03-19 for engine stability). **571 tests**. **33 lint rules**. **0 findings at ANY tier** (error/warn/info). 0 missing features. 9 auto-fixers. **~150 tasks completed** across all sessions. Deep analysis: **125/125 PASS / 0 WARN / 0 FAIL**. Issues #20-#68 documented (49 bugs, 35 key rules).
+
+**Entity script conversion: 100% complete** — all 79 v1 entity scripts across 10 mods converted to v2 (was 82% at end of previous session). Final script: DAM_Helis/GunnerAI.lua (T142, 1381 lines).
+
+**Deep desync analysis (T148):** All 6 root causes from MP_DESYNC_PATTERNS.md verified clean across 125 mods. Object_Possession (T149) was FALSE POSITIVE — dead code. MEGAGUN + M2A1_Flamethrower double-processing FIXED (Issues #69-70 — separated server/client data tables). 10 framework mods fixed (Issue #58 batch 2 — ClientCall(p)→ClientCall(0) for world-space gunfire). V1 options.lua (Issue #71): 3 converted, 6 remaining (T158).
+
+**Active:** T150 (clean stale test results, awaiting user approval), T155 (M2A1_Flamethrower math.random divergence), T156 (remove 103 preview images, awaiting user approval).
+**Completed this session:** T158 (all 9/9 v1 options.lua converted — Issue #71 fully resolved), T161 (V2-DEAD-CALLBACK test coverage — 9 tests added, 580 total).
 
 ## MILESTONE: 172 Mods — BHL-X42 Converted (2026-03-19)
 

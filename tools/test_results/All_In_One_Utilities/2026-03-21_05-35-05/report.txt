@@ -1,0 +1,18 @@
+TEST REPORT: All_In_One_Utilities
+======================================================
+Generated: 2026-03-21 05:35:05
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 1 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: FAIL — 2 issues
+    - ServerCall("server.requestAction") passes 2 args but function expects 3 params (callerID, action, targetID)
+    - ServerCall("server.requestAction") passes 2 args but function expects 3 params (callerID, action, targetID)
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

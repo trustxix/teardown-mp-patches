@@ -1,0 +1,28 @@
+TEST REPORT: WIP_GYM_Ragdoll_Framework_MP
+======================================================
+Generated: 2026-03-21 05:37:06
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 8/18 assets missing
+    - Asset NOT found: xml/organBrain.xml
+    - Asset NOT found: xml/organEntrails.xml
+    - Asset NOT found: xml/organHeart.xml
+    - Asset NOT found: xml/organSpine.xml
+    - Asset NOT found: xml/organLung.xml
+    - Asset NOT found: vox/bandages.vox
+    - Asset NOT found: vox/resurrect.vox
+    - Asset NOT found: vox/sedatives.vox
+  ID cross-ref:      WARN — 3 warnings
+    - No SetToolAmmo found for "bandages" — tool may not appear in toolbar
+    - No SetToolAmmo found for "resurrect" — tool may not appear in toolbar
+    - No SetToolAmmo found for "sedatives" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - client.draw() has no GetPlayerTool guard — HUD may show for all tools
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

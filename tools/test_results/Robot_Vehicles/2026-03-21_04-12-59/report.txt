@@ -1,0 +1,30 @@
+TEST REPORT: Robot_Vehicles
+======================================================
+Generated: 2026-03-21 04:12:59
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 5/36 assets missing
+    - Asset NOT found: physgun.vox
+    - Asset NOT found: testLevel.xml
+    - Asset NOT found: miniCity.xml
+    - Asset NOT found: img/preview.png
+    - Asset NOT found: zombieMod/Preview.jpg
+  ID cross-ref:      WARN — 8 warnings
+    - No SetToolEnabled found for "lasergun" — tool may not appear for joining players
+    - No SetToolAmmo found for "lasergun" — tool may not appear in toolbar
+    - No SetToolEnabled found for "z-glock18" — tool may not appear for joining players
+    - No SetToolAmmo found for "z-glock18" — tool may not appear in toolbar
+    - No SetToolEnabled found for "z-m4a1" — tool may not appear for joining players
+    - No SetToolAmmo found for "z-m4a1" — tool may not appear in toolbar
+    - No SetToolEnabled found for "p90" — tool may not appear for joining players
+    - No SetToolAmmo found for "p90" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - client.draw() has no GetPlayerTool guard — HUD may show for all tools
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

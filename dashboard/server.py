@@ -332,23 +332,26 @@ DASHBOARD_HTML_FILE = Path(__file__).parent / "index.html"
 
 class DashboardHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
-        parsed = urlparse(self.path)
-        if parsed.path == "/api/status":
-            data = build_api_response()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps(data).encode())
-        elif parsed.path == "/" or parsed.path == "/index.html":
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html")
-            self.end_headers()
-            html = DASHBOARD_HTML_FILE.read_text(encoding="utf-8")
-            self.wfile.write(html.encode())
-        else:
-            self.send_response(404)
-            self.end_headers()
+        try:
+            parsed = urlparse(self.path)
+            if parsed.path == "/api/status":
+                data = build_api_response()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps(data).encode())
+            elif parsed.path == "/" or parsed.path == "/index.html":
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html")
+                self.end_headers()
+                html = DASHBOARD_HTML_FILE.read_text(encoding="utf-8")
+                self.wfile.write(html.encode())
+            else:
+                self.send_response(404)
+                self.end_headers()
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -404,11 +407,14 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self._json_response(404, {"error": "not found"})
 
     def _json_response(self, code, data):
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        try:
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode())
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
 
     def log_message(self, format, *args):
         pass

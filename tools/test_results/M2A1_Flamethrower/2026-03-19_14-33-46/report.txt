@@ -1,0 +1,16 @@
+TEST REPORT: M2A1_Flamethrower
+======================================================
+Generated: 2026-03-19 14:33:46
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 1 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + QueryShot()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

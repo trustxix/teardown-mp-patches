@@ -1,0 +1,16 @@
+TEST REPORT: M4A1
+======================================================
+Generated: 2026-03-19 22:31:53
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 6 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + MakeHole() + QueryShot()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

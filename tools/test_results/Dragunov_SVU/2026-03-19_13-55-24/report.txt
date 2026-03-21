@@ -1,0 +1,16 @@
+TEST REPORT: Dragunov_SVU
+======================================================
+Generated: 2026-03-19 13:55:24
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 11 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + Explosion() + Shoot()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

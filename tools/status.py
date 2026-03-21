@@ -168,6 +168,44 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     except Exception:
         pass
 
+    # Base game compliance (new lint rules)
+    try:
+        from tools.lint import lint_source
+        clientcall_sound_count = 0
+        missing_removed_count = 0
+        toolanim_local_count = 0
+        cs_mods = set()
+        mr_mods = set()
+        for mod_dir in mods:
+            for rel_path, source in read_lua_files(mod_dir):
+                if rel_path == "options.lua":
+                    continue
+                findings = lint_source(source, rel_path, tier="2")
+                for f in findings:
+                    if f["check"] == "CLIENTCALL-SOUND":
+                        clientcall_sound_count += 1
+                        cs_mods.add(mod_dir.name)
+                    elif f["check"] == "MISSING-PLAYERS-REMOVED":
+                        missing_removed_count += 1
+                        mr_mods.add(mod_dir.name)
+                    elif f["check"] == "TOOLANIM-LOCAL-ONLY":
+                        toolanim_local_count += 1
+
+        compliance_parts = []
+        if clientcall_sound_count:
+            compliance_parts.append(f"{len(cs_mods)} mods use ClientCall for sounds")
+        if missing_removed_count:
+            compliance_parts.append(f"{len(mr_mods)} mods missing PlayersRemoved")
+        if toolanim_local_count:
+            compliance_parts.append(f"{toolanim_local_count} ToolAnimator local-only")
+
+        if compliance_parts:
+            lines.append(f"Base game sync:   {', '.join(compliance_parts)}")
+        else:
+            lines.append("Base game sync:   all mods compliant [OK]")
+    except Exception:
+        pass
+
     # Task queue
     try:
         queue_path = Path(__file__).parent.parent / "TASK_QUEUE.md"
@@ -189,6 +227,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
 
     # Always relevant
     docs_to_read.append("  CLAUDE.md - rules, tools, workflow (always)")
+    docs_to_read.append("  docs/BASE_GAME_MP_PATTERNS.md - #1 PRIORITY: official MP sync patterns (always)")
     docs_to_read.append("  docs/OFFICIAL_DEVELOPER_DOCS.md - GROUND TRUTH from teardowngame.com (API, MP architecture, gotchas)")
 
     # If there are tier-1 errors, they need the issues log for patterns

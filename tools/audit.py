@@ -291,7 +291,7 @@ def audit_cli(mod_name, output_path):
     if mod_name is None:
         dups = check_duplicate_tool_ids(results)
         if dups:
-            click.echo("\n⚠ CROSS-MOD WARNINGS:")
+            click.echo("\n[!] CROSS-MOD WARNINGS:")
             for w in dups:
                 click.echo(f"  {w}")
         else:

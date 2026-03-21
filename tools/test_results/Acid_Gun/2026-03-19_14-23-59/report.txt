@@ -1,0 +1,17 @@
+TEST REPORT: Acid_Gun
+======================================================
+Generated: 2026-03-19 14:23:59
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 4 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + MakeHole() + QueryShot()
+  Effect chain:      WARN
+    - Server has QueryShot damage but no ClientCall — weapon may be silent (no sound/particles for other players)
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

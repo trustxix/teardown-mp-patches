@@ -1,0 +1,16 @@
+TEST REPORT: Koenigsegg_Agera_MP
+======================================================
+Generated: 2026-03-19 17:27:22
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 6 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

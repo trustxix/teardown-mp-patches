@@ -1,0 +1,16 @@
+TEST REPORT: complete_gun
+======================================================
+Generated: 2026-03-19 17:30:24
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 2 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: usetool -> ServerCall -> server.shoot -> Shoot()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

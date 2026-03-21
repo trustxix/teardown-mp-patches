@@ -1,0 +1,18 @@
+TEST REPORT: EVF_International_Emergency_Vehicles
+======================================================
+Generated: 2026-03-21 05:46:05
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      WARN
+  Effect chain:      FAIL
+    - SpawnParticle() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+    - PointLight() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

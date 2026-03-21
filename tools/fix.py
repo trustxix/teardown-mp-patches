@@ -349,6 +349,115 @@ def fix_missing_version2(source: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Fixer 10: missing PlayersRemoved cleanup loop
+# ---------------------------------------------------------------------------
+
+_PLAYERS_ADDED_BLOCK_RE = re.compile(
+    r"([ \t]*)(for\s+\w+\s+in\s+PlayersAdded\s*\(\s*\)\s+do\b.*?end)",
+    re.DOTALL,
+)
+_PLAYERS_REMOVED_RE = re.compile(r"PlayersRemoved\s*\(\s*\)")
+
+
+def fix_missing_players_removed(source: str) -> str:
+    """Insert an empty PlayersRemoved() loop after PlayersAdded() blocks.
+
+    Only runs if the file has PlayersAdded() but no PlayersRemoved().
+    The inserted loop is a skeleton — manual cleanup code must be added.
+    """
+    if _PLAYERS_REMOVED_RE.search(source):
+        return source  # Already has PlayersRemoved
+    if not re.search(r"PlayersAdded\s*\(\s*\)", source):
+        return source  # No PlayersAdded to pair with
+
+    # Find the variable name used in the PlayersAdded loop
+    m = re.search(r"for\s+(\w+)\s+in\s+PlayersAdded\s*\(\s*\)", source)
+    if not m:
+        return source
+    var = m.group(1)
+
+    # Insert a PlayersRemoved loop after the first PlayersAdded block
+    def insert_removed(match):
+        indent = match.group(1)
+        block = match.group(2)
+        removed_loop = (
+            f"\n{indent}for {var} in PlayersRemoved() do\n"
+            f"{indent}    -- TODO: clean up per-player state for {var}\n"
+            f"{indent}end"
+        )
+        return block + removed_loop
+
+    return _PLAYERS_ADDED_BLOCK_RE.sub(insert_removed, source, count=1)
+
+
+# ---------------------------------------------------------------------------
+# Fixer 11: Add MOD/ prefix to asset paths missing it (Issue #63)
+# ---------------------------------------------------------------------------
+
+# Matches LoadSound/LoadLoop/LoadSprite/LoadImage("path/file.ext")
+_ASSET_LOAD_FIX_RE = re.compile(
+    r'(\bLoadSound|\bLoadLoop|\bLoadSprite|\bLoadImage)'
+    r'(\s*\(\s*)"([^"]+)"'
+)
+_UI_IMAGE_FIX_RE = re.compile(
+    r'(\bUiImage)(\s*\(\s*)"([^"]+)"'
+)
+
+# Engine built-in prefixes that don't need MOD/
+_BUILTIN_PREFIXES = (
+    "ui/", "explosion/", "script/", "LEVEL/", "RAW:", "MOD/",
+    "gfx/", "font/", "menu/",
+    "dirt/", "glass/", "wood/", "masonry/", "metal/", "plastic/", "ice/",
+    "foliage/", "rock/", "heavy/", "impact/",
+    "tools/", "snd/", "vehicle/",
+    "data/", "timer/",
+)
+
+
+def fix_missing_mod_prefix(source: str) -> str:
+    """Add MOD/ prefix to asset Load*/UiImage paths that are missing it."""
+    if "#version 2" not in source:
+        return source
+
+    def _fix_load(m: re.Match) -> str:
+        func, paren, path = m.group(1), m.group(2), m.group(3)
+        if not path or "/" not in path:
+            return m.group(0)  # bare filename = engine built-in
+        if any(path.startswith(p) for p in _BUILTIN_PREFIXES):
+            return m.group(0)
+        if ".." in path:
+            return m.group(0)  # dynamic concatenation
+        return f'{func}{paren}"MOD/{path}"'
+
+    def _fix_ui(m: re.Match) -> str:
+        func, paren, path = m.group(1), m.group(2), m.group(3)
+        if not path or "/" not in path:
+            return m.group(0)
+        if any(path.startswith(p) for p in _BUILTIN_PREFIXES):
+            return m.group(0)
+        if ".." in path:
+            return m.group(0)
+        return f'{func}{paren}"MOD/{path}"'
+
+    result = source
+    # Process line by line to skip comments
+    lines = result.split('\n')
+    fixed_lines = []
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith('--'):
+            fixed_lines.append(line)
+            continue
+        if '@lint-ok' in line or '@deepcheck-ok' in line:
+            fixed_lines.append(line)
+            continue
+        line = _ASSET_LOAD_FIX_RE.sub(_fix_load, line)
+        line = _UI_IMAGE_FIX_RE.sub(_fix_ui, line)
+        fixed_lines.append(line)
+    return '\n'.join(fixed_lines)
+
+
+# ---------------------------------------------------------------------------
 # apply_fixes — orchestrator
 # ---------------------------------------------------------------------------
 
@@ -363,6 +472,8 @@ _FIXERS: list[tuple[str, callable, str]] = [
     ("ammo-display",    fix_ammo_display,    "injected SetString ammo.display after RegisterTool"),
     ("queryshot-guard", fix_queryshot_player_guard, "fixed QueryShot player=0 truthy guard (Issue #47)"),
     ("missing-version2", fix_missing_version2, "added #version 2 header"),
+    ("missing-players-removed", fix_missing_players_removed, "added PlayersRemoved() cleanup loop skeleton"),
+    ("missing-mod-prefix", fix_missing_mod_prefix, "added MOD/ prefix to asset paths (Issue #63)"),
 ]
 
 
@@ -413,7 +524,7 @@ def apply_fixes(
     default=None,
     help=(
         "Comma-separated fix IDs: "
-        "ipairs-iterator,mousedx,alttool,raw-key-player,draw-func,handle-gt,ammo-display,queryshot-guard"
+        "ipairs-iterator,mousedx,alttool,raw-key-player,draw-func,handle-gt,ammo-display,queryshot-guard,missing-version2,missing-mod-prefix"
     ),
 )
 @click.option("--dry-run", is_flag=True, help="Preview changes without writing")

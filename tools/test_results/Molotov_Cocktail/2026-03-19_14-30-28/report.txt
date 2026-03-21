@@ -1,0 +1,16 @@
+TEST REPORT: Molotov_Cocktail
+======================================================
+Generated: 2026-03-19 14:30:28
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 2 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with Explosion() + MakeHole()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

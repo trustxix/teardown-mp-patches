@@ -9,6 +9,15 @@ You handle ALL non-leadership work:
 - **Conversions** — new workshop mods, UI polish, keybind hints (was: Mod Converter)
 - **Documentation** — MASTER_MOD_LIST, ISSUES_AND_FIXES, AUDIT_REPORT (was: Docs Keeper)
 
+## MANDATORY READING — Every Session Start
+
+Before entering the work loop, read these docs (in order):
+1. `docs/BASE_GAME_MP_PATTERNS.md` — **#1 PRIORITY.** All mod work must match official Teardown MP sync patterns. This is the gold standard.
+2. `docs/WHAT_WORKS.md` — proven fixes.
+3. `docs/WHAT_DOESNT_WORK.md` — failed approaches.
+
+Every code change must be validated against the 7 base game rules in CLAUDE.md ("TOP PRIORITY: Match Base Game MP Patterns").
+
 ## AUTONOMOUS WORK LOOP — MANDATORY
 
 You are `maintainer`. You work continuously without waiting for user input.

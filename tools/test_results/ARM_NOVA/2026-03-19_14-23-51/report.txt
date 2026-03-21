@@ -1,0 +1,16 @@
+TEST REPORT: ARM_NOVA
+======================================================
+Generated: 2026-03-19 14:23:51
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 4 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + MakeHole() + QueryShot()
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

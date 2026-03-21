@@ -9,6 +9,8 @@
   api_surgeon/outbox/   ← API Surgeon's sent messages (log)
   mod_converter/inbox/  ← Mod Converter reads from here
   mod_converter/outbox/ ← Mod Converter's sent messages (log)
+  docs_keeper/inbox/    ← Docs Keeper reads from here
+  docs_keeper/outbox/   ← Docs Keeper's sent messages (log)
 ```
 
 ## Message Format

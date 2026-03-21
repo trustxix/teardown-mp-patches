@@ -1,0 +1,16 @@
+TEST REPORT: RMW_SMAW
+======================================================
+Generated: 2026-03-19 13:57:00
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 9 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + Explosion() + QueryShot() + Shoot()
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

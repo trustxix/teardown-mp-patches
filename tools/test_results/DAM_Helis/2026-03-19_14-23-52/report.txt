@@ -1,0 +1,16 @@
+TEST REPORT: DAM_Helis
+======================================================
+Generated: 2026-03-19 14:23:52
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 25 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

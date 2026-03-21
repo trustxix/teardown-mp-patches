@@ -1,6 +1,8 @@
 # Multiplayer Desync & Performance Patterns
 
 > Created 2026-03-18 during MP Desync Fix Sprint. These patterns cause desync, lag, or silent failures in multiplayer.
+>
+> **Status (2026-03-21):** 7 root causes documented. RC1-6 resolved across 112 mods (mod set changed 2026-03-21: user removed some, installed ~34 new from workshop backlog). RC7 (host double-processing of shared players[p]) — MEGAGUN + M2A1_Flamethrower fixed (Issues #69-70). 10 framework mods fixed for silent gunfire (Issue #58 batch 2). PlaySound reclassified: works on server, auto-syncs (see RC4 correction below).
 
 ## Root Cause #1: Client-Side Projectile Physics for Remote Players
 
@@ -98,35 +100,38 @@ end
 
 ---
 
-## Root Cause #4: Server-Side PlaySound/SpawnParticle
+## Root Cause #4: Server-Side Visual Effects (SpawnParticle/PointLight/SetShapeEmissiveScale)
 
-**Symptom:** Wasted CPU on server, sounds may not play correctly for clients.
+**Symptom:** Visual effects only visible to host, not to other players.
 
-**Problem:** `PlaySound()` and `SpawnParticle()` are CLIENT-ONLY effects. Calling them on the server wastes processing and may behave unexpectedly. The server should only handle authoritative state — damage, destruction, spawning.
+**Problem:** `SpawnParticle()`, `PointLight()`, and `SetShapeEmissiveScale()` are CLIENT-ONLY effects. Calling them on the server only renders for the host — other clients never see them.
 
-**Fix:** Move all visual/audio effects to client code:
+**CORRECTION (2026-03-21):** `PlaySound()` is the EXCEPTION. The base game calls `PlaySound()` directly on the server (confirmed in official snowball.lua, tank.lua, mpcampaign/tools.lua) and it auto-syncs to all clients with positional audio. **Do NOT wrap PlaySound in ClientCall — call it directly on the server.** See `docs/BASE_GAME_MP_PATTERNS.md` Pattern 10.
+
+**Fix:** Move VISUAL effects to client code. Keep PlaySound on server:
 
 ```lua
--- WRONG: Server playing sounds
+-- RIGHT: PlaySound on server auto-syncs to all clients
 function server.tickPlayer(p, dt)
     if firing then
-        PlaySound(gunsound, pos)  -- wasted on server
+        PlaySound(gunsound, pos)  -- engine replicates to all clients
+        Shoot(pos, dir, "bullet", 1, 100, p, "toolid")  -- synced
     end
 end
 
--- RIGHT: Client handles effects, triggered by state
+-- RIGHT: Visual effects on client, triggered by state
 function client.tickPlayer(p, dt)
     local data = players[p]
     if data.firing and not data.wasFiring then
-        PlaySound(gunsound, pos)
-        SpawnParticle(muzzleFlash, pos)
+        SpawnParticle(muzzleFlash, pos)  -- visual only, client-side
+        PointLight(pos, 1, 0.8, 0.3, 2)  -- visual only, client-side
     end
     data.wasFiring = data.firing
 end
 ```
 
-**Server does:** `MakeHole`, `Explosion`, `Shoot`, `ApplyPlayerDamage`, `Spawn`, `Delete`, `SetBodyVelocity`, `SpawnFire`.
-**Client does:** `PlaySound`, `SpawnParticle`, `DrawLine`, `DrawSprite`, `PointLight`, `SetToolTransform`, `SetShapeEmissiveScale`.
+**Server does:** `MakeHole`, `Explosion`, `Shoot`, `ApplyPlayerDamage`, `Spawn`, `Delete`, `SetBodyVelocity`, `SpawnFire`, **`PlaySound`**.
+**Client does:** `SpawnParticle`, `DrawLine`, `DrawSprite`, `PointLight`, `SetToolTransform`, `SetShapeEmissiveScale`.
 
 > **Note:** `SetShapeEmissiveScale()` is also effectively client-only for visual effects. Server calls only render for the host — other clients never see the emissive glow. Move to client code. (Issue #53)
 
@@ -202,6 +207,42 @@ end
 
 ---
 
+## Root Cause #7: Host Double-Processing Shared players[p] Data
+
+**Symptom:** Host player experiences 2x ammo drain, 2x timer speed, 2x reload speed, 2x recoil. Remote clients behave normally. Arrays cause 2x physics (projectiles fly at 2x speed on host).
+
+**Problem:** In v2, `PlayersAdded` in `server.tick` creates `players[p] = createPlayerData()`. On the host, `client.tick`'s guard `if not players[p]` evaluates to true (data already exists from server), so it skips creation. Both `server.tickPlayer(p, dt)` and `client.tickPlayer(p, dt)` then operate on the **same** `data` object. Any field modified in both contexts is processed twice per frame on host.
+
+**Fix:** Gate client-side continuous state writes with `IsPlayerLocal(p)`, or use separate field names for server-owned vs client-owned state:
+
+```lua
+-- BROKEN (host gets 2x ammo drain):
+function server.tickPlayer(p, dt)
+    local data = players[p]
+    if data.firing then data.ammo = data.ammo - 1 end
+end
+function client.tickPlayer(p, dt)
+    local data = players[p]
+    if data.firing then data.ammo = data.ammo - 1 end  -- ALSO runs on host
+end
+
+-- FIX A: Gate client writes
+function client.tickPlayer(p, dt)
+    local data = players[p]
+    if not IsPlayerLocal(p) then return end
+    -- Only local player runs client-side updates
+    data.clientRecoil = math.max(0, data.clientRecoil - dt * 5)
+end
+
+-- FIX B: Separate fields (for arrays like projectiles)
+-- Server: data.bulletsInAir (authoritative physics, damage)
+-- Client: data.clientTracers (visual-only, local player)
+```
+
+**Scope:** 38+ mods affected (extends beyond MEGAGUN and M2A1_Flamethrower from Issues #69/#70). (Issue #72)
+
+---
+
 ## Quick Reference: Server vs Client Responsibilities
 
 | Operation | Where | Why |
@@ -212,7 +253,7 @@ end
 | `SetBodyVelocity()`, `ApplyBodyImpulse()` | Server | Physics authority |
 | `Spawn()`, `Delete()` | Server | Entity management |
 | `SpawnFire()` | Server | Fire propagation |
-| `PlaySound()` | Client | Local audio |
+| `PlaySound()` | **Server** | **Auto-syncs to all clients** (see BASE_GAME_MP_PATTERNS.md Pattern 10) |
 | `SpawnParticle()` | Client | Local visual |
 | `SetShapeEmissiveScale()` | Client | Visual glow (Issue #53) |
 | `DrawLine()`, `DrawSprite()` | Client | Local rendering |

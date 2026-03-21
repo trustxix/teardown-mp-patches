@@ -1,0 +1,17 @@
+TEST REPORT: AC130_Airstrike_MP
+======================================================
+Generated: 2026-03-19 14:23:50
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 15 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      WARN
+    - Server has QueryShot damage but no ClientCall — beam/melee effects may be silent for other players
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

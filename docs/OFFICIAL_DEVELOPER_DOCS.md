@@ -12,7 +12,7 @@
 > - https://github.com/tuxedolabsorg/mplib (MIT, v1.0.0, March 13 2026)
 > - https://tuxedolabsorg.github.io/mplib/
 >
-> **Last updated:** 2026-03-19
+> **Last updated:** 2026-03-20
 
 ---
 
@@ -798,8 +798,9 @@ if handle ~= 0 then ... end
 
 **Server only:** `MakeHole`, `Explosion`, `Shoot`, `SetBodyVelocity`, `ApplyBodyImpulse`, `Spawn`, `Delete`, `SpawnFire`, `SetPlayerVelocity`, `SetPlayerTransform`, `ApplyPlayerDamage`, `SetPlayerHealth`, `SetToolEnabled`, `SetToolAmmo`, `DisablePlayerInput`, `SetPlayerColor`, `SetPlayerWalkingSpeed`
 
-**Client only:** `PlaySound`, `SpawnParticle`, `DrawLine`, `DrawSprite`, `PointLight`, `SetToolTransform`, `SetCameraTransform`, all `Ui*` functions, `ShakeCamera`, `SetCameraDof`, `DrawBodyOutline`
+**Client only:** `SpawnParticle`, `DrawLine`, `DrawSprite`, `PointLight`, `SetToolTransform`, `SetCameraTransform`, all `Ui*` functions, `ShakeCamera`, `SetCameraDof`, `DrawBodyOutline`
 **Effectively client-only (visual):** `SetShapeEmissiveScale` — server calls only render for host; use in client code for all players to see (Issue #53)
+**Works on BOTH server and client:** `PlaySound(snd, pos)` — when called on server, engine auto-syncs positional audio to all clients. Confirmed by base game snowball.lua, tank.lua, mpcampaign/tools.lua. (See BASE_GAME_MP_PATTERNS.md Pattern 10)
 
 ### 6. UiMakeInteractive Before UiPush
 Options menus MUST call `UiMakeInteractive()` before `UiPush()`. Without it, buttons render but can't be clicked.
@@ -833,6 +834,70 @@ LoadSound("MOD/snd/fire.ogg")
 ```
 In v1, relative paths resolved from the mod folder. In v2, `LoadSound`/`LoadSprite`/`UiImage` without `MOD/` prefix silently fail. Assets appear missing at runtime (no sound, no sprite) but the mod doesn't crash. (Issue #63)
 
+### 12. V2 Scripts Must Define At Least One Callback
+```lua
+-- WRONG (compiles as Lua, but engine fails with "Error compiling"):
+#version 2
+#include "script/include/player.lua"
+-- Content mod, no logic needed
+
+-- CORRECT (add empty callback):
+#version 2
+#include "script/include/player.lua"
+function server.init()
+end
+```
+Content mods (maps, vehicle packs) that need `#version 2` for MP compatibility but have no script logic must still define at least one callback. Without it, the engine's v2 compilation pass fails — even though the Lua syntax is valid. (Issue #67)
+
+### 13. V1 Entity Scripts Are Silently Disabled in MP
+```lua
+-- V1 entity script (attached via tags="script=vehicle.lua" in XML):
+function init()
+    snd = LoadSound("MOD/snd/engine.ogg")
+end
+function tick(dt)
+    PlaySound(snd, GetBodyTransform(body).pos, 1)
+end
+-- ^^^ This script WORKS in singleplayer but is SILENTLY SKIPPED in multiplayer.
+-- No error, no warning — the feature just doesn't work.
+
+-- FIX: Add #version 2 and use v2 callbacks:
+#version 2
+#include "script/include/player.lua"
+function server.init()
+    -- server state
+end
+function client.tick(dt)
+    local snd = LoadSound("MOD/snd/engine.ogg")
+    PlaySound(snd, GetBodyTransform(GetSelf()).pos, 1)
+end
+```
+Entity scripts (attached to XML entities via `tags="script=foo.lua"`) run in their own script context, separate from `main.lua`. Each must independently declare `#version 2` and use v2 callbacks (`server.init()`/`client.tick()`/etc.). Converting only `main.lua` to v2 does NOT fix entity scripts — they are silently disabled. Originally 79 across 10 mods; all 79 converted (100% complete as of 2026-03-20). (Issue #68)
+
+### 14. V1 options.lua Also Silently Disabled in MP
+Same pattern as entity scripts: `options.lua` is a separate script context. Without `#version 2`, its `init()`/`draw()` callbacks are silently skipped in MP — the options button exists but the menu is non-functional. Fix: add `#version 2` and rename `init()` → `client.init()`, `draw()` → `client.draw()`. No server callbacks needed — options UI is client-only. (Issue #71)
+
+### 15. Host Double-Processes Shared players[p] Data
+```lua
+-- The host runs BOTH server.tickPlayer AND client.tickPlayer on the SAME data object.
+-- Any field modified in both contexts is processed TWICE per frame on host.
+
+-- BROKEN (host gets 2x ammo drain, 2x reload speed):
+function server.tickPlayer(p, dt)
+    data.ammo = data.ammo - 1        -- server fires
+end
+function client.tickPlayer(p, dt)
+    data.ammo = data.ammo - 1        -- client ALSO fires on host
+end
+
+-- FIX: Gate client writes or use separate fields:
+function client.tickPlayer(p, dt)
+    if not IsPlayerLocal(p) then return end
+    data.clientRecoil = math.max(0, data.clientRecoil - dt * 5)
+end
+```
+In v2 MP, `PlayersAdded` in `server.tick` creates `players[p]`. The host's `client.tick` shares the same object (its `if not players[p]` guard skips). Both `server.tickPlayer` and `client.tickPlayer` then operate on the same `data`. Arrays (projectile tables) cause 2x physics; scalars (ammo, timers, cooldowns) cause 2x drain/speed. 38+ mods affected. (Issues #69, #70, #72)
+
 ---
 
 ## Official Reference Mods
@@ -854,7 +919,7 @@ C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/mpclassics/
 
 ## API Signature Notes
 
-> The official API page (api.html) sometimes shows **simplified or differently-ordered signatures** compared to what actually works. The main sections above now use the **actual working signatures** verified from official reference mods (minigun/lasergun) and our 177 working mods. The table below documents the discrepancies for reference.
+> The official API page (api.html) sometimes shows **simplified or differently-ordered signatures** compared to what actually works. The main sections above now use the **actual working signatures** verified from official reference mods (minigun/lasergun) and our 112 working mods. The table below documents the discrepancies for reference.
 
 **API page vs actual signatures (main sections above already use the correct versions):**
 

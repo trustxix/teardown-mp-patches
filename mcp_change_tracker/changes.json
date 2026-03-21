@@ -1151,7 +1151,187 @@
       "description": "Added regression test: options.lua client.draw() must not shadow main.lua's tool guard in HUD check (test_options_lua_does_not_shadow_main_tool_guard). Test count: 545\u2192546.",
       "timestamp": "2026-03-19T17:38:49.829558+00:00",
       "documented": true
+    },
+    {
+      "id": 129,
+      "role": "mod_converter",
+      "mod": "Jetskis",
+      "type": "bug_fix",
+      "description": "Added empty server.init() callback \u2014 v2 stubs with no callbacks cause engine compile error",
+      "timestamp": "2026-03-19T21:14:36.424457+00:00",
+      "documented": true
+    },
+    {
+      "id": 130,
+      "role": "mod_converter",
+      "mod": "Service_Vehicles_MP",
+      "type": "bug_fix",
+      "description": "Added empty server.init() callback \u2014 v2 stubs with no callbacks cause engine compile error",
+      "timestamp": "2026-03-19T21:14:36.927830+00:00",
+      "documented": true
+    },
+    {
+      "id": 131,
+      "role": "mod_converter",
+      "mod": "Gwel_Mall",
+      "type": "bug_fix",
+      "description": "Moved SetShapeEmissiveScale() from server to client in 3 entity scripts (substation.lua, sampleCtrl1.lua, firesystem.lua) \u2014 7 SERVER-EFFECT warnings fixed. Non-host clients now see exit sign lighting, gate button states, and power-cut effects.",
+      "timestamp": "2026-03-19T21:19:06.524508+00:00",
+      "documented": true
+    },
+    {
+      "id": 132,
+      "role": "mod_converter",
+      "mod": "PPAN_Vehicle_Pack",
+      "type": "bug_fix",
+      "description": "Moved SetShapeEmissiveScale from server to client in popupHeadlight_MP.lua \u2014 non-host clients now see detached headlights turn off",
+      "timestamp": "2026-03-19T21:20:09.125563+00:00",
+      "documented": true
+    },
+    {
+      "id": 133,
+      "role": "mod_converter",
+      "mod": "The_Office_US",
+      "type": "bug_fix",
+      "description": "Moved SetShapeEmissiveScale from server to client in lamp.lua \u2014 non-host clients now see lamp shade glow correctly",
+      "timestamp": "2026-03-19T21:20:44.401483+00:00",
+      "documented": true
+    },
+    {
+      "id": 134,
+      "role": "mod_converter",
+      "mod": "Legacy_Tank_MP",
+      "type": "conversion",
+      "description": "Converted tank.lua from v1 callbacks (init/tick/shoot) to v2 server/client split. Referenced by 8 XML prefabs. Added server.init/server.tick/client.init/client.tick/client.draw with shared table sync. Fixed projectile trail drift bug and nil==nil dead code. All entity scripts in Legacy_Tank_MP now v2.",
+      "timestamp": "2026-03-20T02:30:53.945567+00:00",
+      "documented": true
+    },
+    {
+      "id": 135,
+      "role": "mod_converter",
+      "mod": "DAM_Helis",
+      "type": "conversion",
+      "description": "Converted 3 entity scripts to v2: engineprops.lua (init\u2192server.init, removed v1 GetPlayerVehicle check), ground.lua (init\u2192server.init), bigass_bomb.lua (init/update\u2192server.init/server.update, player API updated for MP). Reduced V1-ENTITY-SCRIPT warnings from 8 to 5.",
+      "timestamp": "2026-03-20T02:35:39.726000+00:00",
+      "documented": true
+    },
+    {
+      "id": 136,
+      "role": "mod_converter",
+      "mod": "ALL (51 mods)",
+      "type": "polish",
+      "description": "Generated id.txt for 51 mods missing workshop ID files. All 124 mods now have id.txt (was 73/124). Automated via MASTER_MOD_LIST.md parsing + 7 manual overrides for framework mods.",
+      "timestamp": "2026-03-20T02:40:01.531537+00:00",
+      "documented": true
+    },
+    {
+      "id": 137,
+      "role": "mod_converter",
+      "mod": "DAM_Helis",
+      "type": "conversion",
+      "description": "Converted MultiEngine.lua (CRJ-200 prop aircraft, 354 lines) from v1 to v2. init\u2192server.init, update\u2192server.update, added client.init/client.update for PlayLoop. Replaced GetPlayerVehicle() with IsPlayerVehicleDriver(). 4 V1-ENTITY scripts remain (Rocket, Bomb, Missile, GunnerAI \u2014 all 800-1381 lines).",
+      "timestamp": "2026-03-20T02:43:06.278333+00:00",
+      "documented": true
+    },
+    {
+      "id": 138,
+      "role": "mod_converter",
+      "mod": "Multiplayer_Spawnable_Pack",
+      "type": "bug_fix",
+      "description": "Fixed V2-DEAD-CALLBACK in both bounce.lua files (root + scripts/). Renamed init/tick/update \u2192 server.init/server.update, added client.init for sound, moved PlaySound to ClientCall(0,...), converted GetPlayerTransform/GetPlayerVelocity/SetPlayerVelocity to use player params, added bounce cooldown. Bounce pads now functional in MP.",
+      "timestamp": "2026-03-20T02:48:47.698598+00:00",
+      "documented": true
+    },
+    {
+      "id": 139,
+      "role": "mod_converter",
+      "mod": "DAM_Helis",
+      "type": "conversion",
+      "description": "Converted Rocket.lua (990 lines) from v1 to v2. Full server/client split: server handles thrust physics (ApplyBodyImpulse), stabilization, fuse timing, Explosion + shockwave (FindBodies+SetBodyVelocity). Client handles rocket trail (SpawnParticle+PointLight+PlayLoop via shared state), explosion sound (ClientCall onDetonate), and all explosion particle effects (ClientCall onExplode \u2014 4 yield-based effect tiers + water splash). Fixed undefined point0 bug (used rocketpos). V1-ENTITY warnings: 4\u21923.",
+      "timestamp": "2026-03-20T02:56:54.994695+00:00",
+      "documented": true
+    },
+    {
+      "id": 140,
+      "role": "mod_converter",
+      "mod": "DAM_Helis",
+      "type": "conversion",
+      "description": "Converted Bomb.lua (802 lines) from v1 to v2. Server: stabilization physics, water detection, fuse timing, multi-Explosion loop (yield/250 iterations at random offsets) + shockwave. Client: explosion sound (ClientCall onDetonate with ShakeCamera), explosion particles (ClientCall onExplode \u2014 3 yield tiers: <300/<600/>=600 + water splash). Fixed undefined point0 PointLight bug. V1-ENTITY warnings: 3\u21922.",
+      "timestamp": "2026-03-20T03:00:25.915513+00:00",
+      "documented": true
+    },
+    {
+      "id": 141,
+      "role": "mod_converter",
+      "mod": "DAM_Helis",
+      "type": "conversion",
+      "description": "Converted Missile.lua (649 lines) from v1 to v2. Server: AI target acquisition (FindBodies+scoring), flare countermeasures, stabilization (ApplyBodyImpulse), fuel-based thrust, ConstrainOrientation steering, proximity detonation, Explosion+Shoot shrapnel+Delete. Client: seeker sounds (PlayLoop idle/lock via shared.seekerState), launch sound (ClientCall onLaunch), rocket trail (SpawnParticle+PointLight+PlayLoop via shared.missileFueled), explosion particles (ClientCall onExplode). Fixed GetPlayerTransform()\u2192GetLocalPlayer()+GetPlayerPos(p). V1-ENTITY warnings: 2\u21921 (only GunnerAI.lua 1381 lines remains).",
+      "timestamp": "2026-03-20T03:02:45.502408+00:00",
+      "documented": true
+    },
+    {
+      "id": 142,
+      "role": "mod_converter",
+      "mod": "TABS_Effect",
+      "type": "conversion",
+      "description": "Converted options.lua from v1 to v2: added #version 2 + player.lua include, renamed init()->client.init(), draw()->client.draw(). Lint clean, deepcheck PASS.",
+      "timestamp": "2026-03-20T13:52:15.891601+00:00",
+      "documented": true
+    },
+    {
+      "id": 143,
+      "role": "mod_converter",
+      "mod": "Airstrike_Arsenal",
+      "type": "conversion",
+      "description": "Converted options.lua from v1 to v2: added #version 2 + player.lua include, renamed init()->client.init(), draw()->client.draw(). Lint clean, deepcheck PASS.",
+      "timestamp": "2026-03-20T13:52:16.865079+00:00",
+      "documented": true
+    },
+    {
+      "id": 144,
+      "role": "mod_converter",
+      "mod": "Ion_Cannon_Beacon",
+      "type": "conversion",
+      "description": "Converted options.lua from v1 to v2: added #version 2 + player.lua include, renamed init()->client.init(), draw()->client.draw(), tick()->client.tick(). Lint clean, deepcheck PASS.",
+      "timestamp": "2026-03-20T13:52:17.680019+00:00",
+      "documented": true
+    },
+    {
+      "id": 145,
+      "role": "mod_converter",
+      "mod": "Minecraft_Building_Tool",
+      "type": "conversion",
+      "description": "Converted options.lua from v1 to v2: added #version 2 + player.lua, renamed init()->client.init(), draw()->client.draw(), tick(dt)->client.tick(dt). 7 includes preserved. Lint clean, deepcheck PASS.",
+      "timestamp": "2026-03-20T13:54:47.136633+00:00",
+      "documented": true
+    },
+    {
+      "id": 146,
+      "role": "mod_converter",
+      "mod": "Artillery_Barrage_RELOADED",
+      "type": "conversion",
+      "description": "Converted options.lua from v1 to v2: added #version 2 + player.lua, renamed init()->client.init(), draw()->client.draw(). i18n.lua include preserved. Lint clean, deepcheck PASS.",
+      "timestamp": "2026-03-20T13:54:49.358177+00:00",
+      "documented": true
+    },
+    {
+      "id": 147,
+      "role": "mod_converter",
+      "mod": "Molotov_Cocktail",
+      "type": "conversion",
+      "description": "Converted options.lua from v1 to v2: added #version 2 + player.lua, renamed init()->client.init(), draw()->client.draw(), tick()->client.tick(). Self-contained textboxClass preserved. Lint clean, deepcheck PASS.",
+      "timestamp": "2026-03-20T13:54:50.572617+00:00",
+      "documented": true
+    },
+    {
+      "id": 148,
+      "role": "docs_keeper",
+      "mod": "general",
+      "type": "doc_update",
+      "description": "Session doc sweep: Fixed PlaySound classification across 7 files (ISSUES_AND_FIXES, OFFICIAL_DEVELOPER_DOCS, CLAUDE.md rules 8/9, MP_DESYNC_PATTERNS). Rewrote README.md (184\u219265 lines). Added PlayersRemoved pattern to WHAT_WORKS.md. Updated deferred table (11\u219213), summary counts, PROTOCOL.md. Found/added 1 unlisted mod (Improved_Spawnable_Missile_&_Bomb_MP). Cleared 19 undocumented changes. Created T180 (README), T182 (version=2 for 3 maps). Regenerated AUDIT_REPORT 2x (Shoot 4\u21920, AimInfo 20\u21920).",
+      "timestamp": "2026-03-21T10:09:57.438735+00:00",
+      "documented": true
     }
   ],
-  "next_id": 129
+  "next_id": 149
 }

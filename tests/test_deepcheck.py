@@ -195,12 +195,28 @@ class TestEffectChain:
             '#version 2\n'
             'function server.shoot(p, pos, dir)\n'
             '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
+            '    SpawnParticle(pos, Vec(0,1,0), 1, 1, 1, 1)\n'
+            'end\n'
+        )
+        findings = check_effect_chain(mod)
+        fails = [f for f in findings if f.status == "FAIL"]
+        assert any("server" in f.detail.lower() and "SpawnParticle" in f.detail for f in fails)
+
+    def test_playsound_on_server_not_flagged(self, tmp_path):
+        """PlaySound on server auto-syncs — should NOT be flagged as FAIL."""
+        mod = tmp_path / "srvps"
+        mod.mkdir()
+        (mod / "info.txt").write_text("name = SrvPS\nversion = 2")
+        (mod / "main.lua").write_text(
+            '#version 2\n'
+            'function server.shoot(p, pos, dir)\n'
+            '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
             '    PlaySound(LoadSound("MOD/snd/bang.ogg"), pos)\n'
             'end\n'
         )
         findings = check_effect_chain(mod)
         fails = [f for f in findings if f.status == "FAIL"]
-        assert any("server" in f.detail.lower() and "PlaySound" in f.detail for f in fails)
+        assert not any("PlaySound" in f.detail for f in fails)
 
     def test_silent_weapon_warns(self, tmp_path):
         """QueryShot+ApplyPlayerDamage without ClientCall should warn."""
@@ -336,7 +352,7 @@ class TestEffectChain:
             '-- @lint-ok-file SERVER-EFFECT\n'
             'function server.okShoot(p, pos, dir)\n'
             '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
-            '    PlaySound(LoadSound("MOD/snd/ok.ogg"), pos)\n'
+            '    SpawnParticle(pos, Vec(0,1,0), 1, 1, 1, 1)\n'
             'end\n'
         )
         # File WITHOUT suppression — different function name
@@ -344,7 +360,7 @@ class TestEffectChain:
             '#version 2\n'
             'function server.badShoot(p, pos, dir)\n'
             '    Shoot(pos, dir, "bullet", 1, 100, p)\n'
-            '    PlaySound(LoadSound("MOD/snd/bad.ogg"), pos)\n'
+            '    SpawnParticle(pos, Vec(0,1,0), 1, 1, 1, 1)\n'
             'end\n'
         )
         findings = check_effect_chain(mod)

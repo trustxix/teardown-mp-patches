@@ -1,187 +1,62 @@
 # Teardown MP Patches
 
-Unofficial multiplayer compatibility patches for Teardown Steam Workshop mods.
+Multiplayer compatibility patches for Teardown Steam Workshop mods. Converts v1 single-player mod scripts to v2 multiplayer-compatible code following official Teardown MP patterns.
 
-> **Note:** These are community patches. Please subscribe to the original mods on the Steam Workshop to support the original authors.
+> **Note:** These are community patches. Subscribe to the original mods on the Steam Workshop to support the original authors.
 
-## Status Dashboard
+## Current Status
 
-| Mod | Author | Type | Complexity | Status | Workshop | Download |
-|-----|--------|------|------------|--------|----------|----------|
-| Armed Vehicles Framework (AVF) | elboydo | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2400346027) | [Download](../../releases/tag/mod-2400346027-v1.0) |
-| Charge Shotgun | My Cresta | Tool | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2400731319) | [Download](../../releases/tag/mod-2400731319-v1.0) |
-| AK-47 | My Cresta | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2400745103) | [Download](../../releases/tag/mod-2400745103-v1.0) |
-| Minigun | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2400974910) | [Download](../../releases/tag/mod-2400974910-v1.0) |
-| Dual Miniguns | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2400975518) | [Download](../../releases/tag/mod-2400975518-v1.0) |
-| Black Hole | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401574819) | [Download](../../releases/tag/mod-2401574819-v1.0) |
-| AC130 Airstrike | My Cresta | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401575709) | [Download](../../releases/tag/mod-2401575709-v1.0) |
-| Magic Bag | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401576135) | [Download](../../releases/tag/mod-2401576135-v1.0) |
-| Dual Berettas | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401576949) | [Download](../../releases/tag/mod-2401576949-v1.0) |
-| Scorpion | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401577403) | [Download](../../releases/tag/mod-2401577403-v1.0) |
-| AWP | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401577826) | [Download](../../releases/tag/mod-2401577826-v1.0) |
-| Laser Cutter | My Cresta | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401589688) | [Download](../../releases/tag/mod-2401589688-v1.0) |
-| SCAR-20 | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401590057) | [Download](../../releases/tag/mod-2401590057-v1.0) |
-| M4A1 | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401590758) | [Download](../../releases/tag/mod-2401590758-v1.0) |
-| SG553 | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401591104) | [Download](../../releases/tag/mod-2401591104-v1.0) |
-| .500 Magnum | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401591426) | [Download](../../releases/tag/mod-2401591426-v1.0) |
-| Dragonslayer | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401591811) | [Download](../../releases/tag/mod-2401591811-v1.0) |
-| Mjölner | My Cresta | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401593417) | [Download](../../releases/tag/mod-2401593417-v1.0) |
-| Nova Shotgun | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401871202) | [Download](../../releases/tag/mod-2401871202-v1.0) |
-| P90 | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401871551) | [Download](../../releases/tag/mod-2401871551-v1.0) |
-| Multi Grenade Launcher | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401871778) | [Download](../../releases/tag/mod-2401871778-v1.0) |
-| M249 | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401871948) | [Download](../../releases/tag/mod-2401871948-v1.0) |
-| Desert Eagle | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401872336) | [Download](../../releases/tag/mod-2401872336-v1.0) |
-| Exploding Star | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401872536) | [Download](../../releases/tag/mod-2401872536-v1.0) |
-| Guided Missile | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401872753) | [Download](../../releases/tag/mod-2401872753-v1.0) |
-| HADOUKEN! | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401872968) | [Download](../../releases/tag/mod-2401872968-v1.0) |
-| Holy Grenade | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401873154) | [Download](../../releases/tag/mod-2401873154-v1.0) |
-| Lightkatana | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2401873387) | [Download](../../releases/tag/mod-2401873387-v1.0) |
-| M1 Garand | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2408922595) | [Download](../../releases/tag/mod-2408922595-v1.0) |
-| Hook Shotgun | My Cresta | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2412621869) | [Download](../../releases/tag/mod-2412621869-v1.0) |
-| YLVF (YuLun's Vehicle Frame) 0.9.4 | YuLun | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2414735882) | [Download](../../releases/tag/mod-2414735882-v1.0) |
-| Mega Prop Pack | Tuxedo Labs. Recreated By Tony Stark | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2414764881) | [Download](../../releases/tag/mod-2414764881-v1.0) |
-| C4 | Punished Bernadetta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2415643616) | [Download](../../releases/tag/mod-2415643616-v1.0) |
-| Tool Menu | mjtlittle | Gameplay | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2418422455) | [Download](../../releases/tag/mod-2418422455-v1.0) |
-| Attack Drone | My Cresta | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2419814408) | [Download](../../releases/tag/mod-2419814408-v1.0) |
-| Flying Planes | Cheejins | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2423986361) | [Download](../../releases/tag/mod-2423986361-v1.0) |
-| Bee Gun | My Cresta | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2425682439) | [Download](../../releases/tag/mod-2425682439-v1.0) |
-| Chaos Mod | NLferdiNL, Superfroggman, MutatedOnion, Snazzah, The Mafia | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2433702881) | [Download](../../releases/tag/mod-2433702881-v1.0) |
-| The World Trade Center | steamcommunity.com/id/Land_Owl | Gameplay | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2461381268) | [Download](../../releases/tag/mod-2461381268-v1.0) |
-| Miniature World v1.1 (NEW UPDATE!) | Spencer Johnson | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2488185625) | [Download](../../releases/tag/mod-2488185625-v1.0) |
-| MEGAGUN | Atenfyr | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2497213038) | [Download](../../releases/tag/mod-2497213038-v1.0) |
-| Thruster Tool | NLferdiNL | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2515871265) | [Download](../../releases/tag/mod-2515871265-v1.0) |
-| AK-105 | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2536589821) | [Download](../../releases/tag/mod-2536589821-v1.0) |
-| Thermite Cannon | elboydo | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2539026789) | [Download](../../releases/tag/mod-2539026789-v1.0) |
-| Lightsaber | Tislerics Máté | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2547915810) | [Download](../../releases/tag/mod-2547915810-v1.0) |
-| Boeing 737 Full Version | Offensive.PDF + Please Pick A Name + Bingle + GGProGaming + Deffcolony + AlexVeeBee + NeoLights | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2559081519) | [Download](../../releases/tag/mod-2559081519-v1.0) |
-| G36K | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2588821225) | [Download](../../releases/tag/mod-2588821225-v1.0) |
-| Kriss Vector | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2595780161) | [Download](../../releases/tag/mod-2595780161-v1.0) |
-| G17 | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2597745035) | [Download](../../releases/tag/mod-2597745035-v1.0) |
-| Sith Saber | BattleBob72 | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2598610013) | [Download](../../releases/tag/mod-2598610013-v1.0) |
-| Player Scaler | NLferdiNL | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2598890168) | [Download](../../releases/tag/mod-2598890168-v1.0) |
-| Explosive Pack by gs_115 | gs_115 | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2604914470) | [Download](../../releases/tag/mod-2604914470-v1.0) |
-| Micro Metropolis | Parking Meter | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2606695330) | [Download](../../releases/tag/mod-2606695330-v1.0) |
-| Adjustable Fire | NLferdiNL | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2622040244) | [Download](../../releases/tag/mod-2622040244-v1.0) |
-| Fire Locator | NLferdiNL | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2622849832) | [Download](../../releases/tag/mod-2622849832-v1.0) |
-| Vacuum Cleaner | My Cresta | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2625710852) | [Download](../../releases/tag/mod-2625710852-v1.0) |
-| Colossus Attack | tislericsm (Tislerics Máté) | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2628628690) | [Download](../../releases/tag/mod-2628628690-v1.0) |
-| New York (mini) | steamcommunity.com/id/Land_Owl | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2631642003) | [Download](../../releases/tag/mod-2631642003-v1.0) |
-| M4A1 | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2637503043) | [Download](../../releases/tag/mod-2637503043-v1.0) |
-| Revengeance Katana | stringie | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2648760922) | [Download](../../releases/tag/mod-2648760922-v1.0) |
-| Saiga-12 | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2651403234) | [Download](../../releases/tag/mod-2651403234-v1.0) |
-| AK-12 | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2653176229) | [Download](../../releases/tag/mod-2653176229-v1.0) |
-| Ability to read | Please Pick a Name | Gameplay | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2668505408) | [Download](../../releases/tag/mod-2668505408-v1.0) |
-| Teardown Touring Cars (Ai Racing) | elboydo | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2668638370) | [Download](../../releases/tag/mod-2668638370-v1.0) |
-| Dragunov SVU | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2670830203) | [Download](../../releases/tag/mod-2670830203-v1.0) |
-| Robot Vehicles | Cheejins & Tuxedo Labs | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2673451391) | [Download](../../releases/tag/mod-2673451391-v1.0) |
-| AK-74 | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2682043380) | [Download](../../releases/tag/mod-2682043380-v1.0) |
-| SCAR | Tesseractahedron | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2686729186) | [Download](../../releases/tag/mod-2686729186-v1.0) |
-| Hungry Slimes | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2695893023) | [Download](../../releases/tag/mod-2695893023-v1.0) |
-| Bouncepad | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2706150164) | [Download](../../releases/tag/mod-2706150164-v1.0) |
-| BHL-X42 | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2721596235) | [Download](../../releases/tag/mod-2721596235-v1.0) |
-| The Swap Button | Geneosis | Vehicle | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2728464103) | [Download](../../releases/tag/mod-2728464103-v1.0) |
-| Gasoline Flamethrower | HypnoTox | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2739855429) | [Download](../../releases/tag/mod-2739855429-v1.0) |
-| Poltergeists | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2744169679) | [Download](../../releases/tag/mod-2744169679-v1.0) |
-| Singularity | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2759823622) | [Download](../../releases/tag/mod-2759823622-v1.0) |
-| Ultimate Jetpack | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2776716903) | [Download](../../releases/tag/mod-2776716903-v1.0) |
-| Infinite World Generator | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2778661781) | [Download](../../releases/tag/mod-2778661781-v1.0) |
-| AVF Vehicles | elboydo | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2779697403) | [Download](../../releases/tag/mod-2779697403-v1.0) |
-| [SW's] ADVANCED GORE MOD 2 | SnakeyWakey and others | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2782336916) | [Download](../../releases/tag/mod-2782336916-v1.0) |
-| Liquify | stringie | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2782511908) | [Download](../../releases/tag/mod-2782511908-v1.0) |
-| Magnets | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2783125614) | [Download](../../releases/tag/mod-2783125614-v1.0) |
-| Procedural Labyrinth | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2788964343) | [Download](../../releases/tag/mod-2788964343-v1.0) |
-| Bikes, Ramps & Ragdolls Collection | JiffyUP | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2800919393) | [Download](../../releases/tag/mod-2800919393-v1.0) |
-| Spawnable Medieval Crossbow | Autumnatic, DimasVoxel | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2823236249) | [Download](../../releases/tag/mod-2823236249-v1.0) |
-| STAR WARS AI PACK | tislericsm | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2823645128) | [Download](../../releases/tag/mod-2823645128-v1.0) |
-| Acid Gun (voxels) | Laz | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2826557844) | [Download](../../releases/tag/mod-2826557844-v1.0) |
-| Bombard | Zaap | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2843848555) | [Download](../../releases/tag/mod-2843848555-v1.0) |
-| Lava Gun | coolJWB, HorizonZer0, Deffcolony, Dzage, ComradeAlpaca, Dgeekmonkey | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2854539326) | [Download](../../releases/tag/mod-2854539326-v1.0) |
-| TEARMINATOR | tislericsm | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2875424108) | [Download](../../releases/tag/mod-2875424108-v1.0) |
-| Airstrike Arsenal | Cyber | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2877387699) | [Download](../../releases/tag/mod-2877387699-v1.0) |
-| Debug Scanner | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2885663661) | [Download](../../releases/tag/mod-2885663661-v1.0) |
-| Shards Summoner | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2888719505) | [Download](../../releases/tag/mod-2888719505-v1.0) |
-| Spells | Zigbert | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2906575554) | [Download](../../releases/tag/mod-2906575554-v1.0) |
-| AI Trainer | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2918508637) | [Download](../../releases/tag/mod-2918508637-v1.0) |
-| Tameable Dragon | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2945997960) | [Download](../../releases/tag/mod-2945997960-v1.0) |
-| High Tech Drone | My Cresta | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2965297478) | [Download](../../releases/tag/mod-2965297478-v1.0) |
-| Corrupted Crystal | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2969580627) | [Download](../../releases/tag/mod-2969580627-v1.0) |
-| Vortexes and Tornadoes | Rainbow, Tuxedo Labs, Daniel W & Cheejins | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2983703634) | [Download](../../releases/tag/mod-2983703634-v1.0) |
-| Omni Gun | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2994616319) | [Download](../../releases/tag/mod-2994616319-v1.0) |
-| Bridge Luancher System | Smeshan | Vehicle | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2998330771) | [Download](../../releases/tag/mod-2998330771-v1.0) |
-| Blight Gun | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3004952393) | [Download](../../releases/tag/mod-3004952393-v1.0) |
-| Melt | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3005988296) | [Download](../../releases/tag/mod-3005988296-v1.0) |
-| Zombies [AUTUMNATIC] | AUTUMNATIC | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3011292197) | [Download](../../releases/tag/mod-3011292197-v1.0) |
-| Prop Gallery | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3043828547) | [Download](../../releases/tag/mod-3043828547-v1.0) |
-| Bright Valley Correctional Center | PrismDL | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3047993521) | [Download](../../releases/tag/mod-3047993521-v1.0) |
-| Control | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3134340282) | [Download](../../releases/tag/mod-3134340282-v1.0) |
-| [TABS] Vehicle Framework | TABS Dev Team | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3148138736) | [Download](../../releases/tag/mod-3148138736-v1.0) |
-| [TABS] Vehicles Of War | TABS Dev Team | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3148143301) | [Download](../../releases/tag/mod-3148143301-v1.0) |
-| Lightning Gun | Tuxedo Labs, Dzage, KBD2, Autumn, GalaxyPizza, Doomdrvk, Nolrm12345 | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3173859813) | [Download](../../releases/tag/mod-3173859813-v1.0) |
-| Active Volatile Aviation | CynicalFox | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3199019196) | [Download](../../releases/tag/mod-3199019196-v1.0) |
-| GNOME ZONE [Barely Dysfunctional] | Barely Dysfunctional | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3209546457) | [Download](../../releases/tag/mod-3209546457-v1.0) |
-| Solid Sphere Summoner | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3234758956) | [Download](../../releases/tag/mod-3234758956-v1.0) |
-| Always Up! | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3240423177) | [Download](../../releases/tag/mod-3240423177-v1.0) |
-| Lively Bunnies | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3254185397) | [Download](../../releases/tag/mod-3254185397-v1.0) |
-| Synthetic Swarm | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3289269367) | [Download](../../releases/tag/mod-3289269367-v1.0) |
-| Telekinesis | stringie | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3330426273) | [Download](../../releases/tag/mod-3330426273-v1.0) |
-| (EVF) International Emergency Vehicles | Ekki, DerKuhn | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3348340556) | [Download](../../releases/tag/mod-3348340556-v1.0) |
-| Ascended Sword Master | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3358293229) | [Download](../../releases/tag/mod-3358293229-v1.0) |
-| RPM - Modern Military Playermodels REMASTERED (RAGDOLL UPDATE) | Mr. Rubyyy | Gameplay | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401098159) | [Download](../../releases/tag/mod-3401098159-v1.0) |
-| RMW - M4A1 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401161277) | [Download](../../releases/tag/mod-3401161277-v1.0) |
-| RMW - AK74M | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401161489) | [Download](../../releases/tag/mod-3401161489-v1.0) |
-| RMW - RPG-7 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401161673) | [Download](../../releases/tag/mod-3401161673-v1.0) |
-| RMW - MK 153 SMAW | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401161858) | [Download](../../releases/tag/mod-3401161858-v1.0) |
-| RMW - 92FS | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401402675) | [Download](../../releases/tag/mod-3401402675-v1.0) |
-| RMW - MP443 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401402900) | [Download](../../releases/tag/mod-3401402900-v1.0) |
-| RMW - G17 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401403081) | [Download](../../releases/tag/mod-3401403081-v1.0) |
-| RMW - FN SCAR | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3401417008) | [Download](../../releases/tag/mod-3401417008-v1.0) |
-| RMW - PKP Pecheneg | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3404747101) | [Download](../../releases/tag/mod-3404747101-v1.0) |
-| RMW - M249 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3404747328) | [Download](../../releases/tag/mod-3404747328-v1.0) |
-| RMW - Colt King Cobra | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3404784805) | [Download](../../releases/tag/mod-3404784805-v1.0) |
-| RMW - SVD | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3404785067) | [Download](../../releases/tag/mod-3404785067-v1.0) |
-| RMW - M110 SASS | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3404785331) | [Download](../../releases/tag/mod-3404785331-v1.0) |
-| RMW - M870 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3405104694) | [Download](../../releases/tag/mod-3405104694-v1.0) |
-| RMW - MP5 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3405573992) | [Download](../../releases/tag/mod-3405573992-v1.0) |
-| RMW - Stoeger Double Defense | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3405943128) | [Download](../../releases/tag/mod-3405943128-v1.0) |
-| RMW - Desert Eagle | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3405979963) | [Download](../../releases/tag/mod-3405979963-v1.0) |
-| RMW - MK18 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3407023588) | [Download](../../releases/tag/mod-3407023588-v1.0) |
-| RMW - G36C | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3407553780) | [Download](../../releases/tag/mod-3407553780-v1.0) |
-| RMW - MP7 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3408682775) | [Download](../../releases/tag/mod-3408682775-v1.0) |
-| RMW - USP45 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3408725894) | [Download](../../releases/tag/mod-3408725894-v1.0) |
-| RMW - AUGA3 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3414850251) | [Download](../../releases/tag/mod-3414850251-v1.0) |
-| RMW - AA12 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3414873272) | [Download](../../releases/tag/mod-3414873272-v1.0) |
-| RMW - AKM | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3416512833) | [Download](../../releases/tag/mod-3416512833-v1.0) |
-| RMW - M16 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3418348908) | [Download](../../releases/tag/mod-3418348908-v1.0) |
-| RMW - Barrett M82 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3420845311) | [Download](../../releases/tag/mod-3420845311-v1.0) |
-| Modern Soldier NPCs | Mr. Rubyyy | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3421173144) | [Download](../../releases/tag/mod-3421173144-v1.0) |
-| RMW - G3A1 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3453220485) | [Download](../../releases/tag/mod-3453220485-v1.0) |
-| RMW - FAMAS F1 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3453503295) | [Download](../../releases/tag/mod-3453503295-v1.0) |
-| RMW - AK74 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3453623778) | [Download](../../releases/tag/mod-3453623778-v1.0) |
-| RMW - SA80 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3454536933) | [Download](../../releases/tag/mod-3454536933-v1.0) |
-| RMW - CZ Bren 2 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3456192497) | [Download](../../releases/tag/mod-3456192497-v1.0) |
-| RMW - MG3 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3499183286) | [Download](../../releases/tag/mod-3499183286-v1.0) |
-| RMW - HK416 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3512024787) | [Download](../../releases/tag/mod-3512024787-v1.0) |
-| RMW - M16A2 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3512026573) | [Download](../../releases/tag/mod-3512026573-v1.0) |
-| Rubyyy's Bleeding System | Mr. Rubyyy | Gameplay | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3517470326) | [Download](../../releases/tag/mod-3517470326-v1.0) |
-| RMW - SIG Spear | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3528009592) | [Download](../../releases/tag/mod-3528009592-v1.0) |
-| TABS Effect | Okidoki | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3541730926) | [Download](../../releases/tag/mod-3541730926-v1.0) |
-| Infinity technique | DiggolBick | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3549181010) | [Download](../../releases/tag/mod-3549181010-v1.0) |
-| Final Flash | GalaxyPizza | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3553116743) | [Download](../../releases/tag/mod-3553116743-v1.0) |
-| RMW - FN P90 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3575668960) | [Download](../../releases/tag/mod-3575668960-v1.0) |
-| RMW - Bofors AK5 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3575990304) | [Download](../../releases/tag/mod-3575990304-v1.0) |
-| Enchanter | Geneosis | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3576567190) | [Download](../../releases/tag/mod-3576567190-v1.0) |
-| VectorRazor | TheKnook | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3578552621) | [Download](../../releases/tag/mod-3578552621-v1.0) |
-| RMW - MP7 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3581952805) | [Download](../../releases/tag/mod-3581952805-v1.0) |
-| RMW - QBZ-95 | Mr. Rubyyy | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3582628842) | [Download](../../releases/tag/mod-3582628842-v1.0) |
-| The Lockonauts Toolbox | Prop Guy, Novena, One Thousand Volts (A.K.A DirtyDan), Slippy, Hotcocoa | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3586166386) | [Download](../../releases/tag/mod-3586166386-v1.0) |
-| Artillery Barrage RELOADED | Donnie Brasco | Gameplay | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3592259278) | [Download](../../releases/tag/mod-3592259278-v1.0) |
-| [PB] ProBallistics Framework | SafetyCar | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3600192776) | [Download](../../releases/tag/mod-3600192776-v1.0) |
-| Multiple Grenade Launcher | Cyber | Tool | Medium | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3600437109) | [Download](../../releases/tag/mod-3600437109-v1.0) |
-| [PB] Assault Pack 1 | SafetyCar | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3611419174) | [Download](../../releases/tag/mod-3611419174-v1.0) |
-| [PB] Assault Pack 2 | SafetyCar | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3619318834) | [Download](../../releases/tag/mod-3619318834-v1.0) |
-| Steve's NPCS | Steve | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3619320878) | [Download](../../releases/tag/mod-3619320878-v1.0) |
-| AndRe's Koenigsegg Agera | And:Re | Vehicle | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3643457222) | [Download](../../releases/tag/mod-3643457222-v1.0) |
-| ODM Gear Revorked | O hello 2.0 | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3661214063) | [Download](../../releases/tag/mod-3661214063-v1.0) |
-| M2A1 Flamethrower | 4EB!K | Tool | Simple | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3661732417) | [Download](../../releases/tag/mod-3661732417-v1.0) |
-| [GLaD] GYM Ragdoll Framework | GLaDOS Yulun PPAN | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3668043935) | [Download](../../releases/tag/mod-3668043935-v1.0) |
-| Winch | Slot | Tool | Complex | 📦 Packaged | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3681340622) | [Download](../../releases/tag/mod-3681340622-v1.0) |
+| Metric | Value |
+|--------|-------|
+| **Mods installed** | 112 |
+| **Lint clean (tier 1)** | 112/112 |
+| **Issues documented** | 73 (with rules derived from each) |
+| **Lint rules** | 39 (covering 48 V2 rewrite rules) |
+| **Deferred mods** | 13 (framework dependencies, too complex) |
+
+## How It Works
+
+Patches are applied directly to `C:/Users/trust/Documents/Teardown/mods/` — the game's local mod directory. Local mods override workshop versions when both exist.
+
+**Key conversions:**
+- Add `#version 2` header + v2 callbacks (`server.init`, `client.tick`, etc.)
+- Split server/client logic (server owns game state, client owns visuals)
+- Fix raw key input (`InputPressed("rmb", p)` fails silently in MP)
+- Add per-player state via `PlayersAdded()`/`PlayersRemoved()` loops
+- Convert `ipairs()` on iterators to bare `for p in Players() do`
+- Add `SetToolAmmoPickupAmount` for mplib loot crate integration
+
+## Project Structure
+
+| Path | Purpose |
+|------|---------|
+| `docs/` | Research, patterns, guides, audit reports |
+| `tools/` | Lint (39 rules), deepcheck, audit, auto-fix, log parser |
+| `mods/` | Patches repo metadata (game does NOT read from here) |
+| `.comms/` | Inter-terminal coordination (4-terminal team system) |
+| `CLAUDE.md` | Project rules — 48 V2 rewrite rules, batch workflow, tool usage |
+| `MASTER_MOD_LIST.md` | Complete mod inventory with batch history and workshop IDs |
+| `ISSUES_AND_FIXES.md` | 73 documented bugs with root causes, fixes, and derived rules |
+
+## Key References
+
+- **`docs/BASE_GAME_MP_PATTERNS.md`** — How official Teardown tools sync in MP (12 patterns)
+- **`docs/OFFICIAL_DEVELOPER_DOCS.md`** — Complete API from teardowngame.com (ground truth)
+- **`docs/WHAT_WORKS.md`** — Proven fixes and patterns
+- **`docs/WHAT_DOESNT_WORK.md`** — Failed approaches to avoid
+
+## Developer Tools
+
+```
+python -m tools.status          # Session overview
+python -m tools.lint             # 39-rule scanner (all mods)
+python -m tools.lint --mod "X"   # Single mod
+python -m tools.test --mod "X" --static  # Deep semantic analysis
+python -m tools.audit            # Feature matrix
+python -m tools.fix --dry-run    # Preview auto-fixes
+python -m tools.logparse         # Parse game log for errors
+```
+
+## Batch History
+
+See `MASTER_MOD_LIST.md` for the full inventory. Summary: 13 batches across 4 sessions converted 177 mods from v1 to v2, with 66+ later removed by user (engine stability at ~178 mods). Current set: 112 active, 13 deferred.

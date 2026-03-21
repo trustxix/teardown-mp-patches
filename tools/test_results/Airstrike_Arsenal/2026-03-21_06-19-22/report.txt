@@ -1,0 +1,16 @@
+TEST REPORT: Airstrike_Arsenal
+======================================================
+Generated: 2026-03-21 06:19:22
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 10 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

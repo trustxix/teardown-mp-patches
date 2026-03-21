@@ -1,0 +1,39 @@
+TEST REPORT: Bright_Valley_Correctional_Center
+======================================================
+Generated: 2026-03-21 05:44:07
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 22/48 assets missing
+    - Asset NOT found: snd/dis0.ogg
+    - Asset NOT found: snd/siren.ogg
+    - Asset NOT found: snd/broken.ogg
+    - Asset NOT found: main/sounds/elevator_motor.ogg
+    - Asset NOT found: sounds/licensed-tracks/WB_THE_COVER_UP.ogg
+    - Asset NOT found: menu/record.png
+    - Asset NOT found: sounds/select.ogg
+    - Asset NOT found: images/missing.png
+    - Asset NOT found: main/snd/villager/woman.ogg
+    - Asset NOT found: sounds/midle0.ogg
+    - Asset NOT found: main/snd/villager/fdeath0.ogg
+    - Asset NOT found: main/snd/villager/mdeath0.ogg
+    - Asset NOT found: sounds/lampStarts%d.ogg
+    - Asset NOT found: main/snd/blastersfx.ogg
+    - Asset NOT found: main/snd/stdeath.ogg
+    - Asset NOT found: main/snd/villager/m3.ogg
+    - Asset NOT found: main/snd/villager/midle2.ogg
+    - Asset NOT found: main/snd/villager/m1.ogg
+    - Asset NOT found: main/snd/trooper/storm0.ogg
+    - Asset NOT found: main/snd/villager/midle0.ogg
+    - Asset NOT found: main/snd/clsh08.ogg
+    - Asset NOT found: main/snd/swng07.ogg
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      FAIL
+    - usetool input detected but no ServerCall to server — weapon won't fire
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

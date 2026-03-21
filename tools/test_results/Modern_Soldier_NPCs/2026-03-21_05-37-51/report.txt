@@ -1,0 +1,17 @@
+TEST REPORT: Modern_Soldier_NPCs
+======================================================
+Generated: 2026-03-21 05:37:51
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 1/231 assets missing
+    - Asset NOT found: snd/SmgGun0.ogg.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

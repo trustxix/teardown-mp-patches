@@ -2,7 +2,7 @@
 
 All resolved bugs and the rules derived from them. Consult before making changes. Append after fixing new issues.
 
-## Key Rules (condensed from all 65 issues)
+## Key Rules (condensed from all 73 issues)
 
 1. NEVER use `goto` or `::label::` (Lua 5.1 only)
 2. NEVER use raw key names with player parameter - use ServerCall pattern
@@ -11,7 +11,7 @@ All resolved bugs and the rules derived from them. Consult before making changes
 5. Every mod with keybinds must show them on-screen
 6. Always include group number in RegisterTool
 7. Send ALL aim geometry from same client frame - never mix client aim with server eye transform
-8. options.lua stays UNCHANGED - uses special callbacks
+8. ~~options.lua stays UNCHANGED~~ **OUTDATED** — options.lua MUST be converted to v2 with `#version 2` + `client.init()`/`client.draw()` callbacks (Issue #71, all 9 converted 2026-03-20)
 9. SetPlayerTransform is SERVER-ONLY
 10. SetToolAmmo is REQUIRED in PlayersAdded
 11. Use `ClientCall` to sync server state that client needs for HUD/input gating
@@ -27,7 +27,7 @@ All resolved bugs and the rules derived from them. Consult before making changes
 21. Gate client projectile physics with `IsPlayerLocal(p)` — never simulate for remote players
 22. Use registry sync for continuous state, `ServerCall`/`ClientCall` for events only
 23. Throttle `FindShapes()`/`QueryAabb()` to ≤4Hz — never per-tick per-player
-24. `PlaySound()`/`SpawnParticle()` are CLIENT-ONLY — never call on server
+24. `SpawnParticle()`/`PointLight()`/`SetShapeEmissiveScale()` are CLIENT-ONLY — never call on server. **EXCEPTION: `PlaySound()` works on server and auto-syncs to all clients** (see BASE_GAME_MP_PATTERNS.md Pattern 10)
 25. `QueryShot()` + `ApplyPlayerDamage()` on SERVER — client uses `QueryRaycast()` for visuals
 26. Always guard `ApplyPlayerDamage()` with `player ~= 0` after `QueryShot()` — player 0 = host. `if player then` is WRONG (Lua 0 is truthy)
 27. Always use 4-param `ApplyPlayerDamage(target, damage, toolId, attacker)` — for environmental hazards, pass `0` as attacker
@@ -35,6 +35,12 @@ All resolved bugs and the rules derived from them. Consult before making changes
 29. `Explosion()` does NOT damage players — add explicit `ApplyPlayerDamage()` with distance falloff + tool ID for kill attribution
 30. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync)
 31. All asset paths MUST use `MOD/` prefix in v2: `LoadSound("MOD/snd/fire.ogg")`. Without it, assets silently fail to load (v1 resolved relative paths automatically)
+32. NEVER copy preview.jpg/preview.png from workshop into Documents/Teardown/mods/ — strncpy buffer overflow. Monitor active mod count: warn at 150+, engine crashes ~178
+33. V2 scripts MUST define at least one callback (`server.init()`, `client.init()`, etc.) — empty stubs with only `#version 2` + includes cause "Error compiling"
+34. Entity scripts on XML entities MUST have `#version 2` + v2 callbacks — without it, they are silently disabled in MP (no error, just missing features)
+35. `#version 2` can appear on any line — preprocessor scans the whole file. Do NOT enforce line-1 placement. Ensure LF-only line endings (CRLF breaks preprocessor)
+36. Shared `players[p]` on host causes double-processing — use separate fields for server-authoritative state vs client visual-only state (e.g., `data.bulletsInAir` vs `data.clientTracers`)
+37. `options.lua` needs independent `#version 2` + v2 callbacks — same as entity scripts (Issue #68). Converting only `main.lua` does NOT fix options.lua
 
 > **Note:** Issues #1-19 were resolved in earlier sessions. Their rules are captured above. Detailed entries for #1-19 are no longer available but all patterns are encoded in the lint tool (`python -m tools.lint`).
 
@@ -443,7 +449,7 @@ All include: `optionsOpen` in `createPlayerData()`, `server.setOptionsOpen()` fo
 1. Client-side projectile physics running for ALL players (should be local only)
 2. Per-tick ServerCall/ClientCall with position data (should use registry sync)
 3. FindShapes/QueryAabb every frame per player (should throttle to ≤4Hz)
-4. Server-side PlaySound/SpawnParticle (wasted CPU, effects are client-only)
+4. Server-side ~~PlaySound~~/SpawnParticle (wasted CPU, effects are client-only) **[CORRECTED 2026-03-21: PlaySound on server actually auto-syncs — see BASE_GAME_MP_PATTERNS.md Pattern 10. Only SpawnParticle/PointLight/SetShapeEmissiveScale are truly client-only.]**
 5. Raw key InputPressed in server code (fails silently for non-host players)
 6. Client-side QueryShot for damage (should be server-side for authoritative hit detection)
 
@@ -460,7 +466,7 @@ All include: `optionsOpen` in `createPlayerData()`, `server.setOptionsOpen()` fo
 - Gate client projectile physics with `IsPlayerLocal(p)` (CLAUDE.md Rule 26)
 - Use registry sync for continuous state, RPC for events only (Rule 27)
 - Throttle FindShapes/QueryAabb to ≤4Hz (Rule 28)
-- PlaySound/SpawnParticle are client-only (Rule 29)
+- ~~PlaySound~~/SpawnParticle are client-only (Rule 29) **[CORRECTED: PlaySound on server auto-syncs — only SpawnParticle/PointLight/SetShapeEmissiveScale are client-only]**
 - QueryShot + ApplyPlayerDamage must run on server (Rule 30)
 
 **Date found:** 2026-03-18
@@ -489,7 +495,7 @@ All include: `optionsOpen` in `createPlayerData()`, `server.setOptionsOpen()` fo
 
 **Fix:** Added `hitPos`/`hitDir` to shared projectile table for client impact detection. Added `client.handleImpactEffects()` — detects projectile deactivation, plays correct sounds+particles per ammo type. Server handles only authoritative effects (MakeHole, Explosion, SpawnFire).
 
-**RULE: #29 — PlaySound/SpawnParticle are CLIENT-ONLY. Use shared state or ClientCall to trigger effects from server events.**
+**RULE: #29 — ~~PlaySound~~/SpawnParticle are CLIENT-ONLY. Use shared state or ClientCall to trigger effects from server events.** **[CORRECTED 2026-03-21: PlaySound() on server auto-syncs to all clients (BASE_GAME_MP_PATTERNS.md Pattern 10). Only SpawnParticle/PointLight/SetShapeEmissiveScale are truly client-only. The AC130 fix was not wrong (client-side PlaySound also works) but was unnecessary for PlaySound specifically.]**
 
 **Date fixed:** 2026-03-18
 
@@ -582,7 +588,7 @@ ApplyPlayerDamage(player, 1, "loc@DAMAGE_CAUSE_EXPLOSION", 0)
 
 **Applied to:** Minigun, Hook_Shotgun, M1_Garand, M249, M4A1, Nova_Shotgun, P90, SCAR-20, SG553 (9 mods total)
 
-**RULE: SpawnParticle/PlaySound are CLIENT-ONLY (rule 29). For multiplayer-visible effects triggered by server events, use `ClientCall(0, "client.effectFunc", ...)` to broadcast to all clients.**
+**RULE: SpawnParticle/~~PlaySound~~ are CLIENT-ONLY (rule 29). For multiplayer-visible effects triggered by server events, use `ClientCall(0, "client.effectFunc", ...)` to broadcast to all clients.** **[CORRECTED 2026-03-21: PlaySound() on server auto-syncs. Only SpawnParticle is truly client-only here. The ClientCall pattern for SpawnParticle is correct; for PlaySound, direct server-side call is simpler.]**
 
 **Date fixed:** 2026-03-18
 
@@ -630,9 +636,9 @@ ApplyPlayerDamage(player, 1, "loc@DAMAGE_CAUSE_EXPLOSION", 0)
 
 **Fix:** Move `SetShapeEmissiveScale` calls from `server.tick` to `client.tick` so all players see the glow animation.
 
-**Applied to:** Remote_Explosives (SetShapeEmissiveScale moved from server.tick to client.tick, also removed unused server shape cache, throttled IsShapeBroken to 4Hz). Originally found in Multiplayer_C4 (duplicate — see Issue #54).
+**Applied to:** Remote_Explosives (SetShapeEmissiveScale moved from server.tick to client.tick, also removed unused server shape cache, throttled IsShapeBroken to 4Hz). Originally found in Multiplayer_C4 (duplicate — see Issue #54). **Additional (2026-03-19):** Gwel_Mall (3 entity scripts: substation.lua, sampleCtrl1.lua, firesystem.lua — exit sign lighting, gate buttons, power-cut effects), PPAN_Vehicle_Pack (popupHeadlight_MP.lua — detached headlights), The_Office_US (lamp.lua — lamp shade glow).
 
-**RULE: `SetShapeEmissiveScale` is effectively CLIENT-ONLY for visual effects. Expand Rule 29: PlaySound/SpawnParticle/SetShapeEmissiveScale are client-only — never call on server for visual effects.**
+**RULE: `SetShapeEmissiveScale` is effectively CLIENT-ONLY for visual effects. Expand Rule 29: ~~PlaySound~~/SpawnParticle/SetShapeEmissiveScale are client-only — never call on server for visual effects.** **[CORRECTED 2026-03-21: PlaySound() on server auto-syncs — it is NOT client-only. Corrected Rule 29 = SpawnParticle/PointLight/SetShapeEmissiveScale are client-only. PlaySound on server is the CORRECT base game pattern.]**
 
 **Date fixed:** 2026-03-18
 
@@ -728,19 +734,23 @@ end
 
 **Fix:** Changed `ClientCall(p, ...)` to `ClientCall(0, ...)` for all world-space effect callbacks.
 
-**Affected mods:**
+**Affected mods (batch 1, 2026-03-19):**
 - Omni_Gun: `client.onShootFX` (shoot sound + muzzle particles) — 1 fix
 - Magnets: `client.onPlaceFX`, `client.onRemoveFX`, `client.onPolarityFX` — 3 fixes
 - Explosive_Pack: `client.onExplosion` for landmine auto-trigger — 1 fix (manual detonation already used `ClientCall(0, ...)`)
 
+**Affected mods (batch 2, 2026-03-20 — 10 framework mods):**
+Earlier listed as "NOT affected" — re-investigation found all 10 used `ClientCall(p, "client.onShoot", ...)` with 0 ClientCall(0,...) broadcasts. Other players couldn't hear gunfire, reload sounds, or dry fire clicks.
+- AK105_Framework, AK12_Framework, AK74_Framework, G17_Framework, G36K_Framework, M4A1_Framework, Kriss_Vector, Dragunov_SVU, SCAR_Framework, Saiga12_Framework
+- Fix: split into `ClientCall(0, ...)` for world-space sounds + `ClientCall(p, ...)` for personal camera shake/recoil
+
 **NOT affected (verified correct):**
-- Framework gun mods (G17, AK series, SCAR, etc.): handlers use `GetLocalPlayer()` for camera shake + recoil — personal feedback. `Shoot()` handles deterministic effects for all clients via engine pipeline.
 - Predator_Missile_MP, Light_Katana_MP: Already broadcast via `for-loop over GetAllPlayers()`.
 - Portal_Gun, ODM_Gear, Telekinesis, Magnetizer_V2: Personal action feedback, correctly targeted.
 
 **RULE: Use `ClientCall(0, ...)` for world-space sound/visual effects (explosions, gunfire, placement sounds). Use `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync). Not lint-checkable — requires understanding handler semantics.**
 
-**Date fixed:** 2026-03-19
+**Date fixed:** 2026-03-19 (batch 1), 2026-03-20 (batch 2 — 10 framework mods)
 
 ---
 
@@ -906,15 +916,112 @@ end
 
 ---
 
+## Issue #66: Game crash from mod enumeration — strncpy buffer overflow
+
+**Bug:** Game crashed during startup with a strncpy buffer overflow in C++ engine code (empty Lua callstack). Crash occurred during mod directory enumeration, not during script compilation. The crash was NOT caused by any specific Lua code change — it was triggered by one of 53 installed mods (39 RMW weapon pack mods + 14 others) causing the engine to overflow a fixed-size buffer while reading mod metadata/directories.
+
+**Root cause:** Teardown's engine enumerates all mod directories at startup and copies mod metadata (preview images, info.txt, directory names) into fixed-size C string buffers using `strncpy`. With ~178 active mods, one or more mods pushed the buffer past its limit. The exact culprit mod was not isolated — binary search by disabling groups failed because the problematic mod wasn't in either test group.
+
+**Fix:** User unsubscribed from 53 Steam Workshop mods (all 39 RMW weapons + 14 others), reducing active mods from 178 to 125. Crash resolved. Safe engine limit appears to be ~125-150 active mods (see also: shadow volume integer overflow at ~178 mods).
+
+**Related rules:**
+- **NEVER copy preview.jpg/preview.png** from workshop originals into Documents/Teardown/mods/ — this was initially suspected as the cause (strncpy on image path processing) and remains dangerous.
+- **Active Mod Count Ceiling:** Warn when approaching 150 mods. Engine crashes above ~178.
+- **No Mass Changes:** Changing 30+ mods simultaneously makes crash isolation impossible.
+
+**RULE: Monitor active mod count. Warn user at 150+. Engine has hard crash limits around 178 mods (strncpy overflow, shadow volume overflow, audio memory ~760MB). When installing new mods, track total and advise which to keep disabled.**
+
+**Date fixed:** 2026-03-19
+
+---
+
+## Issue #67: V2 script stubs with no callbacks cause "Error compiling"
+
+**Symptom:** Jetskis and Service_Vehicles_MP showed "Error compiling" in the game log despite having valid `#version 2` headers and passing lint. Both are content/vehicle mods with minimal script stubs (4-5 lines) that had `#version 2` + `#include` but no callback function definitions.
+
+**Root cause:** Teardown's v2 script engine expects at least one callback function (`server.init()`, `client.init()`, `server.tick()`, etc.) to be defined. A `#version 2` file with only directives, includes, and comments — but zero callbacks — fails the engine's compilation pass. This affects content mods (maps, vehicle packs) that need `#version 2` for MP compatibility but have no script logic (vehicles spawn via `spawn.txt`, entity scripts handle behavior).
+
+**Fix:** Added empty `server.init()` callback to both mods:
+```lua
+#version 2
+#include "script/include/player.lua"
+-- Jetskis -- Content/Vehicle mod (no script logic needed)
+
+function server.init()
+    -- Required: v2 scripts must define at least one callback
+end
+```
+
+**Applied to:** Jetskis (content mod, 5→7 lines), Service_Vehicles_MP (vehicle pack, 4→7 lines). Solid_Sphere_Summoner's compile error was stale (file modified after game log timestamp).
+
+**RULE: All `#version 2` scripts MUST define at least one callback function. Content mods with no script logic should add an empty `server.init()`. Without it, the engine fails to compile the script.**
+
+**Date fixed:** 2026-03-19
+
+---
+
 ## Tooling: PER-TICK-RPC destruction event guard (2026-03-19)
 
 **Improvement:** Added a 4th guard pattern to the PER-TICK-RPC lint rule. RPC calls (ServerCall/ClientCall) inside tick/update are now auto-suppressed if `MakeHole()` or `Explosion()` appears within ±10 lines — indicating the RPC is part of a destruction impact event, not continuous per-tick spam.
 
 **Impact:** 11 `@lint-ok PER-TICK-RPC` annotations became stale and were removed from: Armour_Framework_MP, Explosive_Pack, Legacy_Tank_MP, Sith_Saber. PER-TICK-RPC suppressions reduced 134 → 123.
 
+---
+
+## Issue #68: V1 entity scripts silently disabled in multiplayer
+
+**Symptom:** Vehicle physics, interactive objects (doors, steering wheels, sirens, lights), and environmental effects (flames, elevators, cranes) don't work in multiplayer — but produce no error or warning. The game runs fine, these features are just silently missing.
+
+**Root cause:** Entity scripts using v1-style callbacks (`function init()`, `function tick()`, `function update()`, `function draw()`) without a `#version 2` header are silently skipped by the MP engine. Unlike main.lua scripts (which are forced to v2 via `info.txt version = 2`), entity scripts attached to XML entities via `tags="script=foo.lua"` each run in their own script context and must independently declare `#version 2`.
+
+**Detection:** New lint rule V1-ENTITY-SCRIPT (T2-20) scans for files with global-scope v1 callbacks but no `#version 2` header. Severity: WARN (quality/missing functionality, not crash risk).
+
+**Scale:** 81 findings across 10 mods:
+- Armored_Vehicles_MP, Armour_Framework_MP, DAM_Helis, GYM_Ragdoll, Gwel_Mall
+- Haul_Truck_MP, Legacy_Tank_MP, Multiplayer_Spawnable_Pack, PPAN_Vehicle_Pack, Vehicle_Pack_Remastered_MP
+
+**Fix pattern:** Convert each entity script to v2 server/client pattern:
+```lua
+-- BEFORE (v1 — silently disabled in MP):
+function init()
+    snd = LoadSound("MOD/snd/engine.ogg")
+end
+function tick(dt)
+    PlaySound(snd, GetBodyTransform(body).pos, 1)
+end
+
+-- AFTER (v2 — works in MP):
+#version 2
+#include "script/include/player.lua"
+function server.init()
+    -- server-side state init
+end
+function client.tick(dt)
+    -- client-side effects
+    local snd = LoadSound("MOD/snd/engine.ogg")
+    PlaySound(snd, GetBodyTransform(GetSelf()).pos, 1)
+end
+```
+
+**See also:** RESEARCH.md Finding #43 (entity script conversion patterns), Issue #67 (v2 stubs need at least one callback).
+
+**RULE: Entity scripts attached to XML entities MUST have `#version 2` and use v2 callbacks (`server.init()`/`client.tick()`/etc.). Without it, they are silently disabled in multiplayer — no error, no warning, just missing functionality.**
+
+**Progress:** Originally 79 scripts across 10 mods. **ALL 79 CONVERTED (100%)** as of 2026-03-20. Key conversion sessions:
+- 2026-03-19: 65 scripts converted/suppressed across Service_Vehicles_MP, Toyota_Supra_MP, Vehicle_Pack_Remastered_MP, Legacy_Tank_MP, Gwel_Mall, PPAN_Vehicle_Pack, others
+- 2026-03-20: 14 more — Legacy_Tank_MP/tank.lua (full v1→v2 split with shared table sync), 7 DAM_Helis scripts (engineprops, ground, bigass_bomb, MultiEngine, Rocket, Bomb, Missile), DAM_Helis/GunnerAI.lua (T142, 1381-line AI gunner — final entity script), Gwel_Mall mission scripts, MrRandoms_Vehicles turret scripts, Armour_Framework_MP/tank.lua, Dumb_Stupid_Fast_Cars/recoil.lua, Multiplayer_Spawnable_Pack/bounce.lua x2 (V2-DEAD-CALLBACK: renamed init/tick/update → server.init/server.update + client.init for sound, converted player APIs for MP, added bounce cooldown)
+
+**Date discovered:** 2026-03-19
+
+---
+
+## Tooling: V1-ENTITY-SCRIPT lint rule + misc improvements (2026-03-19)
+
+**New lint rule:** V1-ENTITY-SCRIPT (T2-20, severity: WARN) — detects v1 entity scripts silently disabled in MP. Found 81 issues across 10 mods. See Issue #68.
+
 **Also improved:** Audit KeybindRemap regex broadened to detect `BINDABLE_KEYS`/`rebindingAction` patterns (+5 mods detected). MCP `generate_tasks_from_lint` timeout 60→180s.
 
-**Tests:** 6 new tests added (432 → 438): MakeHole nearby clean, Explosion nearby clean, commented MakeHole still flags, far-away MakeHole still flags, input guard clean, one-time event clean.
+**Tests:** 6 new tests for PER-TICK-RPC destruction event guard (432 → 438): MakeHole nearby clean, Explosion nearby clean, commented MakeHole still flags, far-away MakeHole still flags, input guard clean, one-time event clean. Plus V1-ENTITY-SCRIPT test suite (7 tests). Total: 571.
 
 ---
 
@@ -935,7 +1042,7 @@ end
 - FPV_Drone_Tool: 3 server PlaySound→ClientCall pattern fix
 - HANDLE-GT-ZERO: expanded suffix list (Sum, Value, Total)
 
-**Remaining convertible (2 — both HIGH/DEFERRED):** GLARE (LnL framework), Lockonauts Toolbox (custom UI). ProBallistics closed (17,447 lines — DO NOT CONVERT). 16 UMF-blocked.
+**Remaining convertible (2 — both HIGH/DEFERRED):** GLARE (LnL framework), Lockonauts Toolbox (custom UI). 16 UMF-blocked.
 
 ---
 
@@ -1008,7 +1115,7 @@ end
 
 **Post-session update (2026-03-19):** 4 additional mods converted: Adjustable_Fire (#174), Enchanter (#175, UMF bypass), Always_Up (#176, UMF bypass), Hungry_Slimes (#177, UMF bypass). **177 mods total**. Workshop fully exhausted. 523 tests (deepcheck.py false-positive fixes: C4, Light_Katana_MP now PASS).
 
-**Deferred (12):** GLARE (LnL framework), Lockonauts Toolbox (custom UI), Chaos_Mod (8,100 lines), Player_Scaler (MP-incompatible physics), Ascended Sword Master (4,577 lines, 14 stances), Shards Summoner (2,677 lines), AI Trainer, Blight Gun, Thermite Cannon (1,691 lines), Tameable Dragon (5,037 lines AI), ProBallistics (DO NOT CONVERT), Synthetic Swarm (DO NOT CONVERT).
+**Deferred (11):** GLARE (LnL framework), Lockonauts Toolbox (custom UI), Chaos_Mod (8,100 lines), Player_Scaler (MP-incompatible physics), Ascended Sword Master (4,577 lines, 14 stances), Shards Summoner (2,677 lines), AI Trainer, Blight Gun, Thermite Cannon (1,691 lines), Tameable Dragon (5,037 lines AI), Synthetic Swarm (DO NOT CONVERT).
 
 ---
 
@@ -1032,3 +1139,166 @@ end
 - SERVER-EFFECT: lint boundary detection fixed (Asteroid_Strike false positives eliminated). Rods_from_Gods + Molotov @lint-ok suppressed (spawned entity scripts / server-only projectile positions).
 - RMW weapon pack: 39 mods converted (2 rocket launchers + 5 hitscan exemplars + 32 mass batch). All lint clean, all audit compliant.
 - New docs: OFFICIAL_DEVELOPER_DOCS.md (ground truth API), PER_TICK_RPC_FIX_GUIDE.md, MPLIB_INTERNALS.md, TEAM_PLUGINS.md
+
+---
+
+## Tooling: VERSION2-NOT-LINE1 lint rule reverted (2026-03-19)
+
+**What happened:** A lint rule was added requiring `#version 2` to appear on line 1 of scripts. This caused 60 false positives across working mods — the Teardown preprocessor finds `#version 2` on ANY line, not just line 1. Many mods have it after comment headers.
+
+**Root cause of Solid_Sphere_Summoner compile error:** Originally misdiagnosed as `#version 2` not being on line 1. Actual cause was CRLF line endings interfering with the preprocessor. Fix: reposition the `#version 2` line and normalize line endings.
+
+**RULE: `#version 2` can appear on any line in a script — the preprocessor scans the whole file. Do not enforce line-1 placement. CRLF line endings can cause compile errors — ensure LF-only in Lua scripts.**
+
+**Date:** 2026-03-19
+
+---
+
+## Milestone: Entity Script Conversion Sprint — 82% Complete (2026-03-19)
+
+**Achievement:** 65 of 79 v1 entity scripts converted or suppressed (82% done). 5 mods fully cleared of V1-ENTITY-SCRIPT warnings. 14 scripts remaining across 4 mods.
+
+**Fully cleared mods (5):**
+- **Gwel_Mall** — ALL 38 scripts converted (dealership_spin ×6, speed ×2, discolights ×2, technoloop ×2, tagsmanager ×4, AutoGate ×9, doors ×3, radio ×2, discosmoke ×2, car ×2, shapesprite, betteralarmlights, voxscripts ×2)
+- **Multiplayer_Spawnable_Pack** — ALL 18 scripts converted (physics: spin ×2, floating, blackhole, whitehole, trampoline, sharp, sensor/timed bombs. Effects: balloon, rocket, napalm/gas bombs, asteroid, particle spawner, ferris, rc. Dead: maze)
+- **Armored_Vehicles_MP** — bulldozer.lua full v2, ground.lua voxscript suppressed
+- **Haul_Truck_MP** — ground.lua voxscript suppressed
+- **Legacy_Tank_MP** — ALL entity scripts now v2: RepairKit.lua + cookoff.lua (T120), tank.lua 500+ line full server/client split (T125, completed 2026-03-20). Referenced by 8 XML prefabs
+
+**Partially cleared:**
+- **PPAN_Vehicle_Pack** — 6 of 8 done (steer, breakgroup, cleaner, InitLightsShut, bike, popupHeadlight). 2 crane scripts remaining (WASD_CRANE is 152 lines with rope physics)
+
+**Remaining (14 scripts, all complex):**
+- PPAN_Vehicle_Pack: 2 crane scripts (rope physics + local server={} shadowing)
+- DAM_Helis: 8 scripts (flight model, weapons, CRJ-200 engine)
+- Vehicle_Pack_Remastered_MP: 1 aircraft flight model
+- GYM_Ragdoll: 1 debug spawner
+
+**Also fixed this session:**
+- T126: Solid_Sphere_Summoner compile error (#version 2 + CRLF), Jetskis preview.jpg removed
+- T127: Armored_Vehicles_MP bulldozer.lua full v2 server/client split
+- MrRandoms_Vehicles: 4 entity scripts rewritten (policelights ×2, firetruck, elevator) — had 3 bugs each beyond SERVER-EFFECT (IsPlayerLocal on server, PlayLoop on server, raw key input on server)
+- VERSION2-NOT-LINE1 lint rule reverted (60 false positives — see tooling entry above)
+
+**All converted mods:** lint tier-1 clean, deepcheck PASS.
+
+**Date:** 2026-03-19
+
+---
+
+## Tooling: V2-DEAD-CALLBACK lint rule (2026-03-19)
+
+**New lint rule:** V2-DEAD-CALLBACK (check_v2_dead_callbacks) — detects scripts with `#version 2` that contain v1-style callbacks (`init()`, `tick()`, `update()`, `draw()`).
+
+**Two severity levels:**
+- **WARN** — script has `#version 2` but ONLY dead v1 callbacks. The entire script is non-functional in MP (all callbacks silently ignored). 5 found: Koenigsegg_Agera_MP (4 scripts), GYM_Ragdoll (1 script).
+- **INFO** — script has `#version 2` with working v2 callbacks AND leftover dead v1 callbacks. Script works but has dead code. 10 found across 5 mods.
+
+**Distinction from V1-ENTITY-SCRIPT:** V1-ENTITY-SCRIPT catches scripts missing `#version 2` entirely. V2-DEAD-CALLBACK catches scripts that HAVE `#version 2` but still use v1 callback names.
+
+**Note:** This rule currently has NO test coverage in test_lint.py. Tests needed.
+
+**Date added:** 2026-03-19 (documented 2026-03-20)
+
+---
+
+## Issue #69: MEGAGUN double bullet movement on host (shared players[p])
+
+**Symptom:** On the host, MEGAGUN bullets fly at 2x speed. On remote clients, no bullet tracers visible.
+
+**Root cause:** Host runs both server and client code. `server.tick` creates `players[p]`; `client.tick`'s `if not players[p]` skips on host → same data object shared. Server moves bullets in `data.bulletsInAir`, then client moves them again → 2x speed. Remote clients have empty `bulletsInAir` → no tracers.
+
+**Fix:** Separated `data.bulletsInAir` (server auth) from `data.clientTracers` (client visual). Server broadcasts `ClientCall(0, "client.onMegagunFire", p, numBullets, bulletSpeed)`. Client creates approximate tracers from `GetPlayerEyeTransform(p)`.
+
+**RULE: Separate server-owned and client-owned data into distinct fields when both contexts process the same arrays.**
+
+**Date fixed:** 2026-03-20
+
+---
+
+## Issue #70: M2A1_Flamethrower double napalm on host (same pattern as #69)
+
+**Symptom:** Host napalm at 2x rate/speed. Remote clients see no fire stream.
+
+**Root cause:** Same shared `players[p]` pattern. Both contexts create napalm in `data.projectiles` and run physics.
+
+**Fix:** Client uses `data.clientProjectiles`/`data.clientProjCounter`. No ClientCall needed — client uses `InputDown("usetool", p)` + `GetPlayerAimInfo` for all players. Server remains authoritative (SpawnFire, ApplyPlayerDamage).
+
+**Date fixed:** 2026-03-20
+
+---
+
+## Issue #71: V1 options.lua silently disabled in multiplayer
+
+**Symptom:** Mod options menus don't appear in multiplayer. Players can't change settings. The options button exists but the menu is non-functional.
+
+**Root cause:** Same as Issue #68 — `options.lua` files are separate script contexts from `main.lua`. Without `#version 2` and v2 callbacks, they are silently disabled in MP. The engine loads them but skips execution of v1-style `init()`/`draw()` callbacks.
+
+**Fix:** Add `#version 2` header and convert callbacks:
+- `init()` → `client.init()` (options.lua runs client-side only)
+- `draw()` → `client.draw()`
+- No server callbacks needed — options UI is always client-local
+
+**Scope:** 25 mods have options.lua. 16 already had `#version 2`. 9 were v1 (silently disabled in MP).
+**Converted (9/9 — 100% complete):** Desert_Eagle, GYM_Ragdoll, Multiple_Grenade_Launcher, TABS_Effect, Airstrike_Arsenal, Ion_Cannon_Beacon, Artillery_Barrage_RELOADED, Minecraft_Building_Tool, Molotov_Cocktail
+
+**RULE: options.lua follows the same v2 rules as entity scripts (Issue #68) — each script context needs independent `#version 2` + v2 callbacks. Converting only main.lua does NOT fix options.lua.**
+
+**Date identified:** 2026-03-20
+
+---
+
+## Issue #72: Host double-processing of scalar fields in shared players[p] (extends #69/#70)
+
+**Symptom:** On the host, mods exhibit 2x ammo drain, 2x timer speed, 2x reload speed, 2x recoil. Remote clients unaffected. Subtle — less visible than the array-based double-processing in Issues #69/#70.
+
+**Root cause:** Same shared `players[p]` pattern as #69/#70, but affecting scalar fields instead of arrays. In v2, the host runs both `server.tickPlayer` and `client.tickPlayer` on the same `data` object. When both contexts modify the same scalar fields (ammo counters, cooldown timers, reload timers, recoil values), the host processes them twice per frame. Remote clients only run `client.tickPlayer`, so they see normal 1x behavior.
+
+**Fix pattern:** Gate client-side continuous state writes with an `isHostClient` check, or use separate server-owned vs client-owned field names for state that both contexts modify:
+```lua
+-- Option A: Skip client scalar updates on host
+function client.tickPlayer(p, dt)
+    local data = players[p]
+    if not IsPlayerLocal(p) then return end
+    -- Only local player updates client-side scalars
+    data.clientRecoil = math.max(0, data.clientRecoil - dt * 5)
+end
+
+-- Option B: Separate fields (same as #69/#70 pattern)
+-- Server uses: data.ammo, data.reloadTimer, data.cooldown
+-- Client uses: data.clientAmmo, data.clientRecoil, data.clientCooldown
+```
+
+**Affected mods:** 38 identified (extends beyond MEGAGUN and M2A1_Flamethrower which were fixed in #69/#70). Full list TBD — api_surgeon investigating.
+**Fixed so far:** M2A1_Flamethrower (T163), MEGAGUN (T164)
+
+**RULE: On host, both server.tickPlayer and client.tickPlayer share the same `players[p]` data object. Any scalar field modified in both contexts (ammo, timers, cooldowns, recoil) will be processed 2x on host. Gate client writes with `IsPlayerLocal(p)` or use separate field names.**
+
+**Date identified:** 2026-03-20
+
+---
+
+## Issue #73: Dynamic keybind variables with player param — lint-invisible RAW-KEY-PLAYER
+
+**Symptom:** Thruster_Tool_Multiplayer thrusters completely non-functional for non-host players. No lint warning.
+
+**Root cause:** `InputPressed(rocket.keybind, p)` and `InputDown(rocket.keybind, p)` use a **variable** for the key name instead of a string literal. Lint rule RAW-KEY-PLAYER only matches string patterns like `InputPressed("rmb", p)`. When the key name is a variable, lint can't detect the raw key + player param combination, so the bug goes undetected.
+
+**Fix:** Move all raw key input to client-side with `IsPlayerLocal(p)` check, use `ServerCall` to bridge to server logic. Same pattern as all other RAW-KEY-PLAYER fixes, just harder to find.
+
+```lua
+-- BROKEN (invisible to lint):
+if InputPressed(rocket.keybind, p) then ... end
+
+-- FIXED:
+-- client.tick:
+if IsPlayerLocal(p) and InputPressed(rocket.keybind) then
+    ServerCall("server.activateRocket", p, rocketIndex)
+end
+```
+
+**Applied to:** Thruster_Tool_Multiplayer (2 hidden bugs found and fixed, T166)
+
+**RULE: After lint reports 0 findings, manually check for `InputPressed/InputDown/InputReleased` calls where the first argument is a variable (not a string literal). These bypass RAW-KEY-PLAYER detection. Consider adding lint support for this pattern.**
+
+**Date identified:** 2026-03-21

@@ -38,11 +38,10 @@ local _, startPoint, endPoint, dir = GetPlayerAimInfo(muzzlePos, maxDist, p)
 
 **Impact:** All gun mods have slightly inaccurate aim in multiplayer because we bypass the engine's aim compensation system.
 
-**Action:** Replace manual `GetPlayerEyeTransform` + `QueryRaycast` aim logic with `GetPlayerAimInfo` in gun mods that use QueryRaycast for **weapon aiming**.
+**Action:** ~~Replace manual `GetPlayerEyeTransform` + `QueryRaycast` aim logic with `GetPlayerAimInfo` in gun mods that use QueryRaycast for **weapon aiming**.~~ **DONE (2026-03-20)** — All real candidates now use GetPlayerAimInfo. Remaining MANUAL-AIM lint findings are valid non-aim uses.
 
-**Triage (2026-03-17):** Of 18 mods flagged MANUAL-AIM by lint, only mods using QueryRaycast for actual weapon aim need migration. Most use QueryRaycast legitimately for non-aim purposes:
-- **Already migrated:** Airstrike_Arsenal, Lava_Gun, Lightning_Gun, 500_Magnum
-- **Real candidates:** HADOUKEN (energy ball direction), M2A1_Flamethrower (flame direction)
+**Triage (2026-03-17, verified 2026-03-20):** Of 18 mods flagged MANUAL-AIM by lint, only mods using QueryRaycast for actual weapon aim needed migration. Most use QueryRaycast legitimately for non-aim purposes:
+- **Migrated:** Airstrike_Arsenal, Lava_Gun, Lightning_Gun, 500_Magnum, HADOUKEN, M2A1_Flamethrower
 - **Valid non-aim uses (no migration needed):** AC130_Airstrike_MP (plane camera), Acid_Gun (particle physics), Asteroid_Strike (orbital strike), Bee_Gun (projectile launch), C4 (placement), Charge_Shotgun (recoil), High_Tech_Drone (drone camera), Holy_Grenade (bounce physics), Lightsaber (melee arcs), Magic_Bag (object picker), Molotov_Cocktail (thrown projectile physics), Multiple_Grenade_Launcher (grenade physics), Revengeance_Katana (slash arcs), Rods_from_Gods (area-effect orbital targeting), Swap_Button (target selection), Thruster_Tool (physics tool), Vacuum_Cleaner (suction), Welding_Tool (weld target), Winch (attach target)
 
 ---
@@ -848,8 +847,12 @@ The `"projectilehit"` event is fired when `Shoot()` hits something — this coul
 - All Vec/Quat/Transform math
 - `Find*` functions, `Query*` functions
 - Registry `Get*` functions
+
+**Technically callable on server but EFFECTIVELY client-only (only renders for host):**
 - Particle functions (`SpawnParticle`, `ParticleReset`, etc.)
 - Sound loading and playing (`LoadSound`, `PlaySound`, `LoadLoop`, `PlayLoop`)
+- `SetShapeEmissiveScale` — visual glow (Issue #53)
+- **RULE:** Always call these in `client.*` callbacks so ALL players see/hear the effect. Server-side calls only render for the host. See CLAUDE.md Rule #29.
 
 **CRITICAL IMPLICATION:** Our mods call `Explosion()` and `MakeHole()` on both server AND client. The client calls should be removed — these are server-only and the engine automatically replicates them via the deterministic command stream.
 
@@ -1234,9 +1237,29 @@ The `setupToolsUpgradedFully()` function in `toolutilities.lua` maxes out all to
 
 ---
 
+## Finding #43: Entity Scripts Need Separate V2 Conversion
+
+**Problem:** Converting a mod's `main.lua` to v2 doesn't fix subsidiary entity scripts (scripts attached to XML entities via `tags="script=foo.lua"`). Entity scripts for doors, steering wheels, lights, sirens, flames, etc. run in their own script context and need independent v2 treatment.
+
+**Common entity script issues (found across 6+ vehicle/content mods):**
+- Missing `#version 2` header (script silently disabled in MP)
+- `GetPlayerGrabShape()` without player loop (only detects host grab)
+- `GetPlayerInteractShape()` without player loop (only detects host interaction)
+- `SetShapeEmissiveScale()` on server side (only visible to host). NOTE: `PlaySound()` on server is FINE — it auto-syncs to all clients (see BASE_GAME_MP_PATTERNS.md).
+- v1 callbacks (`init()`/`tick()`) instead of v2 (`server.init()`/`server.tick()`)
+- Undefined variables from incomplete v1→v2 migration
+
+**Fix pattern:** Same v2 rules as main.lua apply. For input/grab detection, wrap in `for p in Players() do` loop. For effects, use shared table state + client.tick() rendering.
+
+**Mods with entity script fixes:** Service_Vehicles_MP (siren, door, steering_wheel), Toyota_Supra_MP (6 scripts), Vehicle_Pack_Remastered_MP (3 scripts), Gwel_Mall (3 scripts), PPAN_Vehicle_Pack, The_Office_US, MrRandoms_Vehicles (4 scripts: policelights, firetruck, elevator), Legacy_Tank_MP (RepairKit.lua, cookoff.lua — v2 with Players() loop + server/client split).
+
+**Scale of problem:** New lint rule V1-ENTITY-SCRIPT (T2-20) originally found 79 v1 entity scripts across 10 mods. **All 79 converted (100% complete)** as of 2026-03-20. See Issue #68.
+
+---
+
 ## RESEARCH COMPLETE — ALL GAPS FILLED
 
-Total findings: **42**
+Total findings: **43**
 Total lines: ~1200
 Companion doc: `TEARDOWN_V2_API_REFERENCE.md` (1,117 lines, 550+ functions)
 

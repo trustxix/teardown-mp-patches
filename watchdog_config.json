@@ -1,0 +1,24 @@
+{
+  "terminals": [
+    {
+      "role": "qa_lead",
+      "title": "QA Lead",
+      "command": "cd C:\\Users\\trust\\teardown-mp-patches; claude --dangerously-skip-permissions 'Read ROLE_QA_LEAD.md and start your autonomous work loop. You are qa_lead. Run tools.status first, then read docs/OFFICIAL_DEVELOPER_DOCS.md. Then get_focus, check_inbox, and get_task. Keep working forever.'"
+    },
+    {
+      "role": "api_surgeon",
+      "title": "API Surgeon",
+      "command": "cd C:\\Users\\trust\\teardown-mp-patches; claude --dangerously-skip-permissions 'Read ROLE_API_SURGEON.md and start your autonomous work loop. You are api_surgeon. Run tools.status first, then read docs/OFFICIAL_DEVELOPER_DOCS.md. Then get_focus, check_inbox, and get_task. Keep working forever.'"
+    },
+    {
+      "role": "mod_converter",
+      "title": "Mod Converter",
+      "command": "cd C:\\Users\\trust\\teardown-mp-patches; claude --dangerously-skip-permissions 'Read ROLE_MOD_CONVERTER.md and start your autonomous work loop. You are mod_converter. Run tools.status first, then read docs/OFFICIAL_DEVELOPER_DOCS.md. Then get_focus, check_inbox, and get_task. Keep working forever.'"
+    },
+    {
+      "role": "docs_keeper",
+      "title": "Docs Keeper",
+      "command": "cd C:\\Users\\trust\\teardown-mp-patches; claude --dangerously-skip-permissions 'Read ROLE_DOCS_KEEPER.md and start your autonomous work loop. You are docs_keeper. Run tools.status first, then read docs/OFFICIAL_DEVELOPER_DOCS.md. Then get_focus, check_inbox, and get_task. Keep working forever.'"
+    }
+  ]
+}

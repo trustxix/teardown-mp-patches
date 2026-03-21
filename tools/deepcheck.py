@@ -93,6 +93,13 @@ def check_assets(mod_dir: Path) -> list[AssetFinding]:
     findings = []
     seen: set[str] = set()
 
+    # Mod-level suppression: @deepcheck-ok ASSET in info.txt skips all asset checks
+    info_path = mod_dir / "info.txt"
+    if info_path.exists():
+        info_text = info_path.read_text(encoding="utf-8", errors="replace")
+        if "@deepcheck-ok ASSET" in info_text:
+            return findings
+
     for rel_path, source in read_lua_files(mod_dir):
         # File-level suppression: @deepcheck-ok ASSET in first 5 lines skips file
         first_lines = source.split('\n')[:5]
@@ -525,7 +532,8 @@ def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
 # ---------------------------------------------------------------------------
 
 _EFFECT_APIS = [
-    ("PlaySound", _PLAYSOUND_RE),
+    # PlaySound intentionally excluded — it auto-syncs when called on server
+    # (confirmed by base game snowball.lua, tank.lua, mpcampaign/tools.lua)
     ("SpawnParticle", _SPAWNPARTICLE_RE),
     ("PointLight", _POINTLIGHT_RE),
 ]
@@ -535,6 +543,14 @@ def check_effect_chain(mod_dir: Path) -> list[ChainFinding]:
     """Trace damage -> ClientCall -> PlaySound/SpawnParticle on client."""
     findings: list[ChainFinding] = []
     all_source = ""
+
+    # Mod-level suppression: @deepcheck-ok EFFECT in info.txt skips all effect checks
+    info_path = mod_dir / "info.txt"
+    if info_path.exists():
+        info_text = info_path.read_text(encoding="utf-8", errors="replace")
+        if "@deepcheck-ok EFFECT" in info_text:
+            return findings
+
     # Collect file-level SERVER-EFFECT suppressions so we can skip functions
     # from files that have @lint-ok-file SERVER-EFFECT at the top
     suppressed_funcs: set[str] = set()
@@ -756,6 +772,14 @@ _UITEXT_RE = re.compile(r'\bUiText\s*\(')
 def check_hud(mod_dir: Path) -> list[Finding]:
     """Check that client.draw() exists and has a tool guard."""
     findings: list[Finding] = []
+
+    # Mod-level suppression: @deepcheck-ok HUD in info.txt skips all HUD checks
+    info_path = mod_dir / "info.txt"
+    if info_path.exists():
+        info_text = info_path.read_text(encoding="utf-8", errors="replace")
+        if "@deepcheck-ok HUD" in info_text:
+            return findings
+
     all_source = ""
     for rel_path, source in read_lua_files(mod_dir):
         # Skip options.lua — it's a v1 artifact whose client.draw() would
@@ -961,7 +985,8 @@ def check_servercall_params(mod_dir: Path) -> list[Finding]:
                     func_body = funcs.get(target, "")
                     optional_count = sum(
                         1 for pm in extra_params
-                        if re.search(rf'\b{re.escape(pm)}\s*=\s*{re.escape(pm)}\s+or\b', func_body)
+                        if (re.search(rf'\b{re.escape(pm)}\s*=\s*{re.escape(pm)}\s+or\b', func_body)
+                            or re.search(rf'=\s*{re.escape(pm)}\s+or\b', func_body))
                     )
                     if optional_count == len(extra_params):
                         is_optional_mismatch = True

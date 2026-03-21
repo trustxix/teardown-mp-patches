@@ -582,6 +582,25 @@ _NON_HANDLE_NAMES = {
     "mode", "type", "state", "phase", "step", "burst", "round",
     "r", "sv", "fuel", "t", "recoil", "life", "dist2",
     "mag", "blend", "blendout", "smoke", "decays",  # ARM framework: ammo/animation/VFX
+    # NPC/vehicle AI variables (from 1000+ false positives across vehicle/NPC mods)
+    "stunned", "contact", "path", "vol", "unblock", "list", "fire",
+    "armor", "overload", "wave_cooldown", "working", "collective",
+    "len", "i", "cd", "yield", "frame1", "moving", "n",
+    "detectfall", "wave", "ready", "newstr", "bodies",
+    "timerheld", "timeheld", "dashcd", "gcd",
+    "plasmaglowt", "displaywarning", "hs",  # Light_Saber timer/state vars
+    "runsleft", "jiggle", "pattern",  # UMF framework vars
+    # NPC AI state machine vars (Hrafn/Steve's NPCs/etc.)
+    "val", "d", "b", "status", "flat", "blur", "fade",
+    "counter", "cargo", "explosive", "projectiles", "animation",
+    "raycasterror", "quanthood", "quantdoor", "headload",
+    "punch_right_phase", "punch_left_phase", "melee_swing_stroke",
+    "panic_lock", "follow_stack", "path_stack", "path_pts", "last_path",
+    "nbpath", "nbdrones", "damage_severity", "best_height_diff",
+    "bestheightdiff", "teamscap",
+    "moveval", "maxarmor", "flashtimer2", "fade_dur", "antitimer2",
+    "wavecooldown", "teamid", "rolladd1", "rolladd2", "handles",
+    "dist3", "10",  # literal number in comparison
 }
 # Suffixes that indicate non-handle numeric variables
 _NON_HANDLE_SUFFIXES = (
@@ -596,6 +615,12 @@ _NON_HANDLE_SUFFIXES = (
     "Dir", "Direction", "Factor", "Mult", "Rate",  # steering/physics/multiplier values
     "Sum", "Value", "Total",  # aggregated numeric values
     "Assist", "Brake", "Thrust", "Friction", "Restitution",  # physics parameters
+    "Multiplier", "Modifier", "Seed", "Iterations", "Frequency",  # misc numeric
+    "Vol", "Vel", "Add",  # NPC/vehicle physics: volume, velocity, additive
+    "Off", "On", "Boost", "Fade", "Cap", "Lock", "Load",  # NPC state machine
+    "Altitude", "Delta", "Energy", "Ammo", "Counter", "Mag",  # gameplay values
+    "Phase", "Stroke", "Stack", "Pts", "Len",  # path/animation
+    "W",  # blend weight suffixes (crouchW, motionW)
 )
 
 
@@ -741,17 +766,21 @@ def _strip_block_comments(source: str) -> str:
 
 
 _CLIENT_EFFECT_RE = re.compile(
-    r"\b(SpawnParticle|PlaySound|PlayLoop|PointLight)\s*\("
+    r"\b(SpawnParticle|PlayLoop|PointLight|SetShapeEmissiveScale)\s*\("
 )
 
 
 def check_server_side_effects(source: str) -> list[dict]:
-    """Warn if PlaySound/SpawnParticle/PlayLoop/PointLight inside server.* functions.
+    """Warn if SpawnParticle/PlayLoop/PointLight/SetShapeEmissiveScale inside server.* functions.
 
     These APIs are client-only in v2 multiplayer. When called on the server,
     they either silently fail or only execute for the host player.
     Use ClientCall() to notify clients to play effects instead.
     See docs/MP_DESYNC_PATTERNS.md RC4.
+
+    NOTE: PlaySound() is EXCLUDED — the base game calls PlaySound() on the
+    server and it auto-syncs to all clients with positional audio.
+    See docs/BASE_GAME_MP_PATTERNS.md Pattern 10.
     """
     findings = []
     current_func: str | None = None
@@ -1536,10 +1565,22 @@ _ASSET_LOAD_RE = re.compile(
 _UI_IMAGE_RE = re.compile(
     r'\bUiImage\s*\(\s*"([^"]*)"'
 )
-# Engine built-in paths that don't need MOD/ prefix
+# Engine built-in paths that don't need MOD/ prefix.
+# Teardown resolves these from the game data directory, not the mod directory.
 _BUILTIN_PREFIXES = (
     "ui/", "explosion/", "script/", "LEVEL/", "RAW:",
     "gfx/", "font/", "menu/",
+    # Material hit/impact sounds
+    "dirt/", "glass/", "wood/", "masonry/", "metal/", "plastic/", "ice/",
+    "foliage/", "rock/", "heavy/", "impact/",
+    # Engine tool/weapon/vehicle sounds
+    "tools/", "snd/", "vehicle/",
+    # Engine data directories
+    "data/",
+    # Timer / alarm / UI sounds
+    "timer/",
+    # Engine entity sounds (-- prefix is engine internal)
+    "--",
 )
 
 
@@ -1551,7 +1592,8 @@ def check_missing_mod_prefix(source: str) -> list[dict]:
     automatically but v2 does not. See Issue #63 in ISSUES_AND_FIXES.md.
 
     Only applies to files with #version 2.
-    Skips engine built-in paths (ui/, explosion/, etc.).
+    Skips engine built-in paths (ui/, explosion/, etc.) and bare filenames
+    (no directory component) which resolve from the game data directory.
     """
     if "#version 2" not in source:
         return []
@@ -1569,6 +1611,9 @@ def check_missing_mod_prefix(source: str) -> list[dict]:
             if path.startswith("MOD/") or path.startswith("LEVEL/"):
                 continue
             if any(path.startswith(p) for p in _BUILTIN_PREFIXES):
+                continue
+            # Bare filenames (no directory) are engine built-ins
+            if "/" not in path:
                 continue
             # Skip string concatenation (dynamic paths)
             if ".." in raw_line[m.start():]:
@@ -1590,6 +1635,9 @@ def check_missing_mod_prefix(source: str) -> list[dict]:
                 continue
             if any(path.startswith(p) for p in _BUILTIN_PREFIXES):
                 continue
+            # Bare filenames (no directory) are engine built-ins
+            if "/" not in path:
+                continue
             if ".." in raw_line[m.start():]:
                 continue
             findings.append(_finding(
@@ -1601,6 +1649,238 @@ def check_missing_mod_prefix(source: str) -> list[dict]:
                 severity="warn",
             ))
     return findings
+
+
+# ---------------------------------------------------------------------------
+# Check T2-20: V1 entity scripts silently disabled in MP
+# ---------------------------------------------------------------------------
+
+_V1_CALLBACK_RE = re.compile(r"^function\s+(init|tick|update|draw)\s*\(", re.MULTILINE)
+_V2_CALLBACK_RE = re.compile(r"^function\s+(server|client)\.", re.MULTILINE)
+_VERSION2_RE = re.compile(r"#version\s+2\b")
+
+
+def check_v1_entity_script(source: str) -> list[dict]:
+    """Warn on v1 entity scripts that lack #version 2 — silently disabled in MP.
+
+    Files with global-scope init()/tick()/update()/draw() callbacks but no
+    #version 2 header are v1 entity scripts. The engine silently disables them
+    in multiplayer sessions, causing missing functionality (no error/crash).
+    """
+    if _VERSION2_RE.search(source):
+        return []  # Already v2
+    if _V2_CALLBACK_RE.search(source):
+        return []  # Has server./client. callbacks — likely partial v2
+
+    matches = list(_V1_CALLBACK_RE.finditer(source))
+    if not matches:
+        return []  # No callbacks — library/include file, not an entity script
+
+    first = matches[0]
+    lineno = source[:first.start()].count("\n") + 1
+    callbacks = ", ".join(m.group(1) + "()" for m in matches)
+    return [_finding(
+        "V1-ENTITY-SCRIPT",
+        lineno,
+        f"v1 entity script (no #version 2) with {callbacks} — "
+        f"silently disabled in MP. Convert to v2 server/client pattern",
+        severity="warn",
+    )]
+
+
+# ---------------------------------------------------------------------------
+# Check T2-21: Dead v1 callbacks in v2 scripts
+# ---------------------------------------------------------------------------
+
+_SKIP_DEAD_CB_FILENAMES = {"old", "backup", "disabled", "copy", "copie"}
+
+
+def check_v2_dead_callbacks(source: str) -> list[dict]:
+    """Warn on v2 scripts containing bare v1 callbacks (init/tick/update/draw).
+
+    In a #version 2 script, bare callbacks like init(), tick(), update(), draw()
+    are silently ignored by the engine — only server.*/client.* callbacks execute.
+    These represent dead code where functionality was lost during partial v2 conversion.
+    """
+    if not _VERSION2_RE.search(source):
+        return []  # Not a v2 script — handled by check_v1_entity_script
+
+    v1_matches = list(_V1_CALLBACK_RE.finditer(source))
+    if not v1_matches:
+        return []  # No v1 callbacks — clean v2 script
+
+    has_v2_callbacks = bool(_V2_CALLBACK_RE.search(source))
+    first = v1_matches[0]
+    lineno = source[:first.start()].count("\n") + 1
+    callbacks = ", ".join(m.group(1) + "()" for m in v1_matches)
+
+    if has_v2_callbacks:
+        return [_finding(
+            "V2-DEAD-CALLBACK",
+            lineno,
+            f"v2 script has dead v1 callbacks: {callbacks} — "
+            f"these are silently ignored; rename to server.*/client.* or remove",
+            severity="info",
+        )]
+    else:
+        return [_finding(
+            "V2-DEAD-CALLBACK",
+            lineno,
+            f"v2 script has ONLY dead v1 callbacks: {callbacks} — "
+            f"entire script is non-functional in MP; convert all to server.*/client.*",
+            severity="warn",
+        )]
+
+
+# ---------------------------------------------------------------------------
+# Check T2-22: ClientCall used for PlaySound (base game auto-syncs)
+# ---------------------------------------------------------------------------
+
+_CLIENTCALL_SOUND_RE = re.compile(
+    r'ClientCall\s*\([^,)]*,\s*"[^"]*(?:[Ss]ound|[Ss]nd|[Aa]udio|[Pp]lay[Ss]ound|fire[Ss]ound|shoot[Ss]ound|impact[Ss]ound|hit[Ss]ound|reload[Ss]ound)[^"]*"'
+)
+
+_CLIENTCALL_PLAYSOUND_RE = re.compile(
+    r'ClientCall\s*\(.*\bPlaySound\b'
+)
+
+
+def check_clientcall_sound(source: str) -> list[dict]:
+    """Warn if ClientCall is used to play sounds.
+
+    The Teardown engine auto-syncs PlaySound() calls made on the server
+    to all clients. Using ClientCall for sounds adds unnecessary RPC overhead.
+    See docs/BASE_GAME_MP_PATTERNS.md Pattern 10.
+    """
+    findings = []
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        if _CLIENTCALL_SOUND_RE.search(stripped) or _CLIENTCALL_PLAYSOUND_RE.search(stripped):
+            findings.append(_finding(
+                "CLIENTCALL-SOUND",
+                lineno,
+                "ClientCall used for sound — PlaySound() on server auto-syncs to all clients. "
+                "Remove ClientCall wrapper, call PlaySound() directly on server. "
+                "See docs/BASE_GAME_MP_PATTERNS.md Pattern 10",
+                severity="warn",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check T2-23: ToolAnimator only called for local player
+# ---------------------------------------------------------------------------
+
+_TOOLANIM_LOCAL_ONLY_RE = re.compile(
+    r'IsPlayerLocal\s*\(\s*\w+\s*\).*tickToolAnimator|tickToolAnimator.*IsPlayerLocal'
+)
+
+_TOOLANIM_CALL_RE = re.compile(r'tickToolAnimator\s*\(')
+
+
+def check_toolanimator_local_only(source: str) -> list[dict]:
+    """Warn if tickToolAnimator is gated behind IsPlayerLocal.
+
+    tickToolAnimator() internally handles FP vs TP rendering based on
+    IsPlayerLocal(). It must be called for ALL players in a Players() loop
+    so remote players see proper tool animations.
+    See docs/BASE_GAME_MP_PATTERNS.md Pattern 6.
+    """
+    findings = []
+    current_func: str | None = None
+    depth = 0
+    in_local_guard = False
+    local_guard_depth = 0
+
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        func_match = _FUNC_DEF_RE.match(stripped)
+        opens = _count_opens(stripped)
+        ends = _count_ends(stripped)
+
+        if func_match:
+            name = func_match.group(1)
+            if depth == 0 or '.' in name:
+                current_func = name
+                depth = 1 + (opens - 1) - ends
+                in_local_guard = False
+            else:
+                depth += opens - ends
+        elif depth > 0:
+            depth += opens - ends
+
+        if depth < 0:
+            depth = 0
+
+        # Track if we're inside an IsPlayerLocal guard
+        if re.search(r'if\s+IsPlayerLocal\s*\(', stripped):
+            in_local_guard = True
+            local_guard_depth = depth
+
+        # Direct pattern: IsPlayerLocal and tickToolAnimator on same line
+        if _TOOLANIM_LOCAL_ONLY_RE.search(stripped):
+            findings.append(_finding(
+                "TOOLANIM-LOCAL-ONLY",
+                lineno,
+                "tickToolAnimator() gated behind IsPlayerLocal() — must be called for ALL "
+                "players so remote players see tool animations. Remove the IsPlayerLocal guard. "
+                "See docs/BASE_GAME_MP_PATTERNS.md Pattern 6",
+                severity="warn",
+            ))
+        # tickToolAnimator inside an IsPlayerLocal block
+        elif in_local_guard and _TOOLANIM_CALL_RE.search(stripped):
+            findings.append(_finding(
+                "TOOLANIM-LOCAL-ONLY",
+                lineno,
+                "tickToolAnimator() inside IsPlayerLocal() block — must be called for ALL "
+                "players so remote players see tool animations. Move outside the guard. "
+                "See docs/BASE_GAME_MP_PATTERNS.md Pattern 6",
+                severity="warn",
+            ))
+
+        if depth <= local_guard_depth and in_local_guard and ends > 0:
+            in_local_guard = False
+
+        if depth == 0:
+            current_func = None
+            in_local_guard = False
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check T2-24: Missing PlayersRemoved cleanup
+# ---------------------------------------------------------------------------
+
+_PLAYERS_ADDED_RE = re.compile(r'PlayersAdded\s*\(\s*\)')
+_PLAYERS_REMOVED_RE = re.compile(r'PlayersRemoved\s*\(\s*\)')
+
+
+def check_missing_players_removed(source: str) -> list[dict]:
+    """Warn if PlayersAdded() is used without PlayersRemoved().
+
+    Any mod that creates per-player state in PlayersAdded() must clean it up
+    in PlayersRemoved(). Missing cleanup causes state leaks — new players
+    inheriting old IDs get stale state.
+    See docs/BASE_GAME_MP_PATTERNS.md Pattern 8.
+    """
+    has_added = bool(_PLAYERS_ADDED_RE.search(source))
+    has_removed = bool(_PLAYERS_REMOVED_RE.search(source))
+
+    if has_added and not has_removed:
+        # Find the line of PlayersAdded for reporting
+        for lineno, raw_line in enumerate(source.splitlines(), 1):
+            stripped = _strip_comment(raw_line)
+            if _PLAYERS_ADDED_RE.search(stripped):
+                return [_finding(
+                    "MISSING-PLAYERS-REMOVED",
+                    lineno,
+                    "PlayersAdded() used but no PlayersRemoved() found — per-player state "
+                    "will leak when players disconnect. Add a PlayersRemoved() loop to clean up. "
+                    "See docs/BASE_GAME_MP_PATTERNS.md Pattern 8",
+                    severity="warn",
+                )]
+    return []
 
 
 # ===========================================================================
@@ -1641,6 +1921,11 @@ TIER2_CHECKS = [
     check_setplayer_arg_order,
     check_damage_no_attacker,
     check_missing_mod_prefix,
+    check_v1_entity_script,
+    check_v2_dead_callbacks,
+    check_clientcall_sound,
+    check_toolanimator_local_only,
+    check_missing_players_removed,
 ]
 
 

@@ -1,0 +1,19 @@
+TEST REPORT: SVERLOVSK_TOWN_2_Multiplayer
+======================================================
+Generated: 2026-03-21 05:36:45
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 3/7 assets missing
+    - Asset NOT found: avf/snd/cook_off_loop.ogg
+    - Asset NOT found: gfx/Sherman_sights.png
+    - Asset NOT found: gfx/scopeOutside_3.png
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

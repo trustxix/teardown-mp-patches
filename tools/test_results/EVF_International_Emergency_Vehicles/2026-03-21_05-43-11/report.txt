@@ -1,0 +1,53 @@
+TEST REPORT: EVF_International_Emergency_Vehicles
+======================================================
+Generated: 2026-03-21 05:43:11
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 35/71 assets missing
+    - Asset NOT found: snd/siren.ogg
+    - Asset NOT found: snd/caseopen.ogg
+    - Asset NOT found: snd/closecase.ogg
+    - Asset NOT found: joint.xml
+    - Asset NOT found: snd/firetruck-eu.ogg
+    - Asset NOT found: sprite/reticle4.png
+    - Asset NOT found: snd/gunshot1.ogg
+    - Asset NOT found: snd/Vehicle Systems/Sirens/siren_beep.ogg
+    - Asset NOT found: snd/Sirens/Dutch/f_dutch1.ogg
+    - Asset NOT found: snd/Sirens/Dutch/dutch2.ogg
+    - Asset NOT found: snd/Sirens/Russia/russia3.ogg
+    - Asset NOT found: snd/Sirens/Germany/german_fire_heavy.ogg
+    - Asset NOT found: snd/Sirens/Germany/german_stadt.ogg
+    - Asset NOT found: snd/Sirens/Austria/austria1.ogg
+    - Asset NOT found: snd/Sirens/Austria/austria2.ogg
+    - Asset NOT found: snd/Sirens/Wail/yelp.ogg
+    - Asset NOT found: snd/Sirens/Dutch/dutch1.ogg
+    - Asset NOT found: snd/Sirens/France/gendamerie.ogg
+    - Asset NOT found: snd/Sirens/Germany/german_land.ogg
+    - Asset NOT found: snd/Sirens/Poland/poland1.ogg
+    - Asset NOT found: snd/Sirens/Poland/poland2.ogg
+    - Asset NOT found: snd/Sirens/Poland/poland3.ogg
+    - Asset NOT found: snd/Sirens/Russia/russia1.ogg
+    - Asset NOT found: snd/Sirens/Russia/russia2.ogg
+    - Asset NOT found: snd/Sirens/Sweden/sweden.ogg
+    - Asset NOT found: snd/Sirens/Wail/wail.ogg
+    - Asset NOT found: sprite/reticle1.png
+    - Asset NOT found: sprite/reticle2.png
+    - Asset NOT found: sprite/reticle3.png
+    - Asset NOT found: snd/police-siren2.ogg
+    - Asset NOT found: slf/ui/interior/els/bg_els_rows%s.png
+    - Asset NOT found: slf/img/matrixboard/%s.png
+    - Asset NOT found: slf/snd/siren/snd/%s/%s/1.ogg
+    - Asset NOT found: slf/snd/siren/snd/%s/%s/2.ogg
+    - Asset NOT found: slf/snd/siren/snd/%s/%s/3.ogg
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      WARN
+  Effect chain:      FAIL
+    - SpawnParticle() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+    - PointLight() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

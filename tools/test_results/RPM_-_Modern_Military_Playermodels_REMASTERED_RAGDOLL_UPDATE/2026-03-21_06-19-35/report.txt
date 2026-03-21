@@ -1,0 +1,16 @@
+TEST REPORT: RPM_-_Modern_Military_Playermodels_REMASTERED_RAGDOLL_UPDATE
+======================================================
+Generated: 2026-03-21 06:19:35
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

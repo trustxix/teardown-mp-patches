@@ -35,6 +35,12 @@ from tools.lint import (
     check_per_tick_spatial,
     check_setplayer_arg_order,
     check_damage_no_attacker,
+    check_missing_mod_prefix,
+    check_v1_entity_script,
+    check_v2_dead_callbacks,
+    check_clientcall_sound,
+    check_toolanimator_local_only,
+    check_missing_players_removed,
     lint_source,
 )
 
@@ -513,6 +519,9 @@ class TestLintSource:
             "    for p in PlayersAdded() do\n"
             '        SetToolEnabled("gun", true, p)\n'
             '        SetToolAmmo("gun", 30, p)\n'
+            "    end\n"
+            "    for p in PlayersRemoved() do\n"
+            "        -- cleanup per-player state\n"
             "    end\n"
             "    for p in Players() do\n"
             '        if GetBool("game.tool.gun.trigger." .. p) then\n'
@@ -1079,17 +1088,19 @@ class TestMakeholeDamage:
 # ---------------------------------------------------------------------------
 
 class TestServerSideEffects:
-    def test_playsound_in_server_flagged(self):
+    def test_playsound_in_server_clean(self):
+        """PlaySound on server auto-syncs to all clients — NOT flagged.
+
+        Base game confirmed: snowball.lua, tank.lua, mpcampaign/tools.lua
+        all call PlaySound() directly on the server.
+        See docs/BASE_GAME_MP_PATTERNS.md Pattern 10.
+        """
         src = (
             "function server.handleHit(pos)\n"
             '    PlaySound(LoadSound("boom.ogg"), pos, 1.0)\n'
             "end"
         )
-        findings = check_server_side_effects(src)
-        assert len(findings) == 1
-        assert findings[0]["check"] == "SERVER-EFFECT"
-        assert "PlaySound" in findings[0]["detail"]
-        assert "server.handleHit" in findings[0]["detail"]
+        assert check_server_side_effects(src) == []
 
     def test_spawnparticle_in_server_flagged(self):
         src = (
@@ -1121,22 +1132,40 @@ class TestServerSideEffects:
         assert len(findings) == 1
         assert "PlayLoop" in findings[0]["detail"]
 
-    def test_server_init_is_info_severity(self):
-        """Effects in server.init are INFO (one-time) not WARN (per-frame)."""
+    def test_server_init_playsound_clean(self):
+        """PlaySound in server.init is NOT flagged — auto-syncs."""
         src = (
             "function server.init()\n"
             '    PlaySound(LoadSound("startup.ogg"), pos, 1.0)\n'
+            "end"
+        )
+        assert check_server_side_effects(src) == []
+
+    def test_server_tick_playsound_clean(self):
+        """PlaySound in server.tick is NOT flagged — auto-syncs."""
+        src = (
+            "function server.tick(dt)\n"
+            '    PlaySound(shootSnd, pos, 1.0)\n'
+            "end"
+        )
+        assert check_server_side_effects(src) == []
+
+    def test_server_init_spawnparticle_is_info(self):
+        """SpawnParticle in server.init is INFO (one-time) not WARN."""
+        src = (
+            "function server.init()\n"
+            '    SpawnParticle(pos, vel, 1.0)\n'
             "end"
         )
         findings = check_server_side_effects(src)
         assert len(findings) == 1
         assert findings[0]["severity"] == "info"
 
-    def test_server_tick_is_warn_severity(self):
-        """Effects in server.tick are WARN (per-frame)."""
+    def test_server_tick_spawnparticle_is_warn(self):
+        """SpawnParticle in server.tick is WARN (per-frame)."""
         src = (
             "function server.tick(dt)\n"
-            '    PlaySound(shootSnd, pos, 1.0)\n'
+            '    SpawnParticle(pos, vel, 1.0)\n'
             "end"
         )
         findings = check_server_side_effects(src)
@@ -1189,7 +1218,8 @@ class TestServerSideEffects:
         )
         assert check_server_side_effects(src) == []
 
-    def test_multiple_findings(self):
+    def test_multiple_findings_playsound_excluded(self):
+        """PlaySound is NOT counted, SpawnParticle IS counted."""
         src = (
             "function server.handleHit(pos)\n"
             '    PlaySound(LoadSound("boom.ogg"), pos, 1.0)\n'
@@ -1197,9 +1227,11 @@ class TestServerSideEffects:
             "end"
         )
         findings = check_server_side_effects(src)
-        assert len(findings) == 2
+        assert len(findings) == 1
+        assert "SpawnParticle" in findings[0]["detail"]
 
-    def test_mixed_server_client(self):
+    def test_mixed_server_client_playsound_clean(self):
+        """PlaySound in both server and client is clean — no findings."""
         src = (
             "function server.tick(dt)\n"
             '    PlaySound(snd, pos, 1.0)\n'
@@ -1208,18 +1240,35 @@ class TestServerSideEffects:
             '    PlaySound(snd, pos, 1.0)\n'
             "end"
         )
-        findings = check_server_side_effects(src)
-        assert len(findings) == 1
-        assert "server.tick" in findings[0]["detail"]
+        assert check_server_side_effects(src) == []
 
-    def test_severity_is_warn(self):
+    def test_spawnparticle_server_severity_is_warn(self):
         src = (
             "function server.tick(dt)\n"
-            '    PlaySound(snd, pos, 1.0)\n'
+            '    SpawnParticle(pos, vel, 1.0)\n'
             "end"
         )
         findings = check_server_side_effects(src)
         assert findings[0]["severity"] == "warn"
+
+    def test_setshapeemissivescale_in_server_flagged(self):
+        src = (
+            "function server.tick(dt)\n"
+            "    SetShapeEmissiveScale(shape, 1)\n"
+            "end"
+        )
+        findings = check_server_side_effects(src)
+        assert len(findings) == 1
+        assert "SetShapeEmissiveScale" in findings[0]["detail"]
+        assert findings[0]["severity"] == "warn"
+
+    def test_setshapeemissivescale_in_client_clean(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    SetShapeEmissiveScale(shape, 1)\n"
+            "end"
+        )
+        assert check_server_side_effects(src) == []
 
 
 # ---------------------------------------------------------------------------
@@ -2425,3 +2474,384 @@ class TestDamageNoAttacker:
         )
         findings = check_damage_no_attacker(src)
         assert len(findings) == 1
+
+
+# ===========================================================================
+# check_missing_mod_prefix
+# ===========================================================================
+
+class TestMissingModPrefix:
+    def test_mod_prefix_present_clean(self):
+        """Paths with MOD/ prefix are clean."""
+        src = (
+            '#version 2\n'
+            'local s = LoadSound("MOD/snd/fire.ogg")\n'
+            'local sp = LoadSprite("MOD/img/cross.png")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 0
+
+    def test_missing_prefix_flagged(self):
+        """Mod-relative paths without MOD/ should be flagged."""
+        src = (
+            '#version 2\n'
+            'local s = LoadSound("snd_custom/fire.ogg")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-MOD-PREFIX"
+
+    def test_engine_builtin_skipped(self):
+        """Engine built-in paths should not be flagged."""
+        src = (
+            '#version 2\n'
+            'local s = LoadSound("tools/launcher0.ogg")\n'
+            'local e = LoadSound("snd/explosion/l1.ogg")\n'
+            'local d = LoadSound("dirt/hit-m0.ogg")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 0
+
+    def test_bare_filename_skipped(self):
+        """Bare filenames (no directory) are engine built-ins — skip."""
+        src = (
+            '#version 2\n'
+            'local s = LoadSound("clickup.ogg")\n'
+            'local l = LoadLoop("chopper-loop")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 0
+
+    def test_v1_not_checked(self):
+        """V1 files should not be checked."""
+        src = (
+            'local s = LoadSound("snd_custom/fire.ogg")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 0
+
+    def test_uiimage_missing_prefix(self):
+        """UiImage with mod path missing MOD/ should be flagged."""
+        src = (
+            '#version 2\n'
+            'UiImage("img/crosshair.png")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 1
+
+    def test_uiimage_builtin_clean(self):
+        """UiImage with engine UI path should be clean."""
+        src = (
+            '#version 2\n'
+            'UiImage("ui/common/box-outline-6.png")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 0
+
+    def test_dynamic_path_skipped(self):
+        """String concatenation (dynamic paths) should be skipped."""
+        src = (
+            '#version 2\n'
+            'local s = LoadSound("snd/" .. name .. ".ogg")\n'
+        )
+        findings = check_missing_mod_prefix(src)
+        assert len(findings) == 0
+
+
+class TestV1EntityScript:
+    def test_v1_init_flagged(self):
+        """v1 entity script with init() should be flagged."""
+        src = 'function init()\nvehicle = FindVehicle("tank")\nend\n'
+        findings = check_v1_entity_script(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "V1-ENTITY-SCRIPT"
+        assert "init()" in findings[0]["detail"]
+
+    def test_v1_init_update_flagged(self):
+        """v1 entity script with init() and update() lists both."""
+        src = 'function init()\nend\nfunction update(dt)\nend\n'
+        findings = check_v1_entity_script(src)
+        assert len(findings) == 1
+        assert "init()" in findings[0]["detail"]
+        assert "update()" in findings[0]["detail"]
+
+    def test_v2_script_clean(self):
+        """v2 script with #version 2 should not be flagged."""
+        src = '#version 2\n#include "script/include/player.lua"\nfunction server.init()\nend\n'
+        findings = check_v1_entity_script(src)
+        assert len(findings) == 0
+
+    def test_library_no_callbacks_clean(self):
+        """Library file without callbacks should not be flagged."""
+        src = 'function clamp(x, lo, hi)\nreturn math.max(lo, math.min(hi, x))\nend\n'
+        findings = check_v1_entity_script(src)
+        assert len(findings) == 0
+
+    def test_partial_v2_clean(self):
+        """File with server./client. callbacks should not be flagged even without #version 2."""
+        src = 'function server.init()\nend\nfunction init()\nend\n'
+        findings = check_v1_entity_script(src)
+        assert len(findings) == 0
+
+    def test_tick_only_flagged(self):
+        """v1 entity script with only tick() should be flagged."""
+        src = 'function tick(dt)\nPlaySound(snd, pos)\nend\n'
+        findings = check_v1_entity_script(src)
+        assert len(findings) == 1
+        assert "tick()" in findings[0]["detail"]
+
+    def test_suppression_works(self):
+        """@lint-ok-file V1-ENTITY-SCRIPT should suppress the finding."""
+        src = '-- @lint-ok-file V1-ENTITY-SCRIPT\nfunction init()\nend\n'
+        findings = check_v1_entity_script(src)
+        # check_v1_entity_script itself doesn't handle suppression —
+        # lint_source does. So the raw check still returns a finding.
+        assert len(findings) == 1
+        # But lint_source should filter it:
+        filtered = lint_source(src, "test.lua")
+        v1_findings = [f for f in filtered if f["check"] == "V1-ENTITY-SCRIPT"]
+        assert len(v1_findings) == 0
+
+
+# ===========================================================================
+# check_v2_dead_callbacks
+# ===========================================================================
+
+class TestV2DeadCallbacks:
+    def test_warn_only_v1_callbacks(self):
+        """v2 script with ONLY dead v1 callbacks → warn (entire script non-functional)."""
+        src = '#version 2\nfunction init()\nend\nfunction tick(dt)\nend\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "V2-DEAD-CALLBACK"
+        assert findings[0]["severity"] == "warn"
+        assert "ONLY dead v1 callbacks" in findings[0]["detail"]
+        assert "init()" in findings[0]["detail"]
+        assert "tick()" in findings[0]["detail"]
+
+    def test_info_mixed_callbacks(self):
+        """v2 script with v2 callbacks + leftover v1 callback → info (dead code)."""
+        src = '#version 2\nfunction server.init()\nend\nfunction init()\nend\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "V2-DEAD-CALLBACK"
+        assert findings[0]["severity"] == "info"
+        assert "dead v1 callbacks" in findings[0]["detail"]
+        assert "init()" in findings[0]["detail"]
+
+    def test_clean_v2_only(self):
+        """v2 script with only server/client callbacks → clean."""
+        src = '#version 2\nfunction server.init()\nend\nfunction client.draw()\nend\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 0
+
+    def test_clean_no_version2(self):
+        """Script without #version 2 → not checked (handled by V1-ENTITY-SCRIPT)."""
+        src = 'function init()\nend\nfunction tick(dt)\nend\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 0
+
+    def test_clean_no_callbacks(self):
+        """v2 script with no callbacks at all → clean."""
+        src = '#version 2\nlocal x = 42\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 0
+
+    def test_warn_single_v1_callback(self):
+        """v2 script with single dead init() → warn."""
+        src = '#version 2\nfunction init()\nend\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 1
+        assert findings[0]["severity"] == "warn"
+
+    def test_info_multiple_dead_callbacks(self):
+        """v2 script with v2 + multiple dead v1 → info, lists all dead callbacks."""
+        src = '#version 2\nfunction client.init()\nend\nfunction init()\nend\nfunction draw()\nend\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 1
+        assert findings[0]["severity"] == "info"
+        assert "init()" in findings[0]["detail"]
+        assert "draw()" in findings[0]["detail"]
+
+    def test_line_number_points_to_first_v1(self):
+        """Line number should reference the first dead v1 callback."""
+        src = '#version 2\n\nfunction server.init()\nend\n\nfunction tick(dt)\nend\nfunction update(dt)\nend\n'
+        findings = check_v2_dead_callbacks(src)
+        assert len(findings) == 1
+        assert findings[0]["line"] == 6  # function tick(dt) is on line 6
+
+    def test_suppression_via_lint_source(self):
+        """@lint-ok-file V2-DEAD-CALLBACK should suppress via lint_source."""
+        src = '-- @lint-ok-file V2-DEAD-CALLBACK\n#version 2\nfunction init()\nend\n'
+        # Raw check still finds it
+        raw = check_v2_dead_callbacks(src)
+        assert len(raw) == 1
+        # lint_source should suppress it
+        filtered = lint_source(src, "test.lua")
+        dead_cb = [f for f in filtered if f["check"] == "V2-DEAD-CALLBACK"]
+        assert len(dead_cb) == 0
+
+
+# ---------------------------------------------------------------------------
+# T2-22: CLIENTCALL-SOUND — ClientCall used for PlaySound
+# ---------------------------------------------------------------------------
+
+class TestClientCallSound:
+    def test_clientcall_with_sound_function_name(self):
+        src = 'ClientCall(0, "client.playSound", pos)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "CLIENTCALL-SOUND"
+
+    def test_clientcall_with_fire_sound(self):
+        src = 'ClientCall(p, "client.fireSound", snd, pos)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 1
+
+    def test_clientcall_with_shoot_sound(self):
+        src = 'ClientCall(0, "client.shootSound", pos)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 1
+
+    def test_clientcall_with_impact_sound(self):
+        src = 'ClientCall(0, "client.impactSound", pos)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 1
+
+    def test_clientcall_with_playsound_in_args(self):
+        src = 'ClientCall(0, "client.onHit", PlaySound, pos)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 1
+
+    def test_clientcall_non_sound_clean(self):
+        src = 'ClientCall(0, "client.onDamage", dmg)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 0
+
+    def test_clientcall_recoil_clean(self):
+        src = 'ClientCall(p, "client.recoil", amount)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 0
+
+    def test_server_playsound_clean(self):
+        src = 'PlaySound(snd, pos)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 0
+
+    def test_suppression(self):
+        src = 'ClientCall(0, "client.playSound", pos)  -- @lint-ok CLIENTCALL-SOUND\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 1  # Raw check still finds it
+        filtered = lint_source(src, "test.lua")
+        sound = [f for f in filtered if f["check"] == "CLIENTCALL-SOUND"]
+        assert len(sound) == 0
+
+    def test_commented_line_clean(self):
+        src = '-- ClientCall(0, "client.playSound", pos)\n'
+        findings = check_clientcall_sound(src)
+        assert len(findings) == 0
+
+
+# ---------------------------------------------------------------------------
+# T2-23: TOOLANIM-LOCAL-ONLY — ToolAnimator gated behind IsPlayerLocal
+# ---------------------------------------------------------------------------
+
+class TestToolAnimatorLocalOnly:
+    def test_same_line_guard(self):
+        src = 'if IsPlayerLocal(p) then tickToolAnimator(anim, dt, nil, p) end\n'
+        findings = check_toolanimator_local_only(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "TOOLANIM-LOCAL-ONLY"
+
+    def test_block_guard(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    for p in Players() do\n"
+            "        if IsPlayerLocal(p) then\n"
+            "            tickToolAnimator(anim, dt, nil, p)\n"
+            "        end\n"
+            "    end\n"
+            "end\n"
+        )
+        findings = check_toolanimator_local_only(src)
+        assert len(findings) == 1
+
+    def test_all_players_clean(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    for p in Players() do\n"
+            "        tickToolAnimator(anim, dt, nil, p)\n"
+            "    end\n"
+            "end\n"
+        )
+        findings = check_toolanimator_local_only(src)
+        assert len(findings) == 0
+
+    def test_no_toolanimator_clean(self):
+        src = (
+            "function client.tick(dt)\n"
+            "    if IsPlayerLocal(p) then\n"
+            "        doSomethingElse()\n"
+            "    end\n"
+            "end\n"
+        )
+        findings = check_toolanimator_local_only(src)
+        assert len(findings) == 0
+
+
+# ---------------------------------------------------------------------------
+# T2-24: MISSING-PLAYERS-REMOVED — PlayersAdded without PlayersRemoved
+# ---------------------------------------------------------------------------
+
+class TestMissingPlayersRemoved:
+    def test_added_without_removed(self):
+        src = (
+            "function server.tick(dt)\n"
+            "    for p in PlayersAdded() do\n"
+            '        players[p] = createPlayerData()\n'
+            "    end\n"
+            "end\n"
+        )
+        findings = check_missing_players_removed(src)
+        assert len(findings) == 1
+        assert findings[0]["check"] == "MISSING-PLAYERS-REMOVED"
+        assert findings[0]["line"] == 2
+
+    def test_both_present_clean(self):
+        src = (
+            "function server.tick(dt)\n"
+            "    for p in PlayersAdded() do\n"
+            '        players[p] = createPlayerData()\n'
+            "    end\n"
+            "    for p in PlayersRemoved() do\n"
+            "        players[p] = nil\n"
+            "    end\n"
+            "end\n"
+        )
+        findings = check_missing_players_removed(src)
+        assert len(findings) == 0
+
+    def test_no_added_clean(self):
+        src = (
+            "function server.tick(dt)\n"
+            "    for p in Players() do\n"
+            "        doStuff(p)\n"
+            "    end\n"
+            "end\n"
+        )
+        findings = check_missing_players_removed(src)
+        assert len(findings) == 0
+
+    def test_suppression(self):
+        src = (
+            "function server.tick(dt)\n"
+            "    for p in PlayersAdded() do  -- @lint-ok MISSING-PLAYERS-REMOVED\n"
+            '        players[p] = createPlayerData()\n'
+            "    end\n"
+            "end\n"
+        )
+        findings = check_missing_players_removed(src)
+        assert len(findings) == 1  # Raw check finds it
+        filtered = lint_source(src, "test.lua")
+        removed = [f for f in filtered if f["check"] == "MISSING-PLAYERS-REMOVED"]
+        assert len(removed) == 0

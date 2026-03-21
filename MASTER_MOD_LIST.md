@@ -1,20 +1,20 @@
 # Teardown MP Mod Patcher — Master Mod List
 
-> Last updated: 2026-03-19
+> Last updated: 2026-03-21 (mod set changed — 112 installed, ~34 new from workshop backlog, some old removed)
 
 ## Summary
 
 | Status | Count |
 |--------|-------|
-| **Fully Patched (v2 rewrite)** | 178 |
-| **Installed — under review/fix** | 0 |
-| **Deferred (documented, not convertible)** | 12 |
-| **Not convertible (frameworks, maps, etc.)** | 6 |
-| **Total installed** | **178** |
-| **Tool-tagged workshop items** | 162 |
+| **Currently installed** | **112** |
+| **Lint clean (tier 1)** | **112/112** |
+| **Removed (user unsubscribed)** | 66+ (53 on 2026-03-19, more since) |
+| **New installs (from workshop backlog)** | ~34 (maps, vehicles, tools) |
+| **Deferred (documented, not convertible)** | 13 (5 installed, 8 not) |
+| **Previously installed (before all cleanups)** | 178 |
 | **Total workshop items (incl. maps)** | 243 |
 
-> Counts updated 2026-03-19. **178 mods installed** (all 178 fully patched, 0 under review). **MILESTONE: Workshop fully exhausted** — all 243 workshop items assessed, every convertible mod converted or deferred with documented reasons. UMF bypass strategy converted 14 UMF-blocked mods (Batch 13: 16 mods total, #162-#177), dropping ~7K-12K framework for ~300-1100 line standalone rewrites. 12 mods deferred. ProBallistics closed (DO NOT CONVERT). 9 auto-fixers, 550 tests, 30 lint rules, 0 findings across 178 mods. Deep analysis: **0 FAIL**, **0 WARN**, 178 PASS, 178 tested (**100%**). Session improved from 77/101/12 → 178/0/0. All WARNs resolved via deepcheck improvements (false positive elimination). **Under review:** None.
+> Counts updated 2026-03-21. **112 mods installed, all 112 lint clean** (was 125 on 2026-03-20, was 178 before 2026-03-19 cleanup). User changed mod set: unsubscribed additional mods beyond the original 53 removals, and installed ~34 new mods from the workshop backlog. QA Lead resolved all 38 tier-1 findings in the new installs: 13 false-positive suppressions (MISSING-VERSION2 in framework files), 1 entity script v2 conversion (SVERLOVSK tv.lua), backup file cleanup (Light_Saber, WIP_GYM), API Surgeon fixed RAW-KEY-PLAYER bugs in 3 mods (Light_Saber, Portal_Gun_MP, Thruster_Tool_Multiplayer — Issue #73). Deep analysis: re-running (T168 in progress — previous results were 16h old with 178 tested, now 112 mods). **Removed mods (original 53 on 2026-03-19):** All 39 RMW weapon pack mods (Batch 7), plus: 500_Magnum, SG553, Liquify, Shape_Collapsor, Easy_Chat, Performance_Mod, Easy_Admin_Menu, Jetpack, ARM_NOVA, FELL_TITAN, American_High_School, Poltergeists, Ultimate_Jetpack, Always_Up. Additional mods removed since then (exact list TBD — user changed subscriptions).
 
 ## Fully Patched Mods (Batch 1 — 35 mods)
 
@@ -50,7 +50,7 @@
 - Nova Shotgun (2401871202)
 - P90 (2401590906)
 - SCAR-20 (2401590057)
-- SG553 (2401591104)
+- ~~SG553 (2401591104)~~ — **REMOVED (2026-03-19): user unsubscribed**
 - Scorpion (2401577403)
 - Vacuum Cleaner (2401577133)
 
@@ -69,7 +69,7 @@
 
 ## Fully Patched Mods (Batch 3 — 5 mods)
 
-- 500 Magnum (2401591426) — `500_Magnum/` dir; original `.500_Magnum/` dir from Batch 1 also kept
+- ~~500 Magnum (2401591426)~~ — **REMOVED (2026-03-19): user unsubscribed** (`500_Magnum/` dir removed)
 - Asteroid Strike (2614499023)
 - Fire Locator (2622849832)
 - Swap Button (2728464103)
@@ -84,7 +84,7 @@
 
 ## Fully Patched Mods (Batch 5 — 2 mods, converted from v1)
 
-- Liquify (2782511908) — full v2 conversion, voxel decomposition + anti-gravity mode + options menu
+- ~~Liquify (2782511908)~~ — **REMOVED (2026-03-19): user unsubscribed** (was full v2 conversion, voxel decomposition + anti-gravity mode + options menu)
 - MEGAGUN (2497213038) — full v2 conversion, 3 ammo types + 6-barrel rotation + wind-up state machine
 
 ## Fully Patched Mods (Batch 6 — 7 mods, installed from workshop pre-v2)
@@ -95,23 +95,25 @@
 - Ion Cannon Beacon (2511805965) — fixed 3 RAW-KEY-PLAYER bugs + ammo setup
 - Jackhammer (3628059485) — fixed 3 ipairs bugs → proper v2 iterators + ammo setup
 - Object Possession (2562082522) — fixed textbox raw keys + ammo setup
-- Shape Collapsor (2643910768) — fixed 5 RAW-KEY-PLAYER bugs + ammo setup
+- ~~Shape Collapsor (2643910768)~~ — **REMOVED (2026-03-19): user unsubscribed** (was fixed 5 RAW-KEY-PLAYER bugs + ammo setup)
 
-## Fully Patched Mods (Batch 7 — 39 mods, RMW weapon pack by Mr. Rubyyy)
+## ~~Fully Patched Mods (Batch 7 — 39 mods, RMW weapon pack by Mr. Rubyyy)~~ **ALL 39 REMOVED (2026-03-19): user unsubscribed**
+
+> All 39 RMW weapon pack mods removed from Steam Workshop subscriptions. Patches were complete and working but user chose to remove the entire pack.
 
 **Rocket launchers (exemplar: SMAW):**
-- MK 153 SMAW (3401161858) — hybrid hitscan+projectile, server projectile physics
-- RPG-7 (3401161673) — hybrid hitscan+projectile, server projectile physics
+- ~~MK 153 SMAW (3401161858)~~ — REMOVED
+- ~~RPG-7 (3401161673)~~ — REMOVED
 
 **Hitscan guns (exemplar: USP45):**
-- USP45 (3408725894) — .45 ACP pistol, recoil system, charging handle
-- MP443 (3401402900) — 9x19mm pistol
-- Stoeger Double Defense (3405943128) — 12GA double-barrel shotgun
-- PKP Pecheneg (3404747101) — 7.62×54mmR machine gun, 100-round belt
-- AUG A3 (3414850251) — 5.56mm NATO rifle, 31-round
+- ~~USP45 (3408725894)~~ — REMOVED
+- ~~MP443 (3401402900)~~ — REMOVED
+- ~~Stoeger Double Defense (3405943128)~~ — REMOVED
+- ~~PKP Pecheneg (3404747101)~~ — REMOVED
+- ~~AUG A3 (3414850251)~~ — REMOVED
 
 **Mass batch conversion (32 mods, template-applied from USP45):**
-- RMW_92FS (3401402675), RMW_AA12 (3414873272), RMW_AK74 (3453623778), RMW_AK74M (3401161489), RMW_AKM (3416512833), RMW_BarrettM82 (3420845311), RMW_BoforsAK5 (3575990304), RMW_CZBren2 (3456192497), RMW_ColtKingCobra (3404784805), RMW_DesertEagle (3405979963), RMW_FAMAS (3453503295), RMW_FNP90 (3575668960), RMW_FNSCAR (3401417008), RMW_G17 (3401403081), RMW_G36C (3407553780), RMW_G3A1 (3453220485), RMW_HK416 (3512024787), RMW_KrissVector (3408682775), RMW_M110SASS (3404785331), RMW_M16 (3418348908), RMW_M16A2 (3512026573), RMW_M249 (3404747328), RMW_M4A1 (3401161277), RMW_M870 (3405104694), RMW_MG3 (3499183286), RMW_MK18 (3407023588), RMW_MP5 (3405573992), RMW_MP7 (3581952805), RMW_QBZ95 (3582628842), RMW_SA80 (3454536933), RMW_SIGSpear (3528009592), RMW_SVD (3404785067)
+- ~~RMW_92FS (3401402675), RMW_AA12 (3414873272), RMW_AK74 (3453623778), RMW_AK74M (3401161489), RMW_AKM (3416512833), RMW_BarrettM82 (3420845311), RMW_BoforsAK5 (3575990304), RMW_CZBren2 (3456192497), RMW_ColtKingCobra (3404784805), RMW_DesertEagle (3405979963), RMW_FAMAS (3453503295), RMW_FNP90 (3575668960), RMW_FNSCAR (3401417008), RMW_G17 (3401403081), RMW_G36C (3407553780), RMW_G3A1 (3453220485), RMW_HK416 (3512024787), RMW_KrissVector (3408682775), RMW_M110SASS (3404785331), RMW_M16 (3418348908), RMW_M16A2 (3512026573), RMW_M249 (3404747328), RMW_M4A1 (3401161277), RMW_M870 (3405104694), RMW_MG3 (3499183286), RMW_MK18 (3407023588), RMW_MP5 (3405573992), RMW_MP7 (3581952805), RMW_QBZ95 (3582628842), RMW_SA80 (3454536933), RMW_SIGSpear (3528009592), RMW_SVD (3404785067)~~ — ALL REMOVED
 
 ## Fully Patched Mods (Batch 8 — 2 mods, new workshop conversions)
 
@@ -167,12 +169,12 @@
 - Predator Missile MP (3653080381) — mod #130. Author: unknown. Guided missile, already v2. 3 INFO (MAKEHOLE-DAMAGE, 2x PER-TICK-SPATIAL — accepted).
 
 **Utilities:**
-- Easy Chat (3621818416) — mod #131. MP chat system, already v2, lint clean.
-- Performance Mod (3635399720) — mod #132. Perf optimizations, already v2, lint clean.
+- ~~Easy Chat (3621818416)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #131, MP chat system)
+- ~~Performance Mod (3635399720)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #132, perf optimizations)
 - VectorRazor (3578552621) — mod #133. Author: TheKnook. Precision cutting tool, already v2 from workshop. Fixed 7 MP bugs (raw key+player param on all keybinds, missing PlayersAdded/SetToolAmmo/AmmoPickup, PointLight in server, missing options sync). 3 INFO remaining (accepted).
-- Easy Admin Menu (3623360646) — mod #134. Author: sniper's wife. Host admin utility (god mode, kick/ban, tool toggle, announcements, debris clear). Already v2, lint clean after @lint-ok for false positives (admin menu toggles OTHER mods' tools, not its own).
+- ~~Easy Admin Menu (3623360646)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #134, host admin utility)
 - Bunker Buster MP (3629456835) — mod #135. Author: ekzesh. Missile strike tool, already v2. Added SetToolAmmoPickupAmount + ammo display. 31 SERVER-EFFECT WARNs accepted (host-only sounds/particles, functional).
-- Jetpack (3684366389) — mod #136. **Official Tuxedo Labs mod.** 46 lines, Gameplay tag. Lint clean. Added `name` field to localized info.txt.
+- ~~Jetpack (3684366389)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #136, official Tuxedo Labs mod)
 
 **Batch 1 upgrades (same session):**
 - AWP — full v2 rewrite: 4 ammo types, zoom scope, custom projectile physics
@@ -185,7 +187,7 @@
 **Graduated from review (QA approved 2026-03-19):**
 - ARM Glock (workshop v2+ARM framework) — mod #154. Lint suppressions for ARM framework patterns.
 - ARM M4A4 (workshop v2+ARM framework) — mod #155. Lint suppressions for ARM framework patterns.
-- ARM NOVA (workshop v2+ARM framework) — mod #156. Lint suppressions for ARM framework patterns.
+- ~~ARM NOVA (workshop v2+ARM framework)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #156)
 - MrRandoms Vehicles (workshop v2) — mod #157. 11 INFO only (vehicle turret attribution — accepted).
 - Multiplayer Spawnable Pack (workshop v2) — mod #158. 3 INFO only (sensor/trampoline QueryRaycast — accepted).
 
@@ -214,9 +216,9 @@
 - The Office US (3681605791) — mod #145. Author: Starspiker. Content/map, TV show recreation. Auto-fixed, lint clean.
 
 **T68 — Final workshop sweep (mod_converter):**
-- FELL TITAN (3324149490) — mod #146. Author: GL8ZED. Content/map. Auto-fixed draw()→client.draw(), added #version 2.
+- ~~FELL TITAN (3324149490)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #146, content/map)
 - PPAN Vehicle Pack (2417100319) — mod #147. Author: Please Pick a Name. Vehicle pack (YLVF framework). Auto-fixed 8 issues (mousedx, draw→client.draw, handle-gt-zero). Added #version 2 to 6 entity scripts.
-- American High School (3543507771) — mod #148. Content/map, 15 lua files. Auto-fixed 9 + 3 manual fixes.
+- ~~American High School (3543507771)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #148, content/map)
 - Service Vehicles MP (3624449716) — mod #149. Author: Tortoise Work. Vehicle pack (tow truck, police car, bus, crane, garbage truck, SWAT van). Auto-fixed 2 raw-key-player issues.
 
 **T69-T72 — QA Lead direct installs:**
@@ -227,7 +229,7 @@
 
 ## Fully Patched Mods (Batch 12 — 3 mods, Very High conversions + workshop install 2026-03-19)
 
-> First successful conversions of "Very High" complexity mods. Session also: FPV_Drone_Tool server PlaySound→ClientCall fix, keybind hints added to all 4 ARM mods, cross-mod duplicate tool ID detection in audit, 12 @lint-ok suppressions removed (improved MISSING-OPTIONS-GUARD). Plan docs: `docs/superpowers/plans/2026-03-19-infinity-technique-v2.md`, `docs/superpowers/plans/2026-03-19-proballistics-v2.md`.
+> First successful conversions of "Very High" complexity mods. Session also: FPV_Drone_Tool server PlaySound→ClientCall fix, keybind hints added to all 4 ARM mods, cross-mod duplicate tool ID detection in audit, 12 @lint-ok suppressions removed (improved MISSING-OPTIONS-GUARD). Plan docs: `docs/superpowers/plans/2026-03-19-infinity-technique-v2.md`.
 
 - Infinity Technique (3549181010) — mod #159. Author: DiggolBick. Satoru Gojo's Limitless/Infinity cursed technique: Blue, Red, Purple, Infinity barrier, Domain Expansion, Fly, Teleport, Telekinesis, Lock, Strength, Time Control, Performance mode. 3505→~950 lines. Full v2 server/client split with registry sync for VFX, 30+ assets. First "Very High" mod converted. Lint clean.
 - ARM AK-47 (3665100521) — mod #160. Author: ARM framework. Already v2 from workshop. Auto-fixed 7→0 findings (5 raw-key-player removed, 1 #version 2 header added to projectile.lua, 1 MANUAL-AIM suppressed). Keybind hints added: [R] Reload [MMB] Fire Mode [Shift] ADS. Lint clean.
@@ -239,8 +241,8 @@
 
 - Omni Gun (2994616319) — mod #162. Author: Geneosis. Physics projectile spawner that copies voxel shapes. 370 lines standalone v2 (replaces ~11K UMF framework). 15 configurable settings via options menu (fire rate, spread, velocity, density, friction, bounce, solid, unbreakable, explosive, ghost), shape copy system (CopyShapePalette + CopyShapeContent), cleanup command. Lint clean.
 - Magnets (2783125614) — mod #163. Author: Geneosis. Place N/S polarity magnets that attract/repel via physics simulation. ~330 lines standalone v2. Server-authoritative magnet physics (force/factor configurable), place/drop/remove/flip-polarity/attach-detach commands, polarity visualization (client-throttled FindBodies at 4Hz), options menu with 5 settings. Lint clean.
-- Ultimate Jetpack (2776716903) — mod #164. Author: Geneosis. Omnidirectional jetpack with gimbal, hover, steer assist, air brake, momentum conservation, fall damage prevention. ~310 lines standalone v2. Uses standard action names (jump/crouch/up/down/left/right) on server for continuous thrust — ZERO per-tick RPC. 12 configurable settings in options menu. Lint clean.
-- Poltergeists (2744169679) — mod #165. Author: Geneosis. Possessed objects attack players — broken props animate and get thrown. 580 lines standalone v2. UMF bypass conversion. Lint clean. (Note: NOT Hungry Slimes — different mod, different workshop ID.)
+- ~~Ultimate Jetpack (2776716903)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #164, UMF bypass conversion, 310 lines)
+- ~~Poltergeists (2744169679)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #165, UMF bypass conversion, 580 lines)
 - Melt (3005988296) — mod #166. Author: Geneosis. Aim at any shape and melt it away voxel by voxel. 350 lines standalone v2. 3 melt modes, options menu, heat effects. UMF bypass conversion. Lint clean.
 - Bouncepad (2706150164) — mod #167. Author: Geneosis. Place trampolines, bouncepads, jumppads and antipads to bounce players and objects. 500 lines standalone v2. Server physics, client rendering via ClientCall sync. UMF bypass conversion. Lint clean.
 - Corrupted Crystal (2969580627) — mod #168. Author: Geneosis. Place corrupted crystals that grow and spread across surfaces. 400 lines standalone v2. Auto-grow configurable crystals. UMF bypass conversion. Lint clean.
@@ -251,7 +253,7 @@
 - TABS Effect (3541730926) — mod #173. Author: Okidoki. Adds fire/smoke effects to TABS-tagged vehicles (broken engines smoke, hulls catch fire, fuel leaks). Global mod, v1→v2 conversion (T87). Lint clean.
 - Adjustable Fire (2622040244) — mod #174. Author: NLferdiNL. Global fire settings mod (max count, spread, no-fire mode, clear all). v1→v2 conversion (T88). 119 lines. Lint clean.
 - Enchanter (3576567190) — mod #175. Author: Geneosis. Apply and dispel enchantments on objects. UMF bypass conversion (T91). 1071 lines standalone v2. Lint clean.
-- Always Up (3240423177) — mod #176. Author: Geneosis. Procedural parkour challenge — climb generated platforms. UMF bypass conversion (T90). 572 lines standalone v2 (replaces ~10K UMF). Lint clean.
+- ~~Always Up (3240423177)~~ — **REMOVED (2026-03-19): user unsubscribed** (was mod #176, UMF bypass conversion, 572 lines)
 - Hungry Slimes (2695893023) — mod #177. Author: Geneosis. Launch slimes that eat voxels, duplicate, and consume everything. UMF bypass conversion (T92). 602 lines standalone v2 (replaces ~12K UMF). Lint clean.
 
 ---
@@ -333,7 +335,7 @@
 | ~~Light Katana~~ | ~~3636049807~~ | ~~2509~~ | **DONE — mod #140, fully patched** (auto-fixed 13→0 FAIL, fixer #8) |
 | ~~Bunker Buster Missile [MP]~~ | ~~3629456835~~ | ~~2195~~ | **DONE — mod #135, fully patched** (AmmoPickup+AmmoDisplay added, 31 SERVER-EFFECT accepted) |
 | ~~Minecraft Building Tool~~ | ~~2755694436~~ | ~~2087~~ | **DONE — mod #151, fully patched** (auto-fixed 9→0 FAIL, fixer #9: fix_missing_version2) |
-| ~~(ARM) NOVA [MP]~~ | ~~3665100095~~ | ~~1628~~ | **DONE — mod #156, graduated** (ARM framework lint suppressions) |
+| ~~(ARM) NOVA [MP]~~ | ~~3665100095~~ | ~~1628~~ | **DONE then REMOVED (2026-03-19)** — was mod #156, user unsubscribed |
 | ~~(ARM) M4A4 [MP]~~ | ~~3667727633~~ | ~~1533~~ | **DONE — mod #155, graduated** (ARM framework lint suppressions) |
 | ~~(ARM) Glock [MP]~~ | ~~3665100775~~ | ~~1502~~ | **DONE — mod #154, graduated** (ARM framework lint suppressions) |
 | ~~(ARM) AK-47 [MP]~~ | ~~3665100521~~ | ~~1494~~ | **DONE — mod #160, fully patched** (auto-fixed 7→0, keybind hints added) |
@@ -348,31 +350,31 @@
 
 - RPM Playermodels (3401098159) — model pack, no script
 - Zombies [AUTUMNATIC] (3011292197) — map/gameplay, no tool script
-- ~~[PB] Framework + Packs (3600192776, 3611419174, 3619318834)~~ — **DO NOT CONVERT** (17,447 lines across 54 files — full game engine, 3.5x estimated complexity. Plan doc available.)
 - ~~[GLaD] GYM Ragdoll (3668043935)~~ — **DONE — mod #161** (v2 conversion, 294→320 lines, 9 backup files removed)
 - GNOME ZONE (3209546457) — map mod
 - ~~Tool Menu (2418422455)~~ — **REMOVED from disk 2026-03-18** (v1-only utility, no MP support)
 - Prop Gallery (3043828547) — spawner utility
 - Debug Scanner (2885663661) — debug utility
 
-### Deferred Mods (12 — documented, not convertible)
+### Deferred Mods (13 — documented, not convertible)
 
-> All 243 workshop items assessed. These 12 mods are deferred with documented reasons. Updated 2026-03-19.
+> All 243+ workshop items assessed. These 13 mods are deferred with documented reasons. Updated 2026-03-21.
 
-| Name | Workshop ID | Reason | Lines |
-|------|------------|--------|-------|
-| GLARE | 3114561159 | LnL framework dependency, full v2 rewrite needed | 6,100+ |
-| The Lockonauts Toolbox | 3586166386 | Deceptively large multi-tool, custom UI rewrite needed | 8,412 |
-| ProBallistics | 3600192776+ | **DO NOT CONVERT** — full game engine (ballistics physics, 8 ammo categories, Phalanx CIWS, Iron Dome, night/thermal/LIDAR vision, autopilot, SDK) | 17,447 (54 files) |
-| Chaos_Mod | 2433702881 | Described as 429 lines but actually 8,100 across all files | 8,100 |
-| Player_Scaler | 2598890168 | MP-incompatible physics (player size manipulation) | 464 |
-| Ascended Sword Master | 3358293229 | UMF — 4,577 game logic lines, 14 sword stances, too complex for bypass | 4,577 |
-| Shards Summoner | 2888719505 | UMF — 2,677 lines game logic | 2,677 |
-| AI Trainer | 2918508637 | UMF dependent | ~1,000+ |
-| Blight Gun | 3004952393 | UMF dependent | ~1,000+ |
-| Thermite Cannon | 2539026789 | UMF dependent | 1,691 |
-| Tameable Dragon | 2945997960 | UMF — 5,037 lines AI (dragon behavior too complex) | 5,037 |
-| Synthetic Swarm | 3289269367 | **DO NOT CONVERT** — drone swarm factory, too complex | ~3,000+ |
+| Name | Workshop ID | Reason | Lines | Installed? |
+|------|------------|--------|-------|------------|
+| Flying_Planes | 2423986361 | TDSU framework dependency, vehicle/map | 24,565 | Yes |
+| GLARE | 3114561159 | LnL framework dependency, full v2 rewrite needed | 6,100+ | Yes |
+| Robot_Vehicles | 2673451391 | UMF framework dependency, vehicles | 20,805 | Yes |
+| Synthetic Swarm | 3289269367 | **DO NOT CONVERT** — drone swarm factory, too complex | ~3,000+ | Yes |
+| Thermite Cannon | 2539026789 | UMF dependent | 1,691 | Yes |
+| The Lockonauts Toolbox | 3586166386 | Deceptively large multi-tool, custom UI rewrite needed | 8,412 | No |
+| Chaos_Mod | 2433702881 | Described as 429 lines but actually 8,100 across all files | 8,100 | No |
+| Player_Scaler | 2598890168 | MP-incompatible physics (player size manipulation) | 464 | No |
+| Ascended Sword Master | 3358293229 | UMF — 4,577 game logic lines, 14 sword stances, too complex for bypass | 4,577 | No |
+| Shards Summoner | 2888719505 | UMF — 2,677 lines game logic | 2,677 | No |
+| AI Trainer | 2918508637 | UMF dependent | ~1,000+ | No |
+| Blight Gun | 3004952393 | UMF dependent | ~1,000+ | No |
+| Tameable Dragon | 2945997960 | UMF — 5,037 lines AI (dragon behavior too complex) | 5,037 | No |
 
 ### Conversion Priority Recommendation (COMPLETED)
 
@@ -381,6 +383,32 @@
 1. ~~**Portal Gun:**~~ **DONE** — mod #103. 3208→~850 lines.
 2. ~~**G17 framework gun series (10 mods):**~~ **ALL DONE** — G17 template + 9 clones. ~553 lines each.
 3. ~~**Standalone weapons:**~~ **ALL DONE** — Sith Saber, Final Flash, Artillery Barrage, Gasoline Flamethrower, Bombard.
-4. ~~**Complex mods:**~~ **2 DONE, 3 DEFERRED** — ~~Infinity Technique~~ (#159), ~~GYM Ragdoll~~ (#161). Deferred: GLARE, Lockonauts Toolbox, ProBallistics (DO NOT CONVERT).
+4. ~~**Complex mods:**~~ **2 DONE, 2 DEFERRED** — ~~Infinity Technique~~ (#159), ~~GYM Ragdoll~~ (#161). Deferred: GLARE, Lockonauts Toolbox.
 5. ~~**Already-v2 review (13 mods):**~~ **ALL DONE** — auto-fixers resolved most, remainder graduated.
 6. ~~**UMF bypass (14 converted):**~~ **ALL VIABLE MODS DONE** — 14 mods converted via bypass strategy. 5 UMF mods deferred (too complex for bypass).
+
+## New Installs from Workshop Backlog (2026-03-21)
+
+> ~34 mods installed from the ~75 pending workshop subscriptions. Most are maps/vehicles/content with no main.lua. 6 mods with scripts identified by QA Lead — all now lint clean after suppressions + fixes.
+
+### New Mods with Scripts (6 — identified and resolved)
+
+| Mod | Workshop ID | Type | Status |
+|-----|------------|------|--------|
+| Flying_Planes | 2423986361 | Vehicle/map (TDSU framework) | DEFERRED — 24,565 lines, TDSU framework dependency. 2 FPs suppressed. |
+| Light_Saber | 3686903220 | Tool | Patched — fixed RAW-KEY-PLAYER + MOUSEDX bugs (T166). **Separate from Lightsaber (2547915810).** |
+| MP_Hide_Multiplayer_Names | 3684710351 | Utility (mplib) | Suppressed — 6 mplib FPs. Mod works as-is. |
+| Robot_Vehicles | 2673451391 | Vehicle (UMF) | DEFERRED — 20,805 lines, UMF framework dependency. 2 FPs suppressed. |
+| SVERLOVSK_TOWN_2_Multiplayer | 3684105073 | Map | Fixed — tv.lua entity script converted to v2. |
+| WIP_GYM_Ragdoll_Framework_MP | 3681634144 | Tool (framework) | Cleaned up — backup files removed. **Separate from GYM_Ragdoll (3668043935).** |
+
+### Known Duplicate/Variant Pairs
+
+| Installed (active) | Also installed as | Notes |
+|-------------------|------------------|-------|
+| Portal_Gun_MP (3659913820) | Portal_Gun (2421609769, our conversion) | MP fork from workshop vs our v2 conversion. Both may be present. |
+| Thruster_Tool_Multiplayer (3625787751) | Thruster_Tool (2515871265, our conversion) | MP fork from workshop vs our v2 conversion. Fixed Issue #73 (hidden dynamic keybind bugs). |
+
+### New Maps/Vehicles/Content (no main.lua — no patching needed)
+
+AVF_Vehicles, Ability_to_read, Active_Volatile_Aviation, Advanced_Tornado, AndRe's_BMW_E36, Bikes_Ramps_&_Ragdolls_Collection, Bridge_Luancher_System, Bright_Valley_Correctional_Center, Centurion_C-RAM_Phalanx_CIWS, Colossus_Attack, Dynamic_AT-AT_Map, EVF_International_Emergency_Vehicles, Futuristic_Vehicle_pack, Geardown, Improved_Spawnable_Missile_&_Bomb_MP (3680249134, already v2), Kooshing's_Dynamic_Aircraft_Mod, Micro_Metropolis, Miniature_World_v1.1, Modern_Soldier_NPCs, New_York_mini, Public_Library, RPM_Modern_Military_Playermodels, Russian_Town_6_Summer_Multiplayer, STAR_WARS_AI_PACK, SW's_ADVANCED_GORE_MOD_2, Steve's_NPCS, The_World_Trade_Center, Vida_Hospital, gm_construct_MP, and others.

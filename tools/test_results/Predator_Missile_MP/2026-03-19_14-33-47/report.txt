@@ -1,0 +1,16 @@
+TEST REPORT: Predator_Missile_MP
+======================================================
+Generated: 2026-03-19 14:33:47
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 15 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

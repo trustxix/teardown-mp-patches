@@ -1,0 +1,16 @@
+TEST REPORT: Bunker_Buster_MP
+======================================================
+Generated: 2026-03-19 13:55:24
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 8 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

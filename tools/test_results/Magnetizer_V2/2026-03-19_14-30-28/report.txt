@@ -1,0 +1,16 @@
+TEST REPORT: Magnetizer_V2
+======================================================
+Generated: 2026-03-19 14:30:28
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 9 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

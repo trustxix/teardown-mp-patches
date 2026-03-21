@@ -1,0 +1,33 @@
+TEST REPORT: AndRe's_BMW_E36
+======================================================
+Generated: 2026-03-21 05:38:08
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 17/23 assets missing
+    - Asset NOT found: Sounds/Radio_Interact.ogg
+    - Asset NOT found: main/snd/blaster2.ogg
+    - Asset NOT found: main/snd/atst.ogg
+    - Asset NOT found: snd/roar.ogg
+    - Asset NOT found: snd/bite.ogg
+    - Asset NOT found: snd/bite2.ogg
+    - Asset NOT found: snd/atom.ogg
+    - Asset NOT found: snd/DeathBeam.ogg
+    - Asset NOT found: snd/jet.ogg
+    - Asset NOT found: snd/step.ogg
+    - Asset NOT found: snd/stepbass.ogg
+    - Asset NOT found: snd/gdeath2.ogg
+    - Asset NOT found: textures/tree/trunk-pine.vox
+    - Asset NOT found: sounds/radios/nebo_kazhe_idy_syda.ogg
+    - Asset NOT found: Sounds/Radio_Volvo.ogg
+    - Asset NOT found: textures/tree/trunk-oak.vox
+    - Asset NOT found: textures/tree/leaf.vox
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

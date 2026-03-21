@@ -2,17 +2,32 @@
 
 ## MANDATORY — Do This First Every Session
 
-**Before doing ANYTHING else, run:**
-```
-cd C:/Users/trust/teardown-mp-patches && python -m tools.status
-```
-This tells you: mod count, last commit, game log errors, lint failures, and missing features.
-Do NOT skip this. Do NOT start working without it. The output replaces reading multiple doc files.
+**Before doing ANYTHING else:**
+1. Run `python -m tools.status` — get mod count, last commit, game log errors, lint failures, missing features.
+2. Read `docs/BASE_GAME_MP_PATTERNS.md` — **THE gold standard.** How official Teardown tools sync in MP. Every mod change must follow these patterns.
+3. Read `docs/WHAT_WORKS.md` — proven fixes and patterns (DO use these).
+4. Read `docs/WHAT_DOESNT_WORK.md` — failed approaches (DON'T repeat these).
+
+All four steps are mandatory. Do NOT skip any. Do NOT start working without completing all four. BASE_GAME_MP_PATTERNS is the #1 priority reference — our mods must match the official sync patterns.
 
 **Then check your inbox and task queue (via MCP):**
 ```
 Use MCP tools: check_inbox(your_role) → process messages → get_task(your_role) → do work
 ```
+
+## TOP PRIORITY: Match Base Game MP Patterns
+
+**Every mod edit MUST follow the patterns in `docs/BASE_GAME_MP_PATTERNS.md`.** These are the rules the official Teardown code follows. Our mods must match them:
+
+1. **Server owns all game logic.** Input, physics, damage, spawning = server only. Client = visuals and animation only.
+2. **No per-tick RPC.** Use registry broadcast (`SetInt/SetFloat/SetBool(key, value, true)`) or `shared.*` tables for continuous state. ServerCall/ClientCall are for discrete one-time events only.
+3. **`PlaySound()` on server auto-syncs.** Do NOT use ClientCall to play sounds — just call PlaySound on the server.
+4. **ToolAnimator for ALL players.** Call `tickToolAnimator(anim, dt, nil, p)` in a `for p in Players()` loop, not just for the local player.
+5. **Event-driven death handling.** Use `GetEventCount("playerdied")`/`GetEvent()`, not per-tick health polling.
+6. **`ClientCall(0, ...)` for world events.** `ClientCall(p, ...)` only for personal feedback (camera shake, HUD).
+7. **`shared.*` for client-readable state.** Server writes, client reads. Zero RPC cost.
+
+When reviewing or writing mod code, check it against these 7 rules FIRST. Any violation is a bug to fix.
 
 ## Inter-Terminal Communication
 
@@ -110,11 +125,11 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 | Command | When to use |
 |---------|-------------|
 | `python -m tools.status` | **EVERY session start** |
-| `python -m tools.lint` | Scan all mods for 30 known bugs (includes info.txt validation) |
+| `python -m tools.lint` | Scan all mods for 36 known bugs (includes info.txt validation) |
 | `python -m tools.lint --mod "X"` | After editing a specific mod |
 | `python -m tools.lint --tier 1` | Hard errors only (crashes/silent failures) |
 | `python -m tools.fix --dry-run` | Preview safe auto-fixes across all mods |
-| `python -m tools.fix` | Apply all 9 deterministic auto-fixes |
+| `python -m tools.fix` | Apply all 10 deterministic auto-fixes |
 | `python -m tools.fix --mod "X" --only ipairs-iterator` | Targeted fix |
 | `python -m tools.audit` | Feature matrix — what each mod has/needs |
 | `python -m tools.audit --output docs/AUDIT_REPORT.md` | Save audit to file |
@@ -132,14 +147,19 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 - `-- @audit-ok` — suppress audit false positives (e.g., tools using QueryShot instead of Shoot)
 - `-- @deepcheck-ok CATEGORY` — suppress deep analysis false positives (e.g., `@deepcheck-ok ASSET` for upstream missing assets, `@deepcheck-ok ENTITY` for entity scripts, `@deepcheck-ok EFFECT` for mods with non-standard effect broadcasting). Place in first 5 lines for file-level, or on the specific line.
 
-**Tests:** `python -m pytest tests/ -q` — 550 tests covering all tools.
+**Tests:** `python -m pytest tests/ -q` — 600 tests covering all tools.
 
-## Where Mods Live
+## Where Mods Live — 3 Directories
 
-- **ALL edits go here:** `C:/Users/trust/Documents/Teardown/mods/` — game reads from this
-- **NEVER edit:** `C:/Users/trust/teardown-mp-patches/mods/` — patches repo, game ignores it
-- **Workshop originals:** `C:/Program Files (x86)/Steam/steamapps/workshop/content/1167630/`
-- **Backup:** `C:/Users/trust/Documents/Teardown/mods_BACKUP/`
+Teardown loads mods from three locations. Local mods override workshop versions when the same mod exists in both.
+
+| Directory | Purpose | Edit? |
+|-----------|---------|-------|
+| `C:/Users/trust/Documents/Teardown/mods/` | **Local/custom mods.** Patched MP mods go here. Takes priority over workshop versions. | **YES — all edits here** |
+| `C:/Program Files (x86)/Steam/steamapps/workshop/content/1167630/` | **Workshop originals.** Steam downloads subscribed mods here (folders named by Workshop ID). Read-only, managed by Steam. | NEVER |
+| `C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/` | **Game install mods.** For mods bundled with the game itself. Currently empty — Teardown ships none here. | NEVER |
+| `C:/Users/trust/teardown-mp-patches/mods/` | **Patches repo.** Our project's source data. Game does not read from here. | NEVER |
+| `C:/Users/trust/Documents/Teardown/mods_BACKUP/` | **Backup.** Snapshots before major changes. | Restore only |
 
 ## V2 Rewrite Rules (MANDATORY)
 
@@ -153,8 +173,8 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 5. `RegisterTool()` with group number in `server.init()`
 6. `SetToolEnabled("id", true, p)` + `SetToolAmmo("id", 101, p)` in PlayersAdded
 7. `SetString("game.tool.id.ammo.display", "")` to hide engine ammo
-8. Server handles: MakeHole, Explosion, SetBodyVelocity, ApplyBodyImpulse, Spawn, Delete, SpawnFire, Shoot, SetPlayerVelocity, SetPlayerTransform, ApplyPlayerDamage, DisablePlayerInput, SetPlayerColor, SetPlayerWalkingSpeed
-9. Client handles: PlaySound, SpawnParticle, DrawLine, DrawSprite, PointLight, SetToolTransform, SetCameraTransform, ShakeCamera, SetCameraDof, DrawBodyOutline, all Ui* functions
+8. Server handles: MakeHole, Explosion, SetBodyVelocity, ApplyBodyImpulse, Spawn, Delete, SpawnFire, Shoot, SetPlayerVelocity, SetPlayerTransform, ApplyPlayerDamage, SetPlayerHealth, SetToolEnabled, SetToolAmmo, DisablePlayerInput, SetPlayerColor, SetPlayerWalkingSpeed, PlaySound (auto-syncs to all clients)
+9. Client handles: SpawnParticle, DrawLine, DrawSprite, PointLight, SetToolTransform, SetCameraTransform, ShakeCamera, SetCameraDof, DrawBodyOutline, all Ui* functions
 10. NEVER use raw keys with player param: `InputPressed("rmb", p)` FAILS SILENTLY. Use `InputPressed("rmb")` with `isLocal` check + ServerCall
 11. `GetPlayerAimInfo` has two forms: simple `GetPlayerAimInfo(p)` or extended `GetPlayerAimInfo(muzzlePos, maxDist, p)`. Use extended for weapons — NOT manual `GetPlayerEyeTransform` + `QueryRaycast`
 12. Use `Shoot(pos, dir, "bullet", damage, range, p, "toolId")` for guns — NOT `MakeHole` (MakeHole can't damage players). The `"toolId"` enables kill attribution in the kill feed.
@@ -174,7 +194,7 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 26. Client projectile physics MUST be gated with `IsPlayerLocal(p)` — never simulate projectiles for remote players
 27. Use registry sync (`SetFloat`/`SetBool` with `sync=true`) for continuous state — NEVER `ServerCall`/`ClientCall` every tick
 28. Throttle `FindShapes()`/`QueryAabb()` to ≤4Hz — never call per-tick per-player
-29. `PlaySound()`/`SpawnParticle()`/`SetShapeEmissiveScale()` are CLIENT-ONLY — never call on server for visual/audio effects
+29. `SpawnParticle()`/`PointLight()`/`SetShapeEmissiveScale()` are CLIENT-ONLY — never call on server. **EXCEPTION: `PlaySound()` works on server and auto-syncs to all clients** (confirmed by base game snowball.lua, tank.lua). Call PlaySound directly on server — do NOT wrap in ClientCall.
 30. `QueryShot()` + `ApplyPlayerDamage()` must run on SERVER — client uses `QueryRaycast()` for visuals only
 31. `info.txt` MUST have `version = 2` for the mod to be recognized as MP-compatible
 32. Respawn API: `SetPlayerSpawnTransform(t, p)`, `SetPlayerSpawnHealth(h, p)`, `RespawnPlayer(p)` — server only
@@ -184,6 +204,16 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 36. `Explosion()` does NOT damage players — it destroys terrain + applies physics impulse but NO health damage. Weapons using Explosion MUST add explicit `ApplyPlayerDamage()` with distance falloff + tool ID for kill attribution. (Issue #56)
 37. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions visible to all players). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync). Wrong targeting = other players can't hear/see effects. (Issue #58)
 38. All asset paths MUST use `MOD/` prefix: `LoadSound("MOD/snd/fire.ogg")`, `LoadSprite("MOD/img/crosshair.png")`, `UiImage("MOD/ui/img.png")`. Without it, assets silently fail to load in v2 (v1 resolved relative paths automatically). (Issue #63)
+39. All `#version 2` scripts MUST define at least one callback (`server.init()`, `client.init()`, etc.). Content mods with no script logic need an empty `server.init()` — without it, the engine fails to compile. (Issue #67)
+40. Entity scripts (attached to XML entities via `tags="script=foo.lua"`) MUST independently have `#version 2` + v2 callbacks. V1 entity scripts with `init()`/`tick()`/`update()` but no `#version 2` are **silently disabled** in MP — no error, no warning, just missing features (vehicle physics, doors, sirens, lights, etc.). Originally 79 across 10 mods; all 79 converted (**100% complete** as of 2026-03-20). (Issue #68)
+41. `#version 2` can appear on ANY line in a script — the preprocessor scans the whole file. Do NOT enforce line-1 placement. However, ensure LF-only line endings in Lua scripts — CRLF can cause compile errors with the preprocessor.
+42. **Shared `players[p]` on host causes double-processing.** In `server.tick`, `PlayersAdded` creates `players[p] = createPlayerData()`. In `client.tick`, the guard `if not players[p]` skips creation on the HOST (data already exists from server). Both contexts then share the SAME `data` object. If both `server.tickPlayer` and `client.tickPlayer` modify the same field — arrays (projectile tables) OR scalars (ammo, timers, cooldowns, recoil) — the host gets double-processed values (2x speed, 2x drain). Remote clients get nothing (server-only data never reaches their `data`). **Fix:** Use separate fields (`data.bulletsInAir` vs `data.clientTracers`) or gate client writes with `IsPlayerLocal(p)`. (Issues #69, #70, #72 — 38+ mods affected)
+43. `options.lua` needs independent `#version 2` + v2 callbacks (`client.init()`, `client.draw()`) — same silent-disable as entity scripts (Issue #68). Converting only `main.lua` does NOT fix options.lua. **All 9 converted (100% complete** as of 2026-03-20). (Issue #71)
+44. **`PlaySound()` on server auto-syncs to all clients.** Do NOT wrap in ClientCall. The engine handles positional audio replication natively. Use `UiSound()` for client-only UI feedback. (Base game pattern — see `docs/BASE_GAME_MP_PATTERNS.md` Pattern 10)
+45. **`tickToolAnimator()` must run for ALL players** in a `for p in Players()` loop. Create animators in `PlayersAdded()`, destroy in `PlayersRemoved()`. Do NOT gate behind `IsPlayerLocal(p)` — the function internally selects FP/TP poses. (Base game pattern — see `docs/BASE_GAME_MP_PATTERNS.md` Pattern 6)
+46. **Every `PlayersAdded()` MUST have a matching `PlayersRemoved()` cleanup.** Per-player state tables, animators, timers, and projectile lists all leak if not cleaned up on disconnect. (Base game pattern — see `docs/BASE_GAME_MP_PATTERNS.md` Pattern 8)
+47. **Use `GetEventCount("playerdied")`/`GetEvent()` for death detection** — do NOT poll `GetPlayerHealth()` every tick. Events fire exactly once, no tracking table needed. (Base game pattern — see `docs/BASE_GAME_MP_PATTERNS.md` Pattern 5)
+48. **Use registry broadcast for continuous state:** `SetInt/SetFloat/SetBool(key, value, true)` with the `true` flag. Do NOT use per-tick ServerCall/ClientCall for state that changes every frame (ammo counts, positions, timers). (Base game pattern — see `docs/BASE_GAME_MP_PATTERNS.md` Pattern 2)
 
 ## Known Subagent Bugs (agents ALWAYS make these)
 
@@ -193,7 +223,14 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 3. `SetToolEnabled("toolid", true, p)` — string first, bool second, player third
 4. After `QueryShot()`, guard with `player ~= 0` — NOT `if player then` (Lua 0 is truthy, damages host)
 5. `ServerCall("server.fn", p, ...)` — ALWAYS pass player ID `p` explicitly as first param. Engine does NOT auto-inject it. (Issue #51)
-6. ALWAYS run `python -m tools.lint --mod "ModName"` after writing any mod code
+6. Do NOT modify the same `data.*` field in both `server.tickPlayer` and `client.tickPlayer` — host runs both and gets 2x processing. Use separate fields or gate client writes with `IsPlayerLocal(p)`. (Issue #72)
+7. ALWAYS run `python -m tools.lint --mod "ModName"` after writing any mod code
+8. `PlaySound()` on server auto-syncs — do NOT use ClientCall to play sounds. Just call PlaySound on server.
+9. `tickToolAnimator()` must be called for ALL players in `for p in Players()` — NOT just the local player. It handles FP/TP internally.
+10. Do NOT use per-tick ServerCall/ClientCall for continuous state. Use `SetInt/SetFloat/SetBool(key, value, true)` (registry broadcast) or `shared.*` tables.
+11. Use `ClientCall(0, ...)` for world-visible events (sounds, particles at a position). Use `ClientCall(p, ...)` only for personal feedback (camera shake, HUD sync).
+12. Use `GetEventCount("playerdied")`/`GetEvent()` for death detection — do NOT poll `GetPlayerHealth()` every tick.
+13. Clean up per-player state in `PlayersRemoved()` — missing cleanup causes state leaks (wrong settings for new players inheriting old IDs).
 
 ## Do NOT Copy Preview Images Into Mod Folders
 
@@ -281,15 +318,20 @@ The tools automatically tell you which docs to read:
 | Doc | Contents | Authority |
 |-----|----------|-----------|
 | **`docs/OFFICIAL_DEVELOPER_DOCS.md`** | **Complete official API from teardowngame.com. ALL function signatures, MP architecture, networking internals, mplib, gotchas. THIS IS GROUND TRUTH — overrides all other docs on conflicts.** | **HIGHEST** |
-| `docs/RESEARCH.md` | 42 findings on official API patterns — Shoot(), GetPlayerAimInfo(), QueryShot(), SetToolAmmoPickupAmount(), sync mechanisms, tool animation, kill attribution. Exact function signatures + code from official mods. | High |
+| `docs/RESEARCH.md` | 43 findings on official API patterns — Shoot(), GetPlayerAimInfo(), QueryShot(), SetToolAmmoPickupAmount(), sync mechanisms, tool animation, kill attribution. Exact function signatures + code from official mods. | High |
+| `docs/BASE_GAME_MP_PATTERNS.md` | **How official Teardown tools/vehicles sync in MP. 12 patterns: server-owns-logic, registry broadcast, shared tables, event-driven deaths, ToolAnimator for all players, PlaySound auto-sync, ClientCall(0) for world events. Actionable improvement table for our mods.** | **HIGHEST** |
 | `docs/V2_SYNC_PATTERNS.md` | Registry sync, RPC (ServerCall/ClientCall), shared table, local-prediction + server-synced-remote pattern, quaternion sync, interpolation tuning. For any mod with custom entities. | High |
-| `docs/MP_DESYNC_PATTERNS.md` | 6 root causes of MP desync/lag: client projectile physics, per-tick RPC, FindShapes spam, server-side effects, raw key input, client QueryShot. Fix patterns for each. **Read before editing any mod.** | High |
+| `docs/MP_DESYNC_PATTERNS.md` | 7 root causes of MP desync/lag: client projectile physics, per-tick RPC, FindShapes spam, server-side effects, raw key input, client QueryShot, host double-processing shared players[p]. Fix patterns for each. **Read before editing any mod.** | High |
 | `docs/MPLIB_INTERNALS.md` | How loot crates, weapon drops, and ammo pickup actually work inside mplib/tools.lua. Essential for understanding why SetToolAmmoPickupAmount matters. | High |
 | `docs/PER_TICK_RPC_FIX_GUIDE.md` | Decision tree + 4 fix patterns for the 69 PER-TICK-RPC lint warnings. **Read before fixing any PER-TICK-RPC finding.** | High |
 | `docs/UMF_TRANSLATION_GUIDE.md` | UMF framework API → v2 equivalents. Registry layer, tool patterns, input, UI, server/client split, 15-point conversion checklist. **Read before converting any UMF-blocked mod.** | High |
 | `docs/TEAM_PLUGINS.md` | All available plugins, agents, and skills with when-to-use decision table. **Every terminal should read this.** | High |
+| `docs/UI_STANDARDS.md` | **Universal UI rules for ALL tools and mods — layout zones, font sizes, menu standards. MUST follow when editing any HUD code.** | **HIGHEST** |
+| `docs/DESYNC_SCAN_RESULTS.md` | Full desync pattern scan results — 16 mods with v1 fallback loops (safe to fix), 4 with shared table bloat (need review). Check before MP optimization work. | High |
 | `docs/AUDIT_REPORT.md` | Generated feature matrix — which mods have/lack each feature. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` | Generated |
-| `ISSUES_AND_FIXES.md` | 46 resolved bugs (#20-#65) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
+| `docs/WHAT_WORKS.md` | **Proven fixes and patterns. Check BEFORE attempting any fix.** | **HIGHEST** |
+| `docs/WHAT_DOESNT_WORK.md` | **Failed approaches — never repeat these. Check BEFORE attempting any fix.** | **HIGHEST** |
+| `ISSUES_AND_FIXES.md` | 53 documented bugs (#20-#72) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
 | `MASTER_MOD_LIST.md` | All patched mods by batch with workshop IDs. Update after converting new mods. | Project |
 | `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` | Full v2 API (550+ functions). For exact function signatures. | Reference |
 

@@ -1,0 +1,19 @@
+TEST REPORT: Fire_Fighter_MP
+======================================================
+Generated: 2026-03-21 09:20:47
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 3 assets found
+  ID cross-ref:      WARN — 2 warnings
+    - No SetToolAmmo found for "mycresta-firefighter" — tool may not appear in toolbar
+    - No SetToolAmmo found for "mycresta-firefighter" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - No client.draw() found — tool mod has no HUD
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

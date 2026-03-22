@@ -1,0 +1,22 @@
+TEST REPORT: Russian_Town_5_MP
+======================================================
+Generated: 2026-03-21 09:43:52
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 3/8 assets missing
+    - Asset NOT found: katyusha.ogg
+    - Asset NOT found: fortunate_son.ogg
+    - Asset NOT found: soviet_anthem.ogg
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      WARN
+    - Entity script: bare function handles usetool + damage (runs on both sides, damage is server-only)
+  Effect chain:      FAIL
+    - SpawnParticle() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+    - PointLight() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

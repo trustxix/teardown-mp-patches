@@ -83,6 +83,30 @@ A **pass** is a complete sweep through all mods with a specific goal (e.g., "fix
 **Message protocol:** See `.comms/PROTOCOL.md` for format details.
 **When to message:** See `.comms/TRIGGERS.md` for exactly when to write to other inboxes.
 
+### When Queue Is Empty — Idle Protocol (MANDATORY)
+
+**When you have no inbox messages, no tasks, and no batch assignment, follow this priority list IN ORDER. Do NOT skip ahead. Do NOT self-assign mod edits.**
+
+1. **Report idle to user.** Output: "Queue empty. No tasks, no inbox. Standing by." Then WAIT. If the user doesn't respond within a reasonable time, proceed to step 2.
+2. **Run diagnostics (READ-ONLY).** These produce reports without changing any files:
+   - `python -m tools.lint` — check for new findings
+   - `python -m tools.test --batch all --static` — deep analysis scan
+   - `python -m tools.audit --output docs/AUDIT_REPORT.md` — feature matrix refresh
+   - Check base game compliance: `grep -c "CLIENTCALL-SOUND\|MISSING-PLAYERS-REMOVED\|TOOLANIM-LOCAL-ONLY"` in lint output
+3. **Create tasks from findings.** If diagnostics found issues, create tasks via `create_task()` describing the issue, affected mod, and fix approach. Do NOT start working on the tasks — just create them.
+4. **Review docs for drift.** Read WHAT_WORKS, WHAT_DOESNT_WORK, and ISSUES_AND_FIXES. Check if any entries are outdated or contradicted by current code. If so, create a docs_keeper task.
+5. **HALT.** After completing steps 1-4, output "Diagnostics complete. [N] new tasks created. Standing by for user." Then STOP. Do not loop.
+
+**What you must NEVER do when idle:**
+- Edit mod code without a task assignment
+- Run auto-fixes without user approval
+- "Improve" or refactor mods you weren't asked to touch
+- Add features, keybind hints, or UI changes proactively
+- Delete, rename, or reorganize files
+- Make "cleanup" changes to tools, docs, or infrastructure
+
+**Why:** Unsupervised changes during idle time have caused crashes, broken mods, and wasted hours of debugging. The batch system exists because every change needs user verification. If there's nothing to do, that means the project is in a good state — don't break it by inventing work.
+
 ## Rules to Prevent Repeated Mistakes
 
 ### No Mass Changes
@@ -129,7 +153,7 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 | `python -m tools.lint --mod "X"` | After editing a specific mod |
 | `python -m tools.lint --tier 1` | Hard errors only (crashes/silent failures) |
 | `python -m tools.fix --dry-run` | Preview safe auto-fixes across all mods |
-| `python -m tools.fix` | Apply all 10 deterministic auto-fixes |
+| `python -m tools.fix` | Apply all 11 deterministic auto-fixes |
 | `python -m tools.fix --mod "X" --only ipairs-iterator` | Targeted fix |
 | `python -m tools.audit` | Feature matrix — what each mod has/needs |
 | `python -m tools.audit --output docs/AUDIT_REPORT.md` | Save audit to file |
@@ -147,7 +171,7 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 - `-- @audit-ok` — suppress audit false positives (e.g., tools using QueryShot instead of Shoot)
 - `-- @deepcheck-ok CATEGORY` — suppress deep analysis false positives (e.g., `@deepcheck-ok ASSET` for upstream missing assets, `@deepcheck-ok ENTITY` for entity scripts, `@deepcheck-ok EFFECT` for mods with non-standard effect broadcasting). Place in first 5 lines for file-level, or on the specific line.
 
-**Tests:** `python -m pytest tests/ -q` — 600 tests covering all tools.
+**Tests:** `python -m pytest tests/ -q` — 601 tests covering all tools.
 
 ## Where Mods Live — 3 Directories
 
@@ -205,7 +229,7 @@ Teardown loads mods from three locations. Local mods override workshop versions 
 37. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions visible to all players). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync). Wrong targeting = other players can't hear/see effects. (Issue #58)
 38. All asset paths MUST use `MOD/` prefix: `LoadSound("MOD/snd/fire.ogg")`, `LoadSprite("MOD/img/crosshair.png")`, `UiImage("MOD/ui/img.png")`. Without it, assets silently fail to load in v2 (v1 resolved relative paths automatically). (Issue #63)
 39. All `#version 2` scripts MUST define at least one callback (`server.init()`, `client.init()`, etc.). Content mods with no script logic need an empty `server.init()` — without it, the engine fails to compile. (Issue #67)
-40. Entity scripts (attached to XML entities via `tags="script=foo.lua"`) MUST independently have `#version 2` + v2 callbacks. V1 entity scripts with `init()`/`tick()`/`update()` but no `#version 2` are **silently disabled** in MP — no error, no warning, just missing features (vehicle physics, doors, sirens, lights, etc.). Originally 79 across 10 mods; all 79 converted (**100% complete** as of 2026-03-20). (Issue #68)
+40. Entity scripts (attached to XML entities via `tags="script=foo.lua"`) MUST independently have `#version 2` + v2 callbacks. V1 entity scripts with `init()`/`tick()`/`update()` but no `#version 2` are **silently disabled** in MP — no error, no warning, just missing features (vehicle physics, doors, sirens, lights, etc.). Originally 79 across 10 mods, expanded to 81 across 11 mods; all 81 converted (**100% complete** as of 2026-03-21). (Issue #68)
 41. `#version 2` can appear on ANY line in a script — the preprocessor scans the whole file. Do NOT enforce line-1 placement. However, ensure LF-only line endings in Lua scripts — CRLF can cause compile errors with the preprocessor.
 42. **Shared `players[p]` on host causes double-processing.** In `server.tick`, `PlayersAdded` creates `players[p] = createPlayerData()`. In `client.tick`, the guard `if not players[p]` skips creation on the HOST (data already exists from server). Both contexts then share the SAME `data` object. If both `server.tickPlayer` and `client.tickPlayer` modify the same field — arrays (projectile tables) OR scalars (ammo, timers, cooldowns, recoil) — the host gets double-processed values (2x speed, 2x drain). Remote clients get nothing (server-only data never reaches their `data`). **Fix:** Use separate fields (`data.bulletsInAir` vs `data.clientTracers`) or gate client writes with `IsPlayerLocal(p)`. (Issues #69, #70, #72 — 38+ mods affected)
 43. `options.lua` needs independent `#version 2` + v2 callbacks (`client.init()`, `client.draw()`) — same silent-disable as entity scripts (Issue #68). Converting only `main.lua` does NOT fix options.lua. **All 9 converted (100% complete** as of 2026-03-20). (Issue #71)
@@ -231,6 +255,7 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 11. Use `ClientCall(0, ...)` for world-visible events (sounds, particles at a position). Use `ClientCall(p, ...)` only for personal feedback (camera shake, HUD sync).
 12. Use `GetEventCount("playerdied")`/`GetEvent()` for death detection — do NOT poll `GetPlayerHealth()` every tick.
 13. Clean up per-player state in `PlayersRemoved()` — missing cleanup causes state leaks (wrong settings for new players inheriting old IDs).
+14. `InputPressed(variable, p)` with a **variable** key name bypasses RAW-KEY-PLAYER lint detection. After lint reports 0 findings, manually grep for `InputPressed/InputDown/InputReleased` where the first arg is NOT a string literal — these are invisible to automated checks. Same fix: move to client with `IsPlayerLocal(p)` + ServerCall. (Issue #73)
 
 ## Do NOT Copy Preview Images Into Mod Folders
 
@@ -331,7 +356,7 @@ The tools automatically tell you which docs to read:
 | `docs/AUDIT_REPORT.md` | Generated feature matrix — which mods have/lack each feature. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` | Generated |
 | `docs/WHAT_WORKS.md` | **Proven fixes and patterns. Check BEFORE attempting any fix.** | **HIGHEST** |
 | `docs/WHAT_DOESNT_WORK.md` | **Failed approaches — never repeat these. Check BEFORE attempting any fix.** | **HIGHEST** |
-| `ISSUES_AND_FIXES.md` | 53 documented bugs (#20-#72) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
+| `ISSUES_AND_FIXES.md` | 54 documented bugs (#20-#73) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
 | `MASTER_MOD_LIST.md` | All patched mods by batch with workshop IDs. Update after converting new mods. | Project |
 | `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` | Full v2 API (550+ functions). For exact function signatures. | Reference |
 

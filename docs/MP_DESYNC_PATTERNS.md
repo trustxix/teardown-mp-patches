@@ -2,7 +2,7 @@
 
 > Created 2026-03-18 during MP Desync Fix Sprint. These patterns cause desync, lag, or silent failures in multiplayer.
 >
-> **Status (2026-03-21):** 7 root causes documented. RC1-6 resolved across 112 mods (mod set changed 2026-03-21: user removed some, installed ~34 new from workshop backlog). RC7 (host double-processing of shared players[p]) — MEGAGUN + M2A1_Flamethrower fixed (Issues #69-70). 10 framework mods fixed for silent gunfire (Issue #58 batch 2). PlaySound reclassified: works on server, auto-syncs (see RC4 correction below).
+> **Status (2026-03-21):** 7 root causes documented. RC1-6 resolved across 102 mods (mod set changed 2026-03-21: 29 removed, 19 added — now 102 installed). RC7 (host double-processing of shared players[p]) — MEGAGUN + M2A1_Flamethrower fixed (Issues #69-70). 10 framework mods fixed for silent gunfire (Issue #58 batch 2). PlaySound reclassified: works on server, auto-syncs (see RC4 correction below).
 
 ## Root Cause #1: Client-Side Projectile Physics for Remote Players
 

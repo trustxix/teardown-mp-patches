@@ -1,0 +1,16 @@
+TEST REPORT: Lightsaber
+======================================================
+Generated: 2026-03-21 09:41:56
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 5 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + MakeHole() + QueryShot()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

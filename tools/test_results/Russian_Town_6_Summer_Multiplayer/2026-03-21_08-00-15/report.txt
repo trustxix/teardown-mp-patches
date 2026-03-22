@@ -1,0 +1,17 @@
+TEST REPORT: Russian_Town_6_Summer_Multiplayer
+======================================================
+Generated: 2026-03-21 08:00:15
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      FAIL
+    - Shoot() called in client function client.tick — must be on server
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

@@ -1,0 +1,16 @@
+TEST REPORT: Toyota_Supra_MP
+======================================================
+Generated: 2026-03-21 07:54:31
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 8 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

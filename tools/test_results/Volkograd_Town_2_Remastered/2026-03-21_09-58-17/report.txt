@@ -1,0 +1,19 @@
+TEST REPORT: Volkograd_Town_2_Remastered
+======================================================
+Generated: 2026-03-21 09:58:17
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 3/3 assets missing
+    - Asset NOT found: katyusha.ogg
+    - Asset NOT found: fortunate_son.ogg
+    - Asset NOT found: soviet_anthem.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

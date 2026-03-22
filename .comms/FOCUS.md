@@ -1,51 +1,53 @@
 # Current Team Focus
 
-## Focus: Lint Cleanup — 38 Findings Across 11 New/Deferred Mods
-**Set by:** QA Lead
+## Focus: Workshop Sync Complete — Triage & Patch New Mods
+**Set by:** User (via main terminal)
 **Date:** 2026-03-21
 
-### Background
-Previous session left 125 mods with 0 lint findings. Since then, 6 new workshop mods appeared + 5 deferred/duplicate mods still installed = 11 mods with 38 tier-1 findings. **No patches were lost** — all 11 are new or previously-known deferred mods. Current installed count: 112.
+### What Happened
+Workshop sync performed by user: 29 unsubscribed mods removed, 19 newly subscribed mods copied in. Mod count: 112 → 101. All local mods now 1:1 match workshop subscriptions.
 
-### The 38 Findings Breakdown
-- **15 MISSING-VERSION2** in framework/library files (UMF, TDSU, mplib, LnL) — FALSE POSITIVES, need @lint-ok-file
-- **10 RAW-KEY-PLAYER** — real bugs in 4 mods (Light_Saber, Portal_Gun_MP, Thruster_Tool_Multiplayer, WIP_GYM)
-- **5 MOUSEDX** — real bugs in Light_Saber (main.lua + backup copy)
-- **4 DRAW-NOT-CLIENT** — real bugs in 2 mods (SVERLOVSK_TOWN_2, WIP_GYM backup files)
-- **4 MISSING-VERSION2** in non-framework files (Light_Saber backup, WIP_GYM backup)
+### Current State
+- **101 mods** installed
+- **173 tier-1 hard errors** — all from newly added unpatched mods
+- **0 errors** on previously patched mods
+- **10/53 gun mods** need AimInfo
+- **2/52 tool mods** need AmmoPickup
 
-### Batch Plan
+### New Mods Added (19 — need triage)
+| Folder Name | Workshop ID | Type | Notes |
+|-------------|-------------|------|-------|
+| Voxel_Plaza | 2430961153 | Map | |
+| GTAV_Map | 2603154222 | Map | |
+| Volkograd_Town_2_Remastered | 2984855900 | Map | |
+| Volkotomsk_Town | 3024970462 | Map | |
+| Twin_Towers | 3340357504 | Map | |
+| Chebyrmansk_Town_MP | 3622439581 | Map | [MP] — may be v2 |
+| Boeing_737_Full_MP | 3622995276 | Vehicle | [MP] — may be v2 |
+| Russian_Town_5_Winter_MP | 3623099610 | Map | May be v2 |
+| Hide_Gamertags_MP | 3624164337 | Utility | May be v2 |
+| Fire_Fighter_MP | 3628141333 | Tool | version=2 in info.txt |
+| DAM_MP_Optimized | 3634551685 | Map | MP Optimized |
+| Performance_Mod | 3635399720 | Utility | May have no scripts |
+| Rocket | 3656888075 | Tool | |
+| SCP-3008 | 3661347086 | Map | |
+| Armour_Framework_MP | 3662000095 | Vehicle | **173 lint errors** — biggest job |
+| de_nuke_MP | 3669825346 | Map | [MP] |
+| Russian_Town_3_4_MP | 3681169788 | Map | |
+| Russian_Town_4_MP | 3685769925 | Map | |
+| Russian_Town_5_MP | 3686055038 | Map | |
 
-**Batch 1: Suppress framework false positives (3 mods)**
-- Flying_Planes: @lint-ok-file on TDSU/umf.lua, TDSU/util_tool.lua
-- GLARE: @lint-ok-file on libs/LnL.lua
-- Robot_Vehicles: @lint-ok-file on custom_robot/scripts/umf.lua, zombieMod/scripts/zombieController.lua
-Assigned: qa_lead (trivial annotations)
+### Mods Removed (29)
+AVF_Vehicles, Acid_Gun, Active_Volatile_Aviation, Adjustable_Fire, Advanced_Tornado, Airstrike_Arsenal, Bikes_Ramps_&_Ragdolls, Control, Dumb_Stupid_Fast_Cars, Dynamic_AT-AT_Map, EVF_International_Emergency_Vehicles, Final_Flash, Flying_Planes, Futuristic_Vehicle_pack, Geardown, Hurricanes_and_Blizzards, Kooshing's_Dynamic_Aircraft_Mod, Lava_Gun, Lightning_Gun, M249, Magic_Bag, Micro_Metropolis, Miniature_World, RPM_Playermodels, STAR_WARS_AI_PACK, SW's_ADVANCED_GORE_MOD_2, Steve's_NPCS, Synthetic_Swarm, WIP_GYM_Ragdoll_Framework_MP
 
-**Batch 2: More suppressions (3 mods)**
-- Synthetic_Swarm: @lint-ok-file on scripts/umf.lua
-- Thermite_Cannon: @lint-ok-file on umf/extension/tool_loader.lua
-- MP_Hide_Multiplayer_Names: @lint-ok-file on 6 mplib/*.lua files
-Assigned: qa_lead (trivial annotations)
+### Priority
+1. **Triage new mods** — which are already v2? which need conversion? which are content-only?
+2. **Fix Armour_Framework_MP** — 173 tier-1 errors
+3. **Patch remaining tools** — Rocket, Fire_Fighter_MP
+4. **Maps** — likely minimal work (no tool scripts)
 
-**Batch 3: Cleanup backup files + entity fix (3 mods)**
-- WIP_GYM_Ragdoll_Framework_MP: Delete backup .lua files (8 gore + 3 main versions)
-- Light_Saber: Delete main - Copy.lua + Preview.jpg
-- SVERLOVSK_TOWN_2_Multiplayer: Fix tv.lua draw()→client.draw()
-Assigned: qa_lead (cleanup + trivial fix)
-
-**Batch 4: Real bug fixes — NEEDS USER APPROVAL**
-- Light_Saber: Fix 5 RAW-KEY-PLAYER + 3 MOUSEDX in main.lua
-- Portal_Gun_MP: Fix 1 RAW-KEY-PLAYER
-- Thruster_Tool_Multiplayer: Fix 2 RAW-KEY-PLAYER
-Assigned: api_surgeon (code changes)
-
-### New Mod Decisions
-| Mod | Workshop ID | Lines | Decision |
-|-----|-------------|-------|----------|
-| Flying_Planes | 2423986361 | 24,565 | DEFER — TDSU framework, vehicle/map |
-| Light_Saber | 3686903220 | 3,517 | PATCH — tool mod, fixable bugs |
-| MP_Hide_Multiplayer_Names | 3684710351 | 5,688 | SUPPRESS — mplib FPs, mod works |
-| Robot_Vehicles | 2673451391 | 20,805 | DEFER — UMF, vehicles |
-| SVERLOVSK_TOWN_2_Multiplayer | 3684105073 | 1,903 | FIX — map, 1 entity script |
-| WIP_GYM_Ragdoll_Framework_MP | 3681634144 | 5,802 | CLEANUP — backup files, then assess |
+### Key Reminders
+- Follow BASE_GAME_MP_PATTERNS for ALL conversions
+- Read WHAT_WORKS and WHAT_DOESNT_WORK before fixing anything
+- Follow Idle Protocol when queue empties
+- Max 3 mods per batch

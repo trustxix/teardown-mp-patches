@@ -1,0 +1,16 @@
+TEST REPORT: FPV_Drone_Tool
+======================================================
+Generated: 2026-03-21 09:57:49
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 11 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

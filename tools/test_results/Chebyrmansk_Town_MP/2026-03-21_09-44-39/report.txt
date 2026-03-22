@@ -1,0 +1,34 @@
+TEST REPORT: Chebyrmansk_Town_MP
+======================================================
+Generated: 2026-03-21 09:44:39
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 18/29 assets missing
+    - Asset NOT found: Sounds/Radio_Interact.ogg
+    - Asset NOT found: main/snd/blaster2.ogg
+    - Asset NOT found: main/snd/atst.ogg
+    - Asset NOT found: snd/roar.ogg
+    - Asset NOT found: snd/bite.ogg
+    - Asset NOT found: snd/bite2.ogg
+    - Asset NOT found: snd/atom.ogg
+    - Asset NOT found: snd/DeathBeam.ogg
+    - Asset NOT found: snd/jet.ogg
+    - Asset NOT found: snd/step.ogg
+    - Asset NOT found: snd/stepbass.ogg
+    - Asset NOT found: snd/gdeath2.ogg
+    - Asset NOT found: textures/tree/trunk-pine.vox
+    - Asset NOT found: sounds/radios/nebo_kazhe_idy_syda.ogg
+    - Asset NOT found: Sounds/Radio_Volvo.ogg
+    - Asset NOT found: textures/tree/trunk-oak.vox
+    - Asset NOT found: textures/tree/leaf.vox
+    - Asset NOT found: Sounds/Siren2.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

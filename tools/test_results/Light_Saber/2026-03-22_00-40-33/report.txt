@@ -1,0 +1,16 @@
+TEST REPORT: Light_Saber
+======================================================
+Generated: 2026-03-22 00:40:33
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 34 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

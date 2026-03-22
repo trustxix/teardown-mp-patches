@@ -107,7 +107,10 @@ class TestReport:
             elif fc_passes:
                 lines.append(f"  Firing chain:      PASS — {fc_passes[0].detail}")
             elif r.firing_chain:
+                fc_warns = [f for f in r.firing_chain if f.status == "WARN"]
                 lines.append(f"  Firing chain:      WARN")
+                for f in fc_warns:
+                    lines.append(f"    - {f.detail}")
             else:
                 lines.append("  Firing chain:      N/A — not a weapon mod")
 

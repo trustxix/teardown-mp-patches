@@ -1,0 +1,42 @@
+TEST REPORT: Vida_Hospital
+======================================================
+Generated: 2026-03-21 06:42:48
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 26/98 assets missing
+    - Asset NOT found: sound/alarm01.ogg
+    - Asset NOT found: sound/alarm02.ogg
+    - Asset NOT found: sound/Off01.ogg
+    - Asset NOT found: sound/Off02.ogg
+    - Asset NOT found: sound/On01.ogg
+    - Asset NOT found: sound/On02.ogg
+    - Asset NOT found: sound/chime01.ogg
+    - Asset NOT found: sound/chime02.ogg
+    - Asset NOT found: sound/chime03.ogg
+    - Asset NOT found: sound/chime04.ogg
+    - Asset NOT found: sound/chime05.ogg
+    - Asset NOT found: sound/honk01.ogg
+    - Asset NOT found: sound/honk02.ogg
+    - Asset NOT found: sound/honk03.ogg
+    - Asset NOT found: sound/honk04.ogg
+    - Asset NOT found: sound/sirenP01.ogg
+    - Asset NOT found: sound/sirenP02.ogg
+    - Asset NOT found: sound/sirenP03.ogg
+    - Asset NOT found: sound/sirenP04.ogg
+    - Asset NOT found: sound/sirenS01.ogg
+    - Asset NOT found: sound/sirenS02.ogg
+    - Asset NOT found: sound/sirenS03.ogg
+    - Asset NOT found: sound/sirenS04.ogg
+    - Asset NOT found: sound/sirenT01.ogg
+    - Asset NOT found: sound/sirenT02.ogg
+    - Asset NOT found: sound/sirenQ01.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

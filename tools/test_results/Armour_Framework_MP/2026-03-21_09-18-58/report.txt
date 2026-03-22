@@ -1,0 +1,18 @@
+TEST REPORT: Armour_Framework_MP
+======================================================
+Generated: 2026-03-21 09:18:58
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 7 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      FAIL
+    - SpawnParticle() called in damage function server.update — effects must be on client (other players won't see/hear them)
+    - PointLight() called in damage function server.update — effects must be on client (other players won't see/hear them)
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

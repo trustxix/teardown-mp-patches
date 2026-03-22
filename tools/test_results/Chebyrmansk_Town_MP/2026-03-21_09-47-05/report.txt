@@ -1,0 +1,23 @@
+TEST REPORT: Chebyrmansk_Town_MP
+======================================================
+Generated: 2026-03-21 09:47:05
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 7/16 assets missing
+    - Asset NOT found: textures/tree/trunk-pine.vox
+    - Asset NOT found: sounds/radios/nebo_kazhe_idy_syda.ogg
+    - Asset NOT found: Sounds/Radio_Volvo.ogg
+    - Asset NOT found: Sounds/Radio_Interact.ogg
+    - Asset NOT found: textures/tree/trunk-oak.vox
+    - Asset NOT found: textures/tree/leaf.vox
+    - Asset NOT found: Sounds/Siren2.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

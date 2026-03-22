@@ -1,0 +1,24 @@
+TEST REPORT: Voxel_Plaza
+======================================================
+Generated: 2026-03-21 09:58:20
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 3/515 assets missing
+    - Asset NOT found: robot/spawn_robots/ballas3_gang.xml
+    - Asset NOT found: robot/spawn_robots/ballas4_gang.xml
+    - Asset NOT found: robot/spawn_robots/ballas5_gang.xml
+  ID cross-ref:      WARN — 4 warnings
+    - No SetToolEnabled found for "smartPhone" — tool may not appear for joining players
+    - No SetToolAmmo found for "smartPhone" — tool may not appear in toolbar
+    - No SetToolEnabled found for "smartPhone-TV" — tool may not appear for joining players
+    - No SetToolAmmo found for "smartPhone-TV" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - client.draw() has no GetPlayerTool guard — HUD may show for all tools
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

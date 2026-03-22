@@ -36,7 +36,7 @@ You are `maintainer`. You work continuously without waiting for user input.
 10. Run `python -m tools.lint --mod "ModName"` after editing any mod
 11. `complete_task(id, summary)` when done
 12. `broadcast("maintainer", "info", "low", "FINISHED: [task id] [summary]")`
-13. If no tasks: `get_lint_summary()` / `get_audit_summary()` to find work
+13. **If no tasks/inbox → follow Idle Protocol in CLAUDE.md.** Report idle, run diagnostics (READ-ONLY), create tasks from findings, then HALT. Do NOT self-assign mod edits or "improvements."
 14. GOTO 1
 
 ## Task Priority
@@ -45,7 +45,7 @@ You are `maintainer`. You work continuously without waiting for user input.
 2. **Critical/high tasks** — bugs, broken mods
 3. **Medium tasks** — lint fixes, polish
 4. **Low tasks** — docs updates, cleanup
-5. **Self-generated** — from lint/audit findings
+5. **If nothing above → Idle Protocol** — report idle, run diagnostics, create tasks from findings, HALT. Never self-assign edits.
 
 ## What You Own
 

@@ -424,14 +424,20 @@ Three lint rules now enforce base game patterns. Run `python -m tools.lint` to c
 | `TOOLANIM-LOCAL-ONLY` | tickToolAnimator gated behind IsPlayerLocal | No — requires restructuring |
 | `MISSING-PLAYERS-REMOVED` | PlayersAdded without matching PlayersRemoved cleanup | **Yes** — `python -m tools.fix --only missing-players-removed` |
 
-### Current Violations (as of 2026-03-21)
+### Current Violations (updated 2026-03-22)
 
-| Pattern | Mods Affected | Findings | Priority |
-|---------|--------------|----------|----------|
-| CLIENTCALL-SOUND | 8 mods | 30 | Medium — works but adds unnecessary RPC overhead |
-| MISSING-PLAYERS-REMOVED | 10 mods | 11 | High — causes state leaks on player disconnect |
-| TOOLANIM-LOCAL-ONLY | 0 mods | 0 | N/A — all mods compliant |
+| Pattern | Mods Affected | Findings | Status |
+|---------|--------------|----------|--------|
+| CLIENTCALL-SOUND | 0 mods | 0 | **Complete** — all 8 mods fixed (CnC, FPV, Magnetizer_V2, Hurricanes_and_Blizzards, Koenigsegg_Agera_MP, Multiplayer_Spawnable_Pack, Service_Vehicles_MP, Toyota_Supra_MP) |
+| MISSING-PLAYERS-REMOVED | 1 mod | 1 | **Complete** — only __test_harness.disabled remains (disabled mod, ignorable) |
+| TOOLANIM-LOCAL-ONLY | 0 mods | 0 | **Complete** |
 
-**Mods needing CLIENTCALL-SOUND fixes:** CnC_Weather_Machine, FPV_Drone_Tool, Hurricanes_and_Blizzards, Koenigsegg_Agera_MP, Magnetizer_V2, Multiplayer_Spawnable_Pack, Service_Vehicles_MP, Toyota_Supra_MP
+**All base game compliance rules fully resolved across 102 installed mods** (was 112 before 2026-03-21 workshop sync — 29 removed, 19 added).
 
-**Mods needing MISSING-PLAYERS-REMOVED fixes:** AC130_Airstrike_MP, Advanced_Tornado, Bomb_Attack, Bunker_Buster_MP, CnC_Weather_Machine, Drivable_Plane, Molotov_Cocktail, Object_Possession, Predator_Missile_MP, Thruster_Tool_Multiplayer
+**Cumulative progress:**
+- CLIENTCALL-SOUND: 8→0 remaining (100% complete; some fixed mods since removed: Hurricanes_and_Blizzards, Koenigsegg_Agera_MP)
+- PlayersRemoved: 11→1 remaining (test harness only, ignorable)
+- Shoot() conversions: 0 remaining (100% complete)
+- AimInfo conversions: 0 remaining (100% complete)
+- Deep analysis: 96 PASS, 6 WARN, 0 FAIL across 102 mods (WARN: Fire_Fighter_MP, Robot_Vehicles, Russian_Town_5_MP, Russian_Town_5_Winter_MP, Volkotomsk_Town, Voxel_Plaza)
+- Tier-1 lint errors: 0 across 102 mods

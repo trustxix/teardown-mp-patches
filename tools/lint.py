@@ -507,8 +507,10 @@ def check_missing_options_guard(source: str) -> list[dict]:
             continue
         # Check for function-level early return guard: walk backwards from
         # the usetool line to the enclosing function declaration, looking
-        # for any ``optionsOpen ... return`` line in between.  This catches
+        # for any ``optionsOpen ... return`` block in between.  This catches
         # guards placed anywhere before the usetool call in the same function.
+        # Supports both single-line (``if optionsOpen then return end``) and
+        # multi-line blocks (``if optionsOpen then\n...\nreturn\nend``).
         func_guarded = False
         for scan in range(lineno - 2, max(lineno - 200, -1), -1):
             if scan < 0:
@@ -517,6 +519,17 @@ def check_missing_options_guard(source: str) -> list[dict]:
             if _OPTIONS_OPEN_RE.search(scan_line) and "return" in scan_line:
                 func_guarded = True
                 break
+            # Multi-line: optionsOpen on this line, return within next 10 lines
+            if _OPTIONS_OPEN_RE.search(scan_line) and "then" in scan_line:
+                for fwd in range(scan + 1, min(scan + 11, len(lines))):
+                    fwd_line = _strip_comment(lines[fwd])
+                    if fwd_line.strip() == "return":
+                        func_guarded = True
+                        break
+                    if _FUNC_DECL_RE.match(fwd_line):
+                        break
+                if func_guarded:
+                    break
             if _FUNC_DECL_RE.match(scan_line):
                 break
         if not func_guarded:

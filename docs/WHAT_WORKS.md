@@ -130,6 +130,23 @@ if not toolActive then return end
 
 ---
 
+## Fix: Entity script v2 conversion — minimal approach for map/vehicle scripts (Issue #68)
+**Problem:** V1 entity scripts (attached to XML entities via `tags="script=foo.lua"`) are silently disabled in MP — no error, no warning, just missing features (vehicle physics, doors, sirens, lights).
+**Root cause:** Entity scripts need independent `#version 2` + v2 callbacks. Converting only `main.lua` does NOT fix entity scripts.
+**Fix pattern:**
+1. Add `#version 2` at top of file
+2. Rename `init()` → `server.init()`
+3. Rename `tick()` → `server.tick(dt)`
+4. Rename `update(dt)` → `server.update(dt)` (keep fixed 60Hz for visual effects)
+5. Add empty `function client.init() end` at bottom (v2 compliance)
+6. For vehicle input: find the driver via `GetAllPlayers()` + `GetPlayerVehicle(p)` loop, pass player param to `InputDown("action", driver)`
+
+**Cosmetic tradeoffs:** `SpawnParticle()`/`PointLight()` in server callbacks only render for the host. Core gameplay (Explosion, SpawnFire, MakeHole, DriveVehicle, PlaySound) auto-syncs to all clients. Accept cosmetic particle loss for minimal-effort conversions.
+**Rule:** Entity scripts with fundamental MP issues (no player iteration, host-only input, shared mutable state) should get `@deepcheck-ok ENTITY` annotations and be deferred to a future vehicle-entity-refactor pass.
+**Applied to:** 81 entity scripts across 11 mods (100% complete as of 2026-03-21). SVERLOVSK EVF.lua and Immersive_Tank.lua were the final 2.
+
+---
+
 ## Base Game Pattern: PlaySound() on server auto-syncs to all clients
 **Source:** Official Teardown snowball.lua, tank.lua, mpcampaign/tools.lua
 **Pattern:** The base game calls `PlaySound(snd, pos)` directly on the server. The engine automatically replicates the sound to all clients with positional audio.

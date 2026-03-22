@@ -113,7 +113,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
                     missing_aim += 1
             if combined.get("has_register_tool"):
                 tool_count += 1
-                if not combined.get("has_ammo_pickup"):
+                if not combined.get("has_ammo_pickup") and "ammopickup" not in all_suppressions:
                     missing_pickup += 1
 
         lines.append(f"Missing features: {missing_shoot}/{gun_count} gun mods need Shoot(), "

@@ -1,0 +1,16 @@
+TEST REPORT: PPAN_Vehicle_Pack
+======================================================
+Generated: 2026-03-22 00:39:12
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 1 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

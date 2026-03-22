@@ -1,0 +1,23 @@
+TEST REPORT: DAM_MP_Optimized
+======================================================
+Generated: 2026-03-21 09:18:59
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 7/56 assets missing
+    - Asset NOT found: Dynamic-Aircraft/Snd/aircraft-sfx/stress.ogg
+    - Asset NOT found: Dynamic-Aircraft/Snd/hitsound.ogg
+    - Asset NOT found: main/aircraft/Sounds/splash.ogg
+    - Asset NOT found: Dynamic-Aircraft/Ragdolls/AI/bailouts/soldierUS.xml
+    - Asset NOT found: Dynamic-Aircraft/Ragdolls/AI/bailouts/pilot_player_eject.xml
+    - Asset NOT found: Dynamic-Aircraft/Ragdolls/AI/bailouts/pilot_player.xml
+    - Asset NOT found: main/aircraft/Sounds/prop_sound_1.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

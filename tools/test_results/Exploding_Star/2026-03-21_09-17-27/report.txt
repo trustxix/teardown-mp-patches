@@ -1,0 +1,16 @@
+TEST REPORT: Exploding_Star
+======================================================
+Generated: 2026-03-21 09:17:27
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 3 assets found
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + Explosion() + MakeHole() + QueryShot()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

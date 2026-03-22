@@ -1,0 +1,16 @@
+TEST REPORT: The_World_Trade_Center
+======================================================
+Generated: 2026-03-21 07:55:43
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

@@ -1,0 +1,31 @@
+TEST REPORT: Voxel_Plaza
+======================================================
+Generated: 2026-03-21 09:41:06
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 6/541 assets missing
+    - Asset NOT found: spawn/heist/heist_8_NPCs.xml
+    - Asset NOT found: robot/spawn_robots/ballas3_gang.xml
+    - Asset NOT found: robot/spawn_robots/ballas4_gang.xml
+    - Asset NOT found: robot/spawn_robots/ballas5_gang.xml
+    - Asset NOT found: spawn/train/train_caboose_Only.xml
+    - Asset NOT found: spawn/train/train_cargo_Only.xml
+  ID cross-ref:      WARN — 4 warnings
+    - No SetToolEnabled found for "smartPhone" — tool may not appear for joining players
+    - No SetToolAmmo found for "smartPhone" — tool may not appear in toolbar
+    - No SetToolEnabled found for "smartPhone-TV" — tool may not appear for joining players
+    - No SetToolAmmo found for "smartPhone-TV" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      FAIL
+    - SpawnParticle() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+    - PointLight() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+    - SpawnParticle() called in damage function server.update — effects must be on client (other players won't see/hear them)
+    - PointLight() called in damage function server.update — effects must be on client (other players won't see/hear them)
+  HUD validation:    WARN
+    - client.draw() has no GetPlayerTool guard — HUD may show for all tools
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

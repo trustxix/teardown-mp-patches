@@ -1,0 +1,16 @@
+TEST REPORT: Molotov_Cocktail
+======================================================
+Generated: 2026-03-21 09:43:19
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 2 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

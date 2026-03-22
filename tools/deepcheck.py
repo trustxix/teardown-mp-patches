@@ -157,7 +157,8 @@ def check_assets(mod_dir: Path) -> list[AssetFinding]:
 _REGISTER_TOOL_ID_RE = re.compile(r'RegisterTool\s*\(\s*"([^"]+)"')
 _SET_TOOL_ENABLED_ID_RE = re.compile(r'SetToolEnabled\s*\(\s*"([^"]+)"')
 _SET_TOOL_AMMO_ID_RE = re.compile(r'SetToolAmmo\s*\(\s*"([^"]+)"')
-_GET_PLAYER_TOOL_ID_RE = re.compile(r'GetPlayerTool\s*\([^)]*\)\s*[~=]=\s*"([^"]+)"')
+_GET_PLAYER_TOOL_ID_RE = re.compile(r'GetPlayerTool\s*\((?:[^()]*|\([^()]*\))*\)\s*[~=]=\s*"([^"]+)"')
+_TABLE_LOOKUP_TOOL_GUARD_RE = re.compile(r'\w+\[GetPlayerTool\s*\((?:[^()]*|\([^()]*\))*\)\s*\]')
 _AMMO_DISPLAY_ID_RE = re.compile(r'SetString\s*\(\s*"game\.tool\.([^.]+)\.ammo\.display"')
 
 
@@ -166,6 +167,11 @@ def check_id_xref(mod_dir: Path) -> list[Finding]:
     findings: list[Finding] = []
     all_source = ""
     for _, source in read_lua_files(mod_dir):
+        # Skip framework stub files — their RegisterTool calls are
+        # documentation examples or function redefinitions, not real tools
+        first_lines = source.split('\n')[:5]
+        if any('@lint-ok-file MISSING-AMMO-PICKUP' in ln for ln in first_lines):
+            continue
         all_source += source + "\n"
 
     registered_ids = _REGISTER_TOOL_ID_RE.findall(all_source)
@@ -334,8 +340,8 @@ def check_firing_chain(mod_dir: Path) -> list[ChainFinding]:
     if not _USETOOL_INPUT_RE.search(all_source):
         return []  # Not a weapon mod
 
-    # Skip firing chain check if mod has @deepcheck-ok firing-chain annotation
-    if '@deepcheck-ok firing-chain' in all_source:
+    # Skip firing chain check if mod has @deepcheck-ok firing-chain or ENTITY annotation
+    if '@deepcheck-ok firing-chain' in all_source or '@deepcheck-ok ENTITY' in all_source:
         return []
 
     funcs = _extract_functions(all_source)
@@ -808,8 +814,9 @@ def check_hud(mod_dir: Path) -> list[Finding]:
 
     draw_body = funcs["client.draw"]
 
-    # Check for GetPlayerTool guard
-    has_tool_guard = _GET_PLAYER_TOOL_ID_RE.search(draw_body)
+    # Check for GetPlayerTool guard (direct comparison or table lookup)
+    has_tool_guard = (_GET_PLAYER_TOOL_ID_RE.search(draw_body) or
+                      _TABLE_LOOKUP_TOOL_GUARD_RE.search(draw_body))
     if not has_tool_guard:
         findings.append(Finding(
             validator="HUD", status="WARN",

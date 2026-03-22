@@ -1,0 +1,17 @@
+TEST REPORT: DAM_MP_Optimized
+======================================================
+Generated: 2026-03-21 09:39:14
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 1/4 assets missing
+    - Asset NOT found: main/aircraft/Sounds/prop_sound_1.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

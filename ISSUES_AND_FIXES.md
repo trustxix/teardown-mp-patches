@@ -882,6 +882,8 @@ Earlier listed as "NOT affected" — re-investigation found all 10 used `ClientC
 
 **Date fixed:** 2026-03-19
 
+**Auto-fix available (2026-03-21):** `python -m tools.fix --only missing-mod-prefix` adds `MOD/` prefix to `LoadSound`/`LoadLoop`/`LoadSprite`/`LoadImage`/`UiImage` paths missing it. Use `--dry-run` to preview. 382 findings fixable across all mods.
+
 ---
 
 ## Issue #64: Orphaned `end` from incomplete raw-key block removal
@@ -976,9 +978,10 @@ end
 
 **Detection:** New lint rule V1-ENTITY-SCRIPT (T2-20) scans for files with global-scope v1 callbacks but no `#version 2` header. Severity: WARN (quality/missing functionality, not crash risk).
 
-**Scale:** 81 findings across 10 mods:
+**Scale:** 81+ findings across 11 mods:
 - Armored_Vehicles_MP, Armour_Framework_MP, DAM_Helis, GYM_Ragdoll, Gwel_Mall
 - Haul_Truck_MP, Legacy_Tank_MP, Multiplayer_Spawnable_Pack, PPAN_Vehicle_Pack, Vehicle_Pack_Remastered_MP
+- SVERLOVSK_TOWN_2_Multiplayer (EVF.lua + Immersive_Tank.lua — discovered 2026-03-21)
 
 **Fix pattern:** Convert each entity script to v2 server/client pattern:
 ```lua
@@ -1007,9 +1010,10 @@ end
 
 **RULE: Entity scripts attached to XML entities MUST have `#version 2` and use v2 callbacks (`server.init()`/`client.tick()`/etc.). Without it, they are silently disabled in multiplayer — no error, no warning, just missing functionality.**
 
-**Progress:** Originally 79 scripts across 10 mods. **ALL 79 CONVERTED (100%)** as of 2026-03-20. Key conversion sessions:
+**Progress:** Originally 79 scripts across 10 mods, expanded to 81 across 11 mods (SVERLOVSK added 2026-03-21). **ALL 81 CONVERTED (100%)** as of 2026-03-21. Key conversion sessions:
 - 2026-03-19: 65 scripts converted/suppressed across Service_Vehicles_MP, Toyota_Supra_MP, Vehicle_Pack_Remastered_MP, Legacy_Tank_MP, Gwel_Mall, PPAN_Vehicle_Pack, others
 - 2026-03-20: 14 more — Legacy_Tank_MP/tank.lua (full v1→v2 split with shared table sync), 7 DAM_Helis scripts (engineprops, ground, bigass_bomb, MultiEngine, Rocket, Bomb, Missile), DAM_Helis/GunnerAI.lua (T142, 1381-line AI gunner — final entity script), Gwel_Mall mission scripts, MrRandoms_Vehicles turret scripts, Armour_Framework_MP/tank.lua, Dumb_Stupid_Fast_Cars/recoil.lua, Multiplayer_Spawnable_Pack/bounce.lua x2 (V2-DEAD-CALLBACK: renamed init/tick/update → server.init/server.update + client.init for sound, converted player APIs for MP, added bounce cooldown)
+- 2026-03-21: 2 more — SVERLOVSK_TOWN_2_Multiplayer (EVF.lua vehicle door/siren script, Immersive_Tank.lua T-34 tank script)
 
 **Date discovered:** 2026-03-19
 

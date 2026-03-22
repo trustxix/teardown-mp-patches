@@ -1,0 +1,16 @@
+TEST REPORT: Twin_Towers
+======================================================
+Generated: 2026-03-22 06:31:08
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: PASS
+======================================================

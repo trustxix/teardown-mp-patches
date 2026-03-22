@@ -51,7 +51,7 @@ if not toolActive then return end
 ---
 
 ## Fix: Bunker Buster MP desync improvements (5 fixes, 2026-03-20)
-**Status: VERIFIED in single-player (2026-03-20). MP test on hold.**
+**Status: Needs MP desync audit — check for shared data double-processing (Issue #42/#72).**
 
 ### Fix 1: shared.spawnTargets cleanup
 **Problem:** Every strike appended to `shared.spawnTargets` but entries were never removed. Over a long session, the shared table grows unbounded → engine syncs larger payloads to all clients every frame → lag.
@@ -144,6 +144,21 @@ if not toolActive then return end
 **Cosmetic tradeoffs:** `SpawnParticle()`/`PointLight()` in server callbacks only render for the host. Core gameplay (Explosion, SpawnFire, MakeHole, DriveVehicle, PlaySound) auto-syncs to all clients. Accept cosmetic particle loss for minimal-effort conversions.
 **Rule:** Entity scripts with fundamental MP issues (no player iteration, host-only input, shared mutable state) should get `@deepcheck-ok ENTITY` annotations and be deferred to a future vehicle-entity-refactor pass.
 **Applied to:** 140 entity scripts across 18 mods (100% complete as of 2026-03-22). Original 81 across 11 mods (2026-03-21), plus 59 new scripts in 7 mods added during workshop sync: Volkograd_Town_2_Remastered (5), Volkotomsk_Town (7), Russian_Town_5_MP (13), Russian_Town_5_Winter_MP (1), Chebyrmansk_Town_MP (29), DAM_MP_Optimized (3), AndRe's_BMW_E36 (1). Voxel_Plaza has 184 additional v1 entity scripts identified but deferred (map features, low priority).
+
+---
+
+## Fix: Server/client timer split to prevent host double-processing (Hook_Shotgun, 2026-03-22)
+**Problem:** Timers (`shootTimer`, `hookCooldown`, `reloadTimer`) decremented in BOTH `server.tickPlayer` and `client.tickPlayer`. On the host, both contexts share the same `data` object via `players[p]`, so timers run at 2x speed — host shoots twice as fast, cooldowns expire in half time.
+**Root cause:** Issue #42/#72 — shared `players[p]` on host. The v2 server/client split means `server.tick` and `client.tick` both run on the host for every player.
+**Fix pattern:**
+1. Server owns gameplay timers: `shootTimer`, `reloadTimer`, `hookCooldown`, `magazine`, `reserveAmmo`
+2. Client uses SEPARATE visual-only fields: `clientShootTimer`, `clientReloadTimer`, `clientReloading`
+3. Server syncs state to client via `shared.*` tables (e.g., `shared.ammo[p]`, `shared.hookCooldowns[p]`)
+4. Client reads `shared` for HUD display, NEVER decrements server-owned fields
+5. Visual recoil impulse (`recoilVel += 0.6`) set in CLIENT shoot handler, not server
+6. Sound loaded in BOTH `server.init()` (for auto-sync PlaySound) AND `client.init()` (for client-only feedback)
+**Lint rule:** `DOUBLE-PROCESS-TIMER` now detects this pattern. Found in 12+ mods (21 findings).
+**Rule:** Every timer, cooldown, and ammo field must have a single owner (server OR client). If both contexts need it, server owns it and syncs via `shared.*`.
 
 ---
 

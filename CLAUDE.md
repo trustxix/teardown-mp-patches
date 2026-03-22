@@ -26,8 +26,11 @@ Use MCP tools: check_inbox(your_role) → process messages → get_task(your_rol
 5. **Event-driven death handling.** Use `GetEventCount("playerdied")`/`GetEvent()`, not per-tick health polling.
 6. **`ClientCall(0, ...)` for world events.** `ClientCall(p, ...)` only for personal feedback (camera shake, HUD).
 7. **`shared.*` for client-readable state.** Server writes, client reads. Zero RPC cost.
+8. **NEVER modify the same `data.*` field in both server and client.** On the host, both contexts share the SAME player data object. Timers decremented in both = 2x speed on host (desync). Split into server-owned fields (gameplay timers, ammo, cooldowns) and client-only fields (visual recoil, client tracers, HUD timers). Lint rule `DOUBLE-PROCESS-TIMER` catches this. (Issue #42/#72 — found in 12+ mods)
 
-When reviewing or writing mod code, check it against these 7 rules FIRST. Any violation is a bug to fix.
+When reviewing or writing mod code, check it against these 8 rules FIRST. Any violation is a bug to fix.
+
+**ZERO TOLERANCE: No single-player code patterns.** Every line of mod code must work in multiplayer. There is no "single-player mode" — even when only one player is in the game, the v2 server/client split is active. Code that works "in single-player" but desyncs in MP is broken code.
 
 ## Inter-Terminal Communication
 
@@ -203,7 +206,7 @@ Teardown loads mods from three locations. Local mods override workshop versions 
 9. Client handles: SpawnParticle, DrawLine, DrawSprite, PointLight, SetToolTransform, SetCameraTransform, ShakeCamera, SetCameraDof, DrawBodyOutline, all Ui* functions
 10. NEVER use raw keys with player param: `InputPressed("rmb", p)` FAILS SILENTLY. Use `InputPressed("rmb")` with `isLocal` check + ServerCall
 11. `GetPlayerAimInfo` has two forms: simple `GetPlayerAimInfo(p)` or extended `GetPlayerAimInfo(muzzlePos, maxDist, p)`. Use extended for weapons — NOT manual `GetPlayerEyeTransform` + `QueryRaycast`
-12. Use `Shoot(pos, dir, "bullet", damage, range, p, "toolId")` for guns — NOT `MakeHole` (MakeHole can't damage players). The `"toolId"` enables kill attribution in the kill feed.
+12. **ALWAYS use `Shoot(pos, dir, "bullet", damage, range, p, "toolId")` for ALL weapons.** Shoot() handles terrain destruction, player damage, kill attribution, bullet trace visuals, and auto-syncs to all clients — all in one call. NEVER use the old `QueryShot + ApplyPlayerDamage + MakeHole` chain — it misses penetration, visuals, sync, and is more code for worse results. MakeHole alone can't damage players. Lint rule `USE-SHOOT` catches the old pattern. (13+ mods still need conversion)
 13. Use `QueryShot(pos, dir, len, radius, p)` + `ApplyPlayerDamage(target, damage, "toolId", attacker)` for beam/melee weapons. Always guard with `if player ~= 0` — QueryShot can return `player=0` (= host) for non-player hits. `if player then` is WRONG (Lua 0 is truthy). See Issue #47.
 14. Add `SetToolAmmoPickupAmount("id", amount)` for ammo crate integration — without it, mplib can't spawn your tool in loot crates (see `docs/MPLIB_INTERNALS.md`)
 15. Entity handles: check `~= 0` not `> 0` (v2 client handles can be negative)
@@ -249,7 +252,7 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 3. `SetToolEnabled("toolid", true, p)` — string first, bool second, player third
 4. After `QueryShot()`, guard with `player ~= 0` — NOT `if player then` (Lua 0 is truthy, damages host)
 5. `ServerCall("server.fn", p, ...)` — ALWAYS pass player ID `p` explicitly as first param. Engine does NOT auto-inject it. (Issue #51)
-6. Do NOT modify the same `data.*` field in both `server.tickPlayer` and `client.tickPlayer` — host runs both and gets 2x processing. Use separate fields or gate client writes with `IsPlayerLocal(p)`. (Issue #72)
+6. **#1 DESYNC BUG: Do NOT modify the same `data.*` field in both `server.tickPlayer` and `client.tickPlayer`** — host runs both and gets 2x processing. Timers, cooldowns, ammo, reload state — ALL must be single-owner. Server owns gameplay state. Client owns visual state. Use `shared.*` to sync server state to client for HUD display. Lint rule `DOUBLE-PROCESS-TIMER` catches timer patterns but NOT all variants — always manually verify. Found in 12+ mods. (Issues #42, #72)
 7. ALWAYS run `python -m tools.lint --mod "ModName"` after writing any mod code
 8. `PlaySound()` on server auto-syncs — do NOT use ClientCall to play sounds. Just call PlaySound on server.
 9. `tickToolAnimator()` must be called for ALL players in `for p in Players()` — NOT just the local player. It handles FP/TP internally.
@@ -258,14 +261,26 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 12. Use `GetEventCount("playerdied")`/`GetEvent()` for death detection — do NOT poll `GetPlayerHealth()` every tick.
 13. Clean up per-player state in `PlayersRemoved()` — missing cleanup causes state leaks (wrong settings for new players inheriting old IDs).
 14. `InputPressed(variable, p)` with a **variable** key name bypasses RAW-KEY-PLAYER lint detection. After lint reports 0 findings, manually grep for `InputPressed/InputDown/InputReleased` where the first arg is NOT a string literal — these are invisible to automated checks. Same fix: move to client with `IsPlayerLocal(p)` + ServerCall. (Issue #73)
+15. **Timer/cooldown pattern:** Server owns `shootTimer`, `reloadTimer`, `hookCooldown`, `magazine`, `reserveAmmo`. Client uses SEPARATE fields: `clientShootTimer`, `clientReloadTimer`, `clientReloading`. Server syncs to client via `shared.*` tables. Client reads `shared` for HUD display. NEVER decrement the same timer in both server.tick and client.tick.
+16. **Sound loading:** Load sounds in BOTH `server.init()` AND `client.init()` if the server needs to call `PlaySound()` (auto-syncs). Client-only sounds (UI feedback) only need `client.init()`.
+17. **Visual recoil:** `recoilPos`, `recoilVel`, `recoilRot`, `recoilRotVel` are CLIENT-ONLY visual fields. Set the impulse (`recoilVel += 0.6`) in the CLIENT shoot handler, not on the server. The server should never touch visual spring physics.
+18. **ALWAYS use `Shoot()` for weapons** — NEVER `QueryShot + ApplyPlayerDamage + MakeHole`. `Shoot(pos, dir, "bullet", damage, range, p, "toolId")` handles everything: terrain, players, kill feed, bullet trace, MP sync. The old manual chain is more code for worse results. Lint rule `USE-SHOOT` catches this.
 
 ## Do NOT Copy Preview Images Into Mod Folders
 
 **NEVER copy preview.jpg/preview.png files from workshop originals into `Documents/Teardown/mods/`.** This crashed the game engine (strncpy buffer overflow during mod enumeration). The engine handles workshop previews through Steam — local copies are unnecessary and dangerous. (Issue #66)
 
-## Do NOT Use Agents/Subagents to Write ANY Code or Files
+## Do NOT Use Agents/Subagents
 
-**Subagents are READ-ONLY.** They may research, search, analyze, and read files. They must NEVER write, edit, create, or delete any file — mod code, tool code, docs, configs, or anything else. Subagents cause too many issues when writing. All writing must be done by the main terminal directly.
+**Do NOT dispatch subagents for ANY work in this project.** Subagents have repeatedly caused issues — wrong API patterns, single-player code, desync bugs, incorrect file edits. All work must be done by the main terminal directly. No exceptions. If the task is too large, break it into smaller pieces and do them sequentially.
+
+## Re-Read CLAUDE.md Before Every Write
+
+**Before writing ANY code — mod files, tool files, docs, configs — re-read the relevant sections of this file.** Specifically:
+- Before editing mod code: re-read "TOP PRIORITY: Match Base Game MP Patterns" (8 rules) and "Known Subagent Bugs" (18 rules)
+- Before editing tools: re-read "Developer Tools" section
+- Before creating tasks: re-read "Batch Pass System"
+- If in doubt about ANY pattern, re-read. Never write from memory — patterns evolve and memory drifts.
 
 ## Do NOT Modify Asset Files
 
@@ -322,6 +337,62 @@ If the user reports a crash or breakage after a batch, **revert that batch's cha
 
 Lint clean + deepcheck PASS does not guarantee the mod works in-game. Only in-game testing by the user is the final word. The team should never claim a mod is "done" based purely on tool output — it's **"done pending user test"** until the user confirms in-game.
 
+## Realistic Ballistics Framework (MANDATORY for all weapons)
+
+**Every weapon and tool mod MUST use the Realistic Ballistics Framework** (`lib/realistic_ballistics.lua`). No more inline damage code, no more per-mod MakeHole/QueryShot chains, no more copy-pasted falloff math.
+
+### What It Is
+A shared Lua library that handles ALL weapon firing mechanics: damage, penetration, spread, distance falloff, and MP sync. One `#include`, one profile definition, one function call to fire.
+
+### Where It Lives
+- **Source:** `lib/realistic_ballistics.lua` (in the project repo)
+- **Deployed:** Copy into each weapon mod as `lib/ballistics.lua`
+- **Include:** `#include "lib/ballistics.lua"` in the mod's main.lua
+
+### When To Use It
+- **Guns/firearms:** Shotguns, rifles, pistols, miniguns — use `FireFromTool()` with pellet count + spread
+- **Beam/laser weapons:** Use `FireProjectile()` per tick with low damage for continuous damage
+- **Melee weapons:** Use `FireProjectile()` at short range for hit detection + terrain damage
+- **Explosive launchers:** Use the falloff system for projectile impact damage
+- **ANY tool that damages terrain or players** — if it calls Shoot(), MakeHole(), or ApplyPlayerDamage(), it should use this framework instead
+
+### The Vision
+This framework will expand to cover ALL tools — not just weapons. Future additions:
+- **Tool physics** (recoil profiles, weight, sway)
+- **Visual effects profiles** (muzzle flash, impact particles, tracer style)
+- **Audio profiles** (fire sound, impact sound, reload sound with distance attenuation)
+- **Ammo systems** (magazine + reserve, reload behavior, ammo types)
+- **Non-weapon tools** (grappling hooks, welding, cutting, construction — interaction ranges, effect profiles)
+
+The goal: every tool in the game feels finely tuned, realistic, and consistent. One framework, one set of knobs to tune, zero duplicated code across 100+ mods.
+
+### How To Use It
+```lua
+#include "lib/ballistics.lua"
+
+local myGun = CreateBallisticsProfile({
+    damage = 20, pellets = 1, spread = 0.02,  -- single accurate bullet
+    range = 100, toolId = "my-rifle",
+    holeScale = 1.0, penScale = 0.5,
+    fullRange = 15, halfRange = 60, minFalloff = 0.2,
+})
+
+-- In server.tickPlayer, when player fires:
+myGun:FireFromTool(toolBody, muzzleOffset, player)
+```
+
+### Key Properties
+| Property | Controls | Example Values |
+|----------|----------|---------------|
+| `damage` | Base damage per projectile (÷100) | 28 (shotgun), 50 (rifle), 8 (SMG) |
+| `pellets` | Projectiles per shot | 1 (rifle), 8 (shotgun), 24 (spread shotgun) |
+| `spread` | Cone angle (0 = laser) | 0 (sniper), 0.02 (rifle), 0.07 (shotgun) |
+| `holeScale` | Crater size multiplier | 0.5 (small holes), 1.0 (normal), 2.0 (large) |
+| `penScale` | Extra MakeHole penetration | 0 (Shoot only), 1.0 (punch through walls) |
+| `fullRange` | Full damage zone (meters) | 3 (shotgun), 15 (rifle), 30 (sniper) |
+| `halfRange` | 50% damage distance | 25 (shotgun), 60 (rifle), 150 (sniper) |
+| `minFalloff` | Damage floor multiplier | 0.1 (weak at range), 0.5 (strong at range) |
+
 ## Plugins & Agents — USE THEM
 
 You have powerful plugins. Key rules:
@@ -345,6 +416,7 @@ You have powerful plugins. Key rules:
 | `docs/MPLIB_INTERNALS.md` | AmmoPickup / loot work | How loot crates, drops, and ammo pickup work inside mplib. |
 | `docs/UMF_TRANSLATION_GUIDE.md` | Converting UMF mods | UMF API → v2 equivalents, 15-point checklist. |
 | `docs/UI_STANDARDS.md` | Editing any HUD code | Layout zones, font sizes, menu standards. |
+| `lib/realistic_ballistics.lua` | **Any weapon/tool damage code** | Shared framework: falloff, penetration, spread, Shoot()+MakeHole. MANDATORY for all weapons. |
 | `docs/AUDIT_REPORT.md` | Feature matrix | Generated. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` |
 | `ISSUES_AND_FIXES.md` | Debugging | 73 documented bugs with root causes, fixes, and rules. |
 | `MASTER_MOD_LIST.md` | After converting mods | All patched mods by batch with workshop IDs. |

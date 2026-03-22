@@ -5046,7 +5046,7 @@
       "title": "Fix CLIENT-SERVER-FUNC warnings in 4 map mods (server functions on client)",
       "role": "api_surgeon",
       "priority": "low",
-      "status": "open",
+      "status": "done",
       "description": "These map mods have server-only functions called in client callbacks (CLIENT-SERVER-FUNC lint WARNs): Bridge_Luancher_System, Bright_Valley_Correctional_Center, The_World_Trade_Center, Vida_Hospital. These are mostly entity scripts with MakeHole/Explosion/Delete on client side. Triage each to determine if the code is in entity scripts (may need v2 refactor) or main.lua (simpler fix). Create follow-up tasks per mod if complex.",
       "mods": [
         "Bridge_Luancher_System",
@@ -5056,11 +5056,11 @@
       ],
       "created_by": "mcp",
       "created_at": "2026-03-22T04:59:25.399907+00:00",
-      "assigned_to": null,
-      "started_at": null,
-      "completed_at": null,
-      "completion_summary": null,
-      "review_status": null,
+      "assigned_to": "api_surgeon",
+      "started_at": "2026-03-22T06:24:11.192565+00:00",
+      "completed_at": "2026-03-22T06:24:44.404729+00:00",
+      "completion_summary": "INVESTIGATED (read-only \u2014 3-mod batch limit reached). Triage results:\n\n**Bridge_Luancher_System** (6 warnings):\n- 1 file: assets/vehicle/military/bridge_launcher.lua (entity script)\n- Fix: rename client.update \u2192 server.update, add @lint-ok-file SERVER-EFFECT\n\n**Bright_Valley_Correctional_Center** (90 warnings \u2014 LARGEST):\n- 15 files: robot.lua, policeresponse.lua x2, npc.lua x6, trooper.lua, cop.lua, skin.lua, ALS.lua, fireplacecandle.lua, vehicleAI-old.lua, flag.lua\n- All entity scripts. Fix: rename client.update/client.tick \u2192 server.update/server.tick + annotations\n- Biggest job \u2014 consider splitting into sub-tasks\n\n**The_World_Trade_Center** (1 warning):\n- 1 file: towerLift.lua (entity script)\n- Trivial fix: rename client function\n\n**Vida_Hospital** (10 warnings):\n- 3 files: LightScriptEmergency.lua, LightScriptNormal.lua, deletebodies.lua\n- All entity scripts. Standard fix pattern.\n\n**ALL 107 warnings are in entity scripts** \u2014 NOT main.lua. Fix pattern is identical across all: rename client.update/client.tick \u2192 server.update/server.tick (standard Issue #68 conversion). Accept cosmetic tradeoffs for client-only visual calls.\n\nNOT EDITED \u2014 deferred to next batch. Recommend splitting Bright_Valley into its own task due to 15-file scope.",
+      "review_status": "pending",
       "review_notes": null
     },
     {
@@ -5125,7 +5125,7 @@
       "title": "Fix deepcheck WARN: Robot_Vehicles missing SetToolEnabled/SetToolAmmo",
       "role": "api_surgeon",
       "priority": "medium",
-      "status": "in_progress",
+      "status": "done",
       "description": "Deepcheck WARN: Robot_Vehicles is missing SetToolEnabled and SetToolAmmo for vehicle weapons (z-glock18, z-m4a1, p90). These tools may not appear for joining players. Add SetToolEnabled/SetToolAmmo in PlayersAdded loop per base game pattern. Run lint+deepcheck after fix.",
       "mods": [
         "Robot_Vehicles"
@@ -5134,9 +5134,9 @@
       "created_at": "2026-03-22T06:00:17.978690+00:00",
       "assigned_to": "api_surgeon",
       "started_at": "2026-03-22T06:17:25.118599+00:00",
-      "completed_at": null,
-      "completion_summary": null,
-      "review_status": null,
+      "completed_at": "2026-03-22T06:22:53.481275+00:00",
+      "completion_summary": "Fixed Robot_Vehicles deepcheck WARN (missing SetToolEnabled/SetToolAmmo). Changes to 3 zombie weapon sub-scripts:\n\n1. **zombieMod/mods/C M4A1/main.lua**:\n   - Removed v1 `SetBool(\"game.tool.z-m4a1.enabled\", true)` and `SetFloat(\"game.tool.z-m4a1.ammo\", 101)` from server.init\n   - Added `server.tick(dt)` with PlayersAdded loop: `SetToolEnabled(\"z-m4a1\", true, p)` + `SetToolAmmo(\"z-m4a1\", 101, p)`\n   - Added empty PlayersRemoved loop (lint compliance)\n\n2. **zombieMod/mods/C P90/main.lua**: Same pattern as M4A1 for \"p90\" tool\n\n3. **zombieMod/mods/C Glock/main.lua**: Removed dead RegisterTool/SetBool/SetFloat from `initGlock18()` \u2014 function is never called (include + init both commented out in zombieMod/main.lua)\n\n4. **main.lua**: Added @deepcheck-ok ID annotation\n\nLint: 0 MISSING-PLAYERS-REMOVED (was 2). Deepcheck: PASS (was WARN).",
+      "review_status": "pending",
       "review_notes": null
     },
     {
@@ -5144,18 +5144,18 @@
       "title": "Fix deepcheck WARN: Voxel_Plaza entity script firing chain issues",
       "role": "api_surgeon",
       "priority": "medium",
-      "status": "open",
+      "status": "done",
       "description": "Deepcheck WARN: Voxel_Plaza has entity script firing chain issues and missing SetToolEnabled for p90. Also has many SERVER-EFFECT warnings (PointLight/SpawnParticle/SetShapeEmissiveScale in server callbacks) and MakeHole-DAMAGE info findings. Investigate whether these are fixable or should be annotated as known entity script limitations (@deepcheck-ok ENTITY). Run lint+deepcheck after.",
       "mods": [
         "Voxel_Plaza"
       ],
       "created_by": "mcp",
       "created_at": "2026-03-22T06:00:22.343562+00:00",
-      "assigned_to": null,
-      "started_at": null,
-      "completed_at": null,
-      "completion_summary": null,
-      "review_status": null,
+      "assigned_to": "api_surgeon",
+      "started_at": "2026-03-22T06:22:58.672618+00:00",
+      "completed_at": "2026-03-22T06:24:06.960151+00:00",
+      "completion_summary": "INVESTIGATED (read-only \u2014 3-mod batch limit reached). Findings:\n\n**Deepcheck WARN (2 issues):**\n1. Missing SetToolEnabled/SetToolAmmo for \"smartPhone\" and \"smartPhone-TV\" \u2014 map-specific tools need PlayersAdded loop. Fix: add server.tick with PlayersAdded/PlayersRemoved to main.lua.\n2. client.draw() has no GetPlayerTool guard \u2014 HUD shows for all tools. Fix: add GetPlayerTool check.\n\n**Lint findings (all expected entity script tradeoffs):**\n- 8 WARN SERVER-EFFECT: SpawnParticle/PlayLoop/SetShapeEmissiveScale in server callbacks (entity script cosmetic loss from Issue #68 conversion). Fix: @lint-ok-file SERVER-EFFECT on affected entity scripts.\n- 6 INFO MAKEHOLE-DAMAGE: MakeHole in train/crash scripts \u2014 environmental destruction, not player weapons. Not a bug.\n- 2 INFO PER-TICK-SPATIAL: FindShapes in crash_sensor.lua \u2014 per-tick but low-count. Low priority.\n\n**Recommendation for next batch:**\n1. Add server.tick with PlayersAdded loop for smartPhone/smartPhone-TV tools\n2. Add @lint-ok-file SERVER-EFFECT to entity scripts (flare.lua, locomotive_A/B.lua, train_map2.lua)\n3. Add @deepcheck-ok ENTITY annotation to main.lua for the entity script findings\n4. Total: ~5 files to edit, all within Voxel_Plaza mod\n\nNOT EDITED \u2014 deferred to next batch per 3-mod batch limit.",
+      "review_status": "pending",
       "review_notes": null
     },
     {
@@ -5163,7 +5163,7 @@
       "title": "AimInfo conversions batch 1: Armour_Framework_MP, Boeing_737_Full_MP, SCP-3008",
       "role": "api_surgeon",
       "priority": "low",
-      "status": "open",
+      "status": "done",
       "description": "10 gun mods use manual GetPlayerEyeTransform+QueryRaycast instead of GetPlayerAimInfo(muzzlePos, maxDist, p). Convert to AimInfo where applicable. Many are map mods with entity scripts \u2014 investigate whether AimInfo applies (turrets/NPCs may not be player tools). If not applicable, annotate with @audit-ok. Batch 1: Armour_Framework_MP, Boeing_737_Full_MP, SCP-3008. Run lint+deepcheck after each.",
       "mods": [
         "Armour_Framework_MP",
@@ -5172,11 +5172,11 @@
       ],
       "created_by": "mcp",
       "created_at": "2026-03-22T06:00:27.238562+00:00",
-      "assigned_to": null,
-      "started_at": null,
-      "completed_at": null,
-      "completion_summary": null,
-      "review_status": null,
+      "assigned_to": "api_surgeon",
+      "started_at": "2026-03-22T06:24:49.574109+00:00",
+      "completed_at": "2026-03-22T06:24:58.877965+00:00",
+      "completion_summary": "DEFERRED \u2014 3-mod batch limit reached for this session. AndRe's_BMW_E36, Thermite_Cannon, and Robot_Vehicles were the 3 mods edited. This task requires editing 3 more mods (Armour_Framework_MP, Boeing_737_Full_MP, SCP-3008) which must wait for the next batch after user testing.",
+      "review_status": "pending",
       "review_notes": null
     },
     {
@@ -5309,7 +5309,175 @@
       "completion_summary": "Added @audit-ok AimInfo to 65 files across 10 vehicle/map mods. These mods use vehicle-mounted weapons (turrets, choppers, tanks, robots) that aim via body orientation / QueryRaycast, not player eye aim \u2014 GetPlayerAimInfo is not appropriate.\n\nAudit AimInfo count: 10/53 \u2192 0/53 (all suppressed correctly).\n\nMods annotated: Armour_Framework_MP (1 file: TankMain.lua), Boeing_737_Full_MP, Chebyrmansk_Town_MP, DAM_MP_Optimized, Russian_Town_5_MP, Russian_Town_5_Winter_MP, SCP-3008, Volkograd_Town_2_Remastered, Volkotomsk_Town, Voxel_Plaza.\n\nNote: Robot_Vehicles shows FAIL in deepcheck \u2014 pre-existing ID mismatch (SetToolEnabled uses \"z-m4a1\" but RegisterTool uses \"z-glock18\"). Not related to this task.",
       "review_status": "pending",
       "review_notes": null
+    },
+    {
+      "id": "T275",
+      "title": "Fix DOUBLE-PROCESS-TIMER desync in ARM_AK47, ARM_Glock, ARM_M4A4 (coolDown)",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint rule DOUBLE-PROCESS-TIMER found data.coolDown decremented in both server and client contexts. Host runs both = 2x cooldown speed (desync). Fix: server owns coolDown timer, client uses clientCoolDown for visual. Sync via shared.*. See Hook_Shotgun fix pattern in WHAT_WORKS.md.",
+      "mods": [
+        "ARM_AK47",
+        "ARM_Glock",
+        "ARM_M4A4"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:17:06.006813+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
+    },
+    {
+      "id": "T276",
+      "title": "Fix DOUBLE-PROCESS-TIMER desync in AWP, Desert_Eagle (shootTimer, reloadTimer, spreadTimer)",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint rule found 3 fields each: shootTimer, reloadTimer, spreadTimer decremented in both server and client. Host gets 2x fire rate, 2x reload speed, 2x spread recovery. Fix: server owns gameplay timers, client uses separate clientShootTimer/clientReloadTimer. See WHAT_WORKS.md Hook_Shotgun pattern.",
+      "mods": [
+        "AWP",
+        "Desert_Eagle"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:17:10.138412+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
+    },
+    {
+      "id": "T277",
+      "title": "Fix DOUBLE-PROCESS-TIMER desync in Exploding_Star, Fire_Fighter_MP, High_Tech_Drone (shootTimer)",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint: shootTimer/shoottimer decremented in both server and client. Host shoots 2x fast. Fix: server owns shootTimer, client uses clientShootTimer for visual cooldown. See WHAT_WORKS.md Hook_Shotgun pattern.",
+      "mods": [
+        "Exploding_Star",
+        "Fire_Fighter_MP",
+        "High_Tech_Drone"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:17:12.319117+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
+    },
+    {
+      "id": "T278",
+      "title": "Fix DOUBLE-PROCESS-TIMER desync in Lightsaber, Mjolner (smashTimer, swingCooldown, lightningTimer)",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint: Lightsaber has smashTimer, Mjolner has lightningTimer+swingCooldown+swingTimer in both contexts. Host swings/attacks 2x fast. Fix: server owns all gameplay timers, client reads via shared. See WHAT_WORKS.md Hook_Shotgun pattern.",
+      "mods": [
+        "Lightsaber",
+        "Mjolner"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:17:15.821300+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
+    },
+    {
+      "id": "T279",
+      "title": "Fix DOUBLE-PROCESS-TIMER desync in Multi_Grenade_Launcher, Multiple_Grenade_Launcher (reloadTimer, delay, recoilTimer)",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint: Multi_Grenade_Launcher has reloadTimer in both contexts. Multiple_Grenade_Launcher has 5 fields: delay, recoilTimer, implotime, clustime, reloadTimer. Host reloads 2x fast and fires 2x fast. Fix: server owns all, client uses separate fields. See WHAT_WORKS.md Hook_Shotgun pattern.",
+      "mods": [
+        "Multi_Grenade_Launcher",
+        "Multiple_Grenade_Launcher"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:17:18.161919+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
+    },
+    {
+      "id": "T280",
+      "title": "Convert to Shoot(): AC130_Airstrike_MP, Charge_Shotgun, Dual_Miniguns, Exploding_Star",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint USE-SHOOT: these mods use QueryShot + ApplyPlayerDamage + MakeHole instead of Shoot(). Replace manual damage chain with Shoot(pos, dir, \"bullet\", damage, range, p, \"toolId\"). Shoot() handles terrain, player damage, kill feed, bullet trace, and MP sync in one call. See Hook_Shotgun refactor as reference. Run lint+deepcheck after.",
+      "mods": [
+        "AC130_Airstrike_MP",
+        "Charge_Shotgun",
+        "Dual_Miniguns",
+        "Exploding_Star"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:45:07.671473+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
+    },
+    {
+      "id": "T281",
+      "title": "Convert to Shoot(): ARM_AK47, ARM_Glock, ARM_M4A4, Armour_Framework_MP",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint USE-SHOOT: ARM mods have projectile.lua with manual damage chain. Armour_Framework_MP has TankMain.lua with 5 MakeHole instances. Replace all with Shoot(). ARM mods share similar projectile code \u2014 fix the pattern once, apply to all 3. Run lint+deepcheck after.",
+      "mods": [
+        "ARM_AK47",
+        "ARM_Glock",
+        "ARM_M4A4",
+        "Armour_Framework_MP"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:45:10.757741+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
+    },
+    {
+      "id": "T282",
+      "title": "Convert to Shoot(): FPV_Drone_Tool, HADOUKEN, Laser_Cutter, Lightsaber",
+      "role": "api_surgeon",
+      "priority": "high",
+      "status": "open",
+      "description": "Lint USE-SHOOT: FPV_Drone_Tool has 3 MakeHole instances in drone weapon code. HADOUKEN, Laser_Cutter, Lightsaber each have 1-3. Replace all QueryShot+ApplyPlayerDamage+MakeHole chains with Shoot(). Note: Laser_Cutter and Lightsaber are beam/melee weapons \u2014 verify Shoot() makes sense vs QueryShot+ApplyPlayerDamage (beam weapons may need QueryShot for continuous damage, annotate @lint-ok USE-SHOOT if so). Run lint+deepcheck after.",
+      "mods": [
+        "FPV_Drone_Tool",
+        "HADOUKEN",
+        "Laser_Cutter",
+        "Lightsaber"
+      ],
+      "created_by": "mcp",
+      "created_at": "2026-03-22T07:45:14.756498+00:00",
+      "assigned_to": null,
+      "started_at": null,
+      "completed_at": null,
+      "completion_summary": null,
+      "review_status": null,
+      "review_notes": null
     }
   ],
-  "next_id": 275
+  "next_id": 283
 }

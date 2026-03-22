@@ -1896,6 +1896,158 @@ def check_missing_players_removed(source: str) -> list[dict]:
     return []
 
 
+# ---------------------------------------------------------------------------
+# Check: Double-processing of shared data fields (Issue #42/#72)
+# ---------------------------------------------------------------------------
+
+# Match timer-like decrements: data.X = data.X - dt, X = X - dt
+_TIMER_DECREMENT_RE = re.compile(
+    r"(data\.(\w+)|(\w+[Tt]imer|\w+[Cc]ooldown|\w+[Dd]elay))\s*="
+    r"\s*(?:data\.)?(?:\2|\3)\s*-\s*dt"
+)
+
+# Match direct field assignments that look like state: data.X = data.X + value
+_FIELD_ADD_RE = re.compile(
+    r"data\.(\w+(?:Vel|Timer|Cooldown|Delay|Count))\s*=\s*data\.\1\s*[+-]"
+)
+
+
+def _extract_function_ranges(source: str) -> dict:
+    """Map function names to (start_line, end_line) ranges."""
+    ranges = {}
+    lines = source.splitlines()
+    stack = []  # (func_name, start_line, depth)
+    depth = 0
+
+    for lineno, raw_line in enumerate(lines, 1):
+        stripped = _strip_comment(raw_line).strip()
+        if not stripped:
+            continue
+
+        # Detect function definitions
+        m = _FUNC_DEF_RE.match(stripped)
+        if m:
+            fname = m.group(1)
+            stack.append((fname, lineno, depth))
+
+        opens = _count_opens(stripped)
+        ends = _count_ends(stripped)
+        depth += opens - ends
+
+        # When depth returns to the level a function was defined at, it ended
+        while stack and depth <= stack[-1][2]:
+            fname, start, _ = stack.pop()
+            ranges[fname] = (start, lineno)
+
+    return ranges
+
+
+def check_double_process_timer(source: str) -> list[dict]:
+    """Detect timer/state fields decremented in both server.* and client.* contexts.
+
+    On the host, both server and client tick run for the same player data.
+    If both decrement the same timer, the host gets 2x speed (desync).
+    See CLAUDE.md Issue #42/#72.
+    """
+    findings = []
+    lines = source.splitlines()
+    func_ranges = _extract_function_ranges(source)
+
+    # Collect fields modified in server context vs client context
+    server_fields = {}  # field_name -> line_number
+    client_fields = {}
+
+    for fname, (start, end) in func_ranges.items():
+        is_server = fname.startswith("server.")
+        is_client = fname.startswith("client.")
+        if not is_server and not is_client:
+            continue
+
+        for lineno in range(start, end + 1):
+            if lineno > len(lines):
+                break
+            stripped = _strip_comment(lines[lineno - 1])
+
+            # Check for timer decrements
+            for m in _TIMER_DECREMENT_RE.finditer(stripped):
+                field = m.group(2) or m.group(3)
+                if field:
+                    if is_server:
+                        server_fields[field] = lineno
+                    elif is_client:
+                        client_fields[field] = lineno
+
+            # Check for additive state modifications (data.X = data.X + value)
+            for m in _FIELD_ADD_RE.finditer(stripped):
+                field = m.group(1)
+                if is_server:
+                    server_fields[field] = lineno
+                elif is_client:
+                    client_fields[field] = lineno
+
+    # Report fields modified in both contexts
+    for field in sorted(set(server_fields) & set(client_fields)):
+        findings.append(_finding(
+            "DOUBLE-PROCESS-TIMER",
+            client_fields[field],
+            f"data.{field} modified in both server (line {server_fields[field]}) "
+            f"and client (line {client_fields[field]}) — host runs both contexts "
+            f"on shared data, causing 2x processing (desync). Use separate "
+            f"client-only field (e.g. client{field[0].upper()}{field[1:]}) "
+            f"or gate client write with IsPlayerLocal(p). See Issue #42/#72",
+            severity="warn",
+        ))
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check: MakeHole used for weapon damage instead of Shoot() (Issue #12)
+# ---------------------------------------------------------------------------
+
+def check_makehole_instead_of_shoot(source: str) -> list[dict]:
+    """Warn if a weapon mod uses QueryShot/ApplyPlayerDamage + MakeHole instead of Shoot().
+
+    Shoot() is the proper MP weapon function — it handles terrain destruction,
+    player damage, kill attribution, visual traces, and auto-syncs to all clients
+    in one call. Using QueryShot + ApplyPlayerDamage + MakeHole is the old pattern
+    that misses penetration, visuals, and is more complex.
+    """
+    # Only flag if the file has BOTH a manual damage chain AND MakeHole
+    has_queryshot = bool(re.search(r"\bQueryShot\s*\(", source))
+    has_applydamage = bool(re.search(r"\bApplyPlayerDamage\s*\(", source))
+    has_makehole = bool(re.search(r"\bMakeHole\s*\(", source))
+    has_shoot = bool(re.search(r"\bShoot\s*\(", source))
+
+    # If already using Shoot(), or not a weapon (no damage chain), skip
+    if has_shoot:
+        return []
+    if not (has_queryshot and has_applydamage and has_makehole):
+        return []
+    # Suppress if annotated
+    if re.search(r"@lint-ok-file\s+USE-SHOOT", source):
+        return []
+    if re.search(r"@audit-ok\s+(?:shoot|makehole)", source, re.IGNORECASE):
+        return []
+
+    findings = []
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        if re.search(r"\bMakeHole\s*\(", stripped):
+            if re.search(r"@lint-ok\s+USE-SHOOT", raw_line):
+                continue
+            findings.append(_finding(
+                "USE-SHOOT",
+                lineno,
+                "Weapon uses QueryShot + ApplyPlayerDamage + MakeHole instead of Shoot(). "
+                "Shoot() handles terrain, player damage, kill feed, bullet trace, and MP sync "
+                "in one call. Replace manual damage chain with Shoot(pos, dir, \"bullet\", "
+                "damage, range, p, \"toolId\"). See CLAUDE.md rule 12",
+                severity="warn",
+            ))
+    return findings
+
+
 # ===========================================================================
 # Aggregation
 # ===========================================================================
@@ -1939,6 +2091,8 @@ TIER2_CHECKS = [
     check_clientcall_sound,
     check_toolanimator_local_only,
     check_missing_players_removed,
+    check_double_process_timer,
+    check_makehole_instead_of_shoot,
 ]
 
 

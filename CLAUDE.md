@@ -416,7 +416,7 @@ You have powerful plugins. Key rules:
 | `docs/MPLIB_INTERNALS.md` | AmmoPickup / loot work | How loot crates, drops, and ammo pickup work inside mplib. |
 | `docs/UMF_TRANSLATION_GUIDE.md` | Converting UMF mods | UMF API → v2 equivalents, 15-point checklist. |
 | `docs/UI_STANDARDS.md` | Editing any HUD code | Layout zones, font sizes, menu standards. |
-| `lib/realistic_ballistics.lua` | **Any weapon/tool damage code** | Shared framework: falloff, penetration, spread, Shoot()+MakeHole. MANDATORY for all weapons. |
+| `lib/realistic_ballistics.lua` | **Any weapon/tool damage code** | Trust Realism framework: falloff, penetration, spread, Shoot()+MakeHole. MANDATORY for all weapons. [GitHub](https://github.com/trustxix/trust-realism) |
 | `docs/AUDIT_REPORT.md` | Feature matrix | Generated. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` |
 | `ISSUES_AND_FIXES.md` | Debugging | 73 documented bugs with root causes, fixes, and rules. |
 | `MASTER_MOD_LIST.md` | After converting mods | All patched mods by batch with workshop IDs. |

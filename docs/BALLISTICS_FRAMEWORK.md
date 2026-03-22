@@ -1,9 +1,10 @@
 # Realistic Ballistics Framework
 
-> **Source:** `lib/realistic_ballistics.lua`
+> **Source:** `lib/realistic_ballistics.lua` (local) / [trustxix/trust-realism](https://github.com/trustxix/trust-realism) (GitHub)
 > **Deploy:** Copy to each weapon mod as `lib/ballistics.lua`
 > **Created:** 2026-03-22 — extracted from Hook_Shotgun refactor
 > **Status:** v1.0 — covers firearms, expanding to all tools
+> **GitHub:** https://github.com/trustxix/trust-realism
 
 ---
 

@@ -1,0 +1,3 @@
+# Force LF line endings for all Lua files
+# Teardown's #version 2 preprocessor fails on CRLF
+*.lua text eol=lf

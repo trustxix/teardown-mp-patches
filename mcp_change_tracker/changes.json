@@ -1331,7 +1331,43 @@
       "description": "Session doc sweep: Fixed PlaySound classification across 7 files (ISSUES_AND_FIXES, OFFICIAL_DEVELOPER_DOCS, CLAUDE.md rules 8/9, MP_DESYNC_PATTERNS). Rewrote README.md (184\u219265 lines). Added PlayersRemoved pattern to WHAT_WORKS.md. Updated deferred table (11\u219213), summary counts, PROTOCOL.md. Found/added 1 unlisted mod (Improved_Spawnable_Missile_&_Bomb_MP). Cleared 19 undocumented changes. Created T180 (README), T182 (version=2 for 3 maps). Regenerated AUDIT_REPORT 2x (Shoot 4\u21920, AimInfo 20\u21920).",
       "timestamp": "2026-03-21T10:09:57.438735+00:00",
       "documented": true
+    },
+    {
+      "id": 149,
+      "role": "qa_lead",
+      "mod": "Winch",
+      "type": "bug_fix",
+      "description": "Fixed 4 missing closing parentheses on shared.toolSettings lines (323, 328, 335, 340) that caused compile error",
+      "timestamp": "2026-03-22T06:10:51.459144+00:00",
+      "documented": false
+    },
+    {
+      "id": 150,
+      "role": "qa_lead",
+      "mod": "Spells",
+      "type": "bug_fix",
+      "description": "Fixed 4 missing closing parentheses on shared.toolSettings lines (862, 869, 882, 889) that caused compile error",
+      "timestamp": "2026-03-22T06:10:52.553644+00:00",
+      "documented": false
+    },
+    {
+      "id": 151,
+      "role": "qa_lead",
+      "mod": "High_Tech_Drone",
+      "type": "bug_fix",
+      "description": "Fixed 2 missing closing parentheses on shared.toolSettings lines (841, 856) that caused compile error",
+      "timestamp": "2026-03-22T06:10:53.217295+00:00",
+      "documented": false
+    },
+    {
+      "id": 152,
+      "role": "qa_lead",
+      "mod": "GLARE",
+      "type": "bug_fix",
+      "description": "Fixed compile error: removed broken --[[ ]] wrapper around #include directives (preprocessor processes includes inside block comments, inlined ]] broke the comment structure). Removed duplicate #version 2 and #include from Automatic.lua. Deferred LoadSprite to lazy-init pattern (AutoGetFlatSprite).",
+      "timestamp": "2026-03-22T06:18:10.422671+00:00",
+      "documented": false
     }
   ],
-  "next_id": 149
+  "next_id": 153
 }

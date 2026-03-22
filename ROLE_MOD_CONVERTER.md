@@ -79,14 +79,7 @@ done | sort -t'|' -k1 -n
 
 ## Authoritative Reference
 
-**ALWAYS consult `docs/OFFICIAL_DEVELOPER_DOCS.md` first** — it contains the complete official API from teardowngame.com. This is the ground truth for how v2 mods must be structured, what functions exist, and what runs server-side vs client-side.
-
-For quick reference during conversion:
-- V2 architecture: `docs/OFFICIAL_DEVELOPER_DOCS.md` → V2 Multiplayer Architecture
-- Callback functions: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Callback Functions
-- Tool registration: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Tool System API
-- Server/client split: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Critical Gotchas & Rules §5
-- info.txt format: `docs/OFFICIAL_DEVELOPER_DOCS.md` → info.txt Format
+**Consult `docs/MP_REFERENCE.md` for function signatures, server/client split, and sync patterns.** `docs/BASE_GAME_MP_PATTERNS.md` is the gold standard for how vanilla code works. For UMF mods, also read `docs/UMF_TRANSLATION_GUIDE.md`.
 
 ## V2 Rewrite Checklist
 Every converted mod MUST have:
@@ -112,7 +105,7 @@ Every converted mod MUST have:
 
 ## Plugins & Agents — Use These
 
-**Read `docs/TEAM_PLUGINS.md` for the complete reference.** Key ones for your role:
+Key plugins for your role:
 
 - **Before converting a big mod (500+ lines):** `Skill: superpowers:writing-plans` — plan the conversion
 - **After converting a mod:** Dispatch `code-simplifier:code-simplifier` to clean up the result

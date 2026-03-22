@@ -13,6 +13,27 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
         mods_dir = LIVE_MODS_DIR
 
     lines = []
+
+    # Workshop sync check (before main status)
+    try:
+        sync_result = subprocess.run(
+            ["python", "-m", "tools.sync", "--status"],
+            capture_output=True, text=True, timeout=15,
+            cwd=str(Path(__file__).parent.parent)
+        )
+        sync_out = sync_result.stdout.strip()
+        if sync_result.returncode != 0 and sync_out:
+            # Out of sync — show warning
+            lines.append("!! WORKSHOP SYNC NEEDED !!")
+            for line in sync_out.splitlines():
+                if "NEW:" in line or "REMOVED:" in line:
+                    lines.append(f"  {line.strip()}")
+            lines.append("  Run: python -m tools.sync        (dry-run)")
+            lines.append("  Run: python -m tools.sync --apply (execute)")
+            lines.append("")
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+
     lines.append("TEARDOWN MP PATCHER -- Status")
     lines.append("=" * 50)
 
@@ -228,7 +249,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     # Always relevant
     docs_to_read.append("  CLAUDE.md - rules, tools, workflow (always)")
     docs_to_read.append("  docs/BASE_GAME_MP_PATTERNS.md - #1 PRIORITY: official MP sync patterns (always)")
-    docs_to_read.append("  docs/OFFICIAL_DEVELOPER_DOCS.md - GROUND TRUTH from teardowngame.com (API, MP architecture, gotchas)")
+    docs_to_read.append("  docs/MP_REFERENCE.md - function signatures, server/client split, sync patterns, desync fixes")
 
     # If there are tier-1 errors, they need the issues log for patterns
     try:
@@ -237,26 +258,11 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     except NameError:
         pass
 
-    # If gun mods need Shoot/AimInfo, they need RESEARCH.md
+    # If gun mods need Shoot/AimInfo, recommend MP_REFERENCE
     try:
         if missing_shoot > 0 or missing_aim > 0:
-            docs_to_read.append("  docs/RESEARCH.md - Shoot(), GetPlayerAimInfo(), QueryShot() patterns")
+            pass  # MP_REFERENCE already recommended above
     except NameError:
-        pass
-
-    # If there are mods with custom entities or complex state, recommend sync patterns
-    try:
-        has_custom_entities = False
-        for mod_dir in mods:
-            for rel_path, source in read_lua_files(mod_dir):
-                if any(kw in source for kw in ["SetFloat(", "ClientCall(", "ServerCall(", "shared.", "VecLerp("]):
-                    has_custom_entities = True
-                    break
-            if has_custom_entities:
-                break
-        if has_custom_entities:
-            docs_to_read.append("  docs/V2_SYNC_PATTERNS.md - registry sync, RPC, interpolation")
-    except Exception:
         pass
 
     # If there are game log errors, they may need the API reference

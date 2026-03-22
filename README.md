@@ -41,7 +41,7 @@ Patches are applied directly to `C:/Users/trust/Documents/Teardown/mods/` — th
 ## Key References
 
 - **`docs/BASE_GAME_MP_PATTERNS.md`** — How official Teardown tools sync in MP (12 patterns)
-- **`docs/OFFICIAL_DEVELOPER_DOCS.md`** — Complete API from teardowngame.com (ground truth)
+- **`docs/MP_REFERENCE.md`** — Function signatures, server/client split, sync patterns, desync fixes
 - **`docs/WHAT_WORKS.md`** — Proven fixes and patterns
 - **`docs/WHAT_DOESNT_WORK.md`** — Failed approaches to avoid
 

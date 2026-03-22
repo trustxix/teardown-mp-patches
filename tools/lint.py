@@ -452,7 +452,7 @@ def check_missing_ammo_pickup(source: str) -> list[dict]:
                 lineno,
                 "RegisterTool() present but no SetToolAmmoPickupAmount() - "
                 "ammo crates won't refill this tool. "
-                "See docs/RESEARCH.md Finding #5",
+                "See docs/MP_REFERENCE.md",
                 severity="warn",
             )]
     return []
@@ -719,7 +719,7 @@ def check_manual_aim(source: str) -> list[dict]:
                 "QueryRaycast() used without GetPlayerAimInfo() - "
                 "consider GetPlayerAimInfo(muzzlePos, maxDist, p) for weapon aim. "
                 "Note: QueryRaycast is valid for non-aim uses (collision, shape lookup). "
-                "See docs/RESEARCH.md Finding #1",
+                "See docs/MP_REFERENCE.md",
                 severity="info",
             )]
     return []
@@ -758,7 +758,7 @@ def check_makehole_damage(source: str) -> list[dict]:
                 lineno,
                 "MakeHole() cannot damage players in v2 - "
                 "use Shoot() for weapons that should damage players. "
-                "See docs/RESEARCH.md Finding #2",
+                "See docs/MP_REFERENCE.md",
                 severity="info",
             ))
     return findings
@@ -789,7 +789,7 @@ def check_server_side_effects(source: str) -> list[dict]:
     These APIs are client-only in v2 multiplayer. When called on the server,
     they either silently fail or only execute for the host player.
     Use ClientCall() to notify clients to play effects instead.
-    See docs/MP_DESYNC_PATTERNS.md RC4.
+    See docs/MP_REFERENCE.md § RC4.
 
     NOTE: PlaySound() is EXCLUDED — the base game calls PlaySound() on the
     server and it auto-syncs to all clients with positional audio.
@@ -831,7 +831,7 @@ def check_server_side_effects(source: str) -> list[dict]:
                 lineno,
                 f"{m.group(1)}() is client-only; found inside {current_func!r} — "
                 f"use ClientCall() to play effects on all clients. "
-                f"See docs/MP_DESYNC_PATTERNS.md RC4",
+                f"See docs/MP_REFERENCE.md § RC4",
                 severity="info" if is_oneshot else "warn",
             ))
 
@@ -973,7 +973,7 @@ def check_server_only_in_client(source: str) -> list[dict]:
     These functions are server-only in v2 multiplayer. Calling them from
     client code either silently fails or causes desyncs.
     Excludes user-defined functions with the same name (e.g. custom Shoot()).
-    See docs/OFFICIAL_DEVELOPER_DOCS.md § Critical Gotchas #5.
+    See docs/MP_REFERENCE.md § Server vs Client.
     """
     # Pre-scan: collect user-defined function names to exclude
     user_defined = set()
@@ -1020,7 +1020,7 @@ def check_server_only_in_client(source: str) -> list[dict]:
                 lineno,
                 f"{m.group(1)}() is server-only; found inside {current_func!r} — "
                 f"move to server.* function or use ServerCall(). "
-                f"See docs/OFFICIAL_DEVELOPER_DOCS.md § Critical Gotchas #5",
+                f"See docs/MP_REFERENCE.md § Server vs Client",
                 severity="warn",
             ))
 
@@ -1060,7 +1060,7 @@ def check_per_tick_rpc(source: str) -> list[dict]:
     - State-change patterns (~= was/old/last/prev) within previous 5 lines
     - One-time events (Delete/flag set/cleared) within next 5 lines
     - Destruction events (MakeHole/Explosion) within ±10 lines (impact events)
-    See docs/OFFICIAL_DEVELOPER_DOCS.md § Critical Gotchas #8.
+    See docs/MP_REFERENCE.md § Server vs Client.
     """
     findings = []
     current_func: str | None = None
@@ -1136,7 +1136,7 @@ def check_per_tick_rpc(source: str) -> list[dict]:
                     f"{m.group(1)}() inside {current_func!r} without input guard — "
                     f"RPC every tick floods the network. "
                     f"Use SetFloat/SetBool with sync=true for continuous state. "
-                    f"See docs/PER_TICK_RPC_FIX_GUIDE.md for fix patterns",
+                    f"See docs/MP_REFERENCE.md § PER-TICK-RPC Decision Tree",
                     severity="warn",
                 ))
 
@@ -1158,7 +1158,7 @@ def check_missing_version2(source: str) -> list[dict]:
 
     Without #version 2, scripts are silently disabled in multiplayer sessions.
     Excludes include/library files that define (not use) v2 functions.
-    See docs/OFFICIAL_DEVELOPER_DOCS.md § V2 Multiplayer Architecture.
+    See CLAUDE.md Rule 39.
     """
     if _VERSION2_RE.search(source):
         return []
@@ -1182,7 +1182,7 @@ def check_missing_version2(source: str) -> list[dict]:
         1,
         "Script uses v2 patterns (server.*/client.*/RegisterTool) but has no "
         "'#version 2' header — script will be SILENTLY DISABLED in multiplayer. "
-        "See docs/OFFICIAL_DEVELOPER_DOCS.md § V2 Multiplayer Architecture",
+        "See CLAUDE.md Rule 39",
     )]
 
 
@@ -1226,7 +1226,7 @@ def check_shoot_missing_attribution(source: str) -> list[dict]:
     Full signature: Shoot(pos, dir, type, damage, range, playerId, toolId)
     Without playerId and toolId, kills show as 'unknown' in the kill feed.
     Skips user-defined Shoot functions.
-    See docs/OFFICIAL_DEVELOPER_DOCS.md § Weapon & Combat API.
+    See docs/MP_REFERENCE.md § Key Function Signatures.
     """
     # Pre-scan: skip if user defines their own Shoot function
     user_defined = set()
@@ -1274,7 +1274,7 @@ def check_shoot_missing_attribution(source: str) -> list[dict]:
                 lineno,
                 f"Shoot() has {num_commas + 1} args (expected 7) — missing "
                 f"playerId and/or toolId for kill attribution. "
-                f"See docs/OFFICIAL_DEVELOPER_DOCS.md § Weapon & Combat API",
+                f"See docs/MP_REFERENCE.md § Key Function Signatures",
                 severity="info",
             ))
 
@@ -1360,7 +1360,7 @@ def check_per_tick_spatial(source: str) -> list[dict]:
     Spatial queries are expensive O(n) operations. Calling them every tick
     per player floods the physics system, especially FindBodies(nil, true)
     which scans every body in the scene. Throttle to <=4Hz or cache results.
-    See docs/MP_DESYNC_PATTERNS.md.
+    See docs/MP_REFERENCE.md § 7 Desync Root Causes.
     """
     findings = []
     current_func: str | None = None
@@ -1404,7 +1404,7 @@ def check_per_tick_spatial(source: str) -> list[dict]:
                     lineno,
                     f"{m.group(1)}() inside {current_func!r} — expensive spatial "
                     f"query every tick. Throttle to <=4Hz or cache results. "
-                    f"See docs/MP_DESYNC_PATTERNS.md",
+                    f"See docs/MP_REFERENCE.md § 7 Desync Root Causes",
                     severity="info",
                 ))
 
@@ -1453,7 +1453,7 @@ def check_explosion_no_player_damage(source: str) -> list[dict]:
                 "Explosion() does not damage players in v2 MP — "
                 "add ApplyPlayerDamage() with distance falloff after Explosion() "
                 "for player-vs-player damage. "
-                "See docs/OFFICIAL_DEVELOPER_DOCS.md § Weapon & Combat API",
+                "See docs/MP_REFERENCE.md § Key Function Signatures",
                 severity="info",
             ))
     return findings
@@ -1482,7 +1482,7 @@ def check_setplayer_arg_order(source: str) -> list[dict]:
     The API page shows playerId first for nearly all SetPlayer* functions,
     but the actual engine puts it LAST. Getting the order wrong silently
     sets the value on the wrong player or does nothing.
-    See docs/OFFICIAL_DEVELOPER_DOCS.md § API Signature Notes.
+    See docs/MP_REFERENCE.md § Key Function Signatures.
     """
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
@@ -1498,7 +1498,7 @@ def check_setplayer_arg_order(source: str) -> list[dict]:
                 lineno,
                 f"{func_name}() first arg is '{first_arg}' (looks like player ID); "
                 f"correct order is {func_name}(value, ..., player) — player param LAST. "
-                f"See docs/OFFICIAL_DEVELOPER_DOCS.md § API Signature Notes",
+                f"See docs/MP_REFERENCE.md § Key Function Signatures",
                 severity="warn",
             ))
     return findings
@@ -2082,7 +2082,7 @@ def check_info_txt(mod_dir) -> list[dict]:
                 "file": "info.txt",
                 "detail": "Lua scripts have #version 2 but info.txt lacks 'version = 2' — "
                           "mod will NOT be recognized as multiplayer-compatible. "
-                          "See docs/OFFICIAL_DEVELOPER_DOCS.md § info.txt Format",
+                          "See CLAUDE.md Rule 31",
             })
 
     return findings

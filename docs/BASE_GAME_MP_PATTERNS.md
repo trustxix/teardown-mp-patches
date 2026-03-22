@@ -439,5 +439,5 @@ Three lint rules now enforce base game patterns. Run `python -m tools.lint` to c
 - PlayersRemoved: 11→1 remaining (test harness only, ignorable)
 - Shoot() conversions: 0 remaining (100% complete)
 - AimInfo conversions: 0 remaining (100% complete)
-- Deep analysis: 96 PASS, 6 WARN, 0 FAIL across 102 mods (WARN: Fire_Fighter_MP, Robot_Vehicles, Russian_Town_5_MP, Russian_Town_5_Winter_MP, Volkotomsk_Town, Voxel_Plaza)
+- Deep analysis: 100 PASS, 2 WARN, 0 FAIL across 102 mods (WARN: Robot_Vehicles, Voxel_Plaza — Robot_Vehicles missing SetToolEnabled/SetToolAmmo for vehicle weapons, Voxel_Plaza has entity script firing chain issues)
 - Tier-1 lint errors: 0 across 102 mods

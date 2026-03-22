@@ -1,6 +1,6 @@
 # Teardown MP Mod Patcher — Master Mod List
 
-> Last updated: 2026-03-21 (workshop sync — 29 removed, 19 added, now 102 installed)
+> Last updated: 2026-03-22 (deep analysis stats refresh — 100 PASS, 2 WARN, 0 FAIL)
 
 ## Summary
 
@@ -15,7 +15,7 @@
 | **Previously installed (before all cleanups)** | 178 |
 | **Total workshop items (incl. maps)** | 243 |
 
-> Counts updated 2026-03-21. **Workshop sync performed:** 29 mods unsubscribed and removed, 19 new mods added. **MILESTONE: 0 tier-1 findings across 102 mods** (was 173 at session start; all fixed by 2026-03-22). All new mods patched by team in a single session: QA Lead (Batch 1: Armour_Framework_MP, GTAV_Map, Fire_Fighter_MP), api_surgeon (DAM_MP_Optimized), mod_converter (Voxel_Plaza, Russian_Towns, Boeing_737, Chebyrmansk, Volkograd, Volkotomsk). Deep analysis: 96 PASS, 6 WARN, 0 FAIL (WARN: Fire_Fighter_MP, Robot_Vehicles, Russian_Town_5_MP, Russian_Town_5_Winter_MP, Volkotomsk_Town, Voxel_Plaza).
+> Counts updated 2026-03-21. **Workshop sync performed:** 29 mods unsubscribed and removed, 19 new mods added. **MILESTONE: 0 tier-1 findings across 102 mods** (was 173 at session start; all fixed by 2026-03-22). All new mods patched by team in a single session: QA Lead (Batch 1: Armour_Framework_MP, GTAV_Map, Fire_Fighter_MP), api_surgeon (DAM_MP_Optimized), mod_converter (Voxel_Plaza, Russian_Towns, Boeing_737, Chebyrmansk, Volkograd, Volkotomsk). Deep analysis: 100 PASS, 2 WARN, 0 FAIL (WARN: Robot_Vehicles, Voxel_Plaza — updated 2026-03-22).
 >
 > **Removed mods (2026-03-21 sync — 29):** AVF_Vehicles, Acid_Gun, Active_Volatile_Aviation, Adjustable_Fire, Advanced_Tornado, Airstrike_Arsenal, Bikes_Ramps_&_Ragdolls, Control, Dumb_Stupid_Fast_Cars, Dynamic_AT-AT_Map, EVF_International_Emergency_Vehicles, Final_Flash, Flying_Planes, Futuristic_Vehicle_pack, Geardown, Hurricanes_and_Blizzards, Kooshing's_Dynamic_Aircraft_Mod, Lava_Gun, Lightning_Gun, M249, Magic_Bag, Micro_Metropolis, Miniature_World, RPM_Playermodels, STAR_WARS_AI_PACK, SW's_ADVANCED_GORE_MOD_2, Steve's_NPCS, Synthetic_Swarm, WIP_GYM_Ragdoll_Framework_MP.
 >

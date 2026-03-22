@@ -1,0 +1,17 @@
+TEST REPORT: Robot_Vehicles
+======================================================
+Generated: 2026-03-22 02:20:34
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      FAIL — 1 mismatches
+    - SetToolEnabled uses "z-m4a1" but RegisterTool uses "z-glock18"
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

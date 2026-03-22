@@ -148,7 +148,9 @@ This requires `python -m tools.test --setup` to have been run first. It injects 
 
 | Command | When to use |
 |---------|-------------|
-| `python -m tools.status` | **EVERY session start** |
+| `python -m tools.status` | **EVERY session start** (includes workshop sync check) |
+| `python -m tools.sync` | Dry-run: show new/removed mods vs workshop |
+| `python -m tools.sync --apply` | Actually sync: copy new mods, remove unsubscribed |
 | `python -m tools.lint` | Scan all mods for 36 known bugs (includes info.txt validation) |
 | `python -m tools.lint --mod "X"` | After editing a specific mod |
 | `python -m tools.lint --tier 1` | Hard errors only (crashes/silent failures) |
@@ -223,13 +225,13 @@ Teardown loads mods from three locations. Local mods override workshop versions 
 31. `info.txt` MUST have `version = 2` for the mod to be recognized as MP-compatible
 32. Respawn API: `SetPlayerSpawnTransform(t, p)`, `SetPlayerSpawnHealth(h, p)`, `RespawnPlayer(p)` — server only
 33. ToolAnimator: `#include "script/toolanimation.lua"` for proper first/third-person tool poses. Call `tickToolAnimator(animator, dt, nil, p)` in client.tickPlayer
-34. **Player param is ALWAYS LAST** in `Set*`/`Get*` functions — the API page almost universally shows it first, which is WRONG. Examples: `SetPlayerColor(r, g, b, p)`, `SetPlayerWalkingSpeed(speed, p)`, `SetPlayerTool(tool, p)`, `SetPlayerRig(rig, p)`, `GetPlayerParam(param, p)`. See OFFICIAL_DEVELOPER_DOCS.md discrepancy table (30+ functions documented).
+34. **Player param is ALWAYS LAST** in `Set*`/`Get*` functions — the API page almost universally shows it first, which is WRONG. Examples: `SetPlayerColor(r, g, b, p)`, `SetPlayerWalkingSpeed(speed, p)`, `SetPlayerTool(tool, p)`, `SetPlayerRig(rig, p)`, `GetPlayerParam(param, p)`. See MP_REFERENCE.md for full signatures.
 35. `ServerCall("server.fn", p, ...)` — player ID `p` is REQUIRED as first param. The engine does NOT auto-inject it. Server functions receive exactly what the client sends. (Issue #51)
 36. `Explosion()` does NOT damage players — it destroys terrain + applies physics impulse but NO health damage. Weapons using Explosion MUST add explicit `ApplyPlayerDamage()` with distance falloff + tool ID for kill attribution. (Issue #56)
 37. `ClientCall(0, ...)` for world-space effects (sounds, particles at positions visible to all players). `ClientCall(p, ...)` only for personal feedback (camera shake, recoil, HUD sync). Wrong targeting = other players can't hear/see effects. (Issue #58)
 38. All asset paths MUST use `MOD/` prefix: `LoadSound("MOD/snd/fire.ogg")`, `LoadSprite("MOD/img/crosshair.png")`, `UiImage("MOD/ui/img.png")`. Without it, assets silently fail to load in v2 (v1 resolved relative paths automatically). (Issue #63)
 39. All `#version 2` scripts MUST define at least one callback (`server.init()`, `client.init()`, etc.). Content mods with no script logic need an empty `server.init()` — without it, the engine fails to compile. (Issue #67)
-40. Entity scripts (attached to XML entities via `tags="script=foo.lua"`) MUST independently have `#version 2` + v2 callbacks. V1 entity scripts with `init()`/`tick()`/`update()` but no `#version 2` are **silently disabled** in MP — no error, no warning, just missing features (vehicle physics, doors, sirens, lights, etc.). Originally 79 across 10 mods, expanded to 81 across 11 mods; all 81 converted (**100% complete** as of 2026-03-21). (Issue #68)
+40. Entity scripts (attached to XML entities via `tags="script=foo.lua"`) MUST independently have `#version 2` + v2 callbacks. V1 entity scripts with `init()`/`tick()`/`update()` but no `#version 2` are **silently disabled** in MP — no error, no warning, just missing features (vehicle physics, doors, sirens, lights, etc.). Originally 79 across 10 mods, expanded to 81 across 11 mods, then to 140 across 18 mods after 2026-03-21 workshop sync added new map/vehicle mods; all 140 converted (**100% complete** as of 2026-03-22). Voxel_Plaza has 184 additional v1 entity scripts identified but deferred (map features, low priority). (Issue #68)
 41. `#version 2` can appear on ANY line in a script — the preprocessor scans the whole file. Do NOT enforce line-1 placement. However, ensure LF-only line endings in Lua scripts — CRLF can cause compile errors with the preprocessor.
 42. **Shared `players[p]` on host causes double-processing.** In `server.tick`, `PlayersAdded` creates `players[p] = createPlayerData()`. In `client.tick`, the guard `if not players[p]` skips creation on the HOST (data already exists from server). Both contexts then share the SAME `data` object. If both `server.tickPlayer` and `client.tickPlayer` modify the same field — arrays (projectile tables) OR scalars (ammo, timers, cooldowns, recoil) — the host gets double-processed values (2x speed, 2x drain). Remote clients get nothing (server-only data never reaches their `data`). **Fix:** Use separate fields (`data.bulletsInAir` vs `data.clientTracers`) or gate client writes with `IsPlayerLocal(p)`. (Issues #69, #70, #72 — 38+ mods affected)
 43. `options.lua` needs independent `#version 2` + v2 callbacks (`client.init()`, `client.draw()`) — same silent-disable as entity scripts (Issue #68). Converting only `main.lua` does NOT fix options.lua. **All 9 converted (100% complete** as of 2026-03-20). (Issue #71)
@@ -322,7 +324,7 @@ Lint clean + deepcheck PASS does not guarantee the mod works in-game. Only in-ga
 
 ## Plugins & Agents — USE THEM
 
-You have powerful plugins. **Read `docs/TEAM_PLUGINS.md` for the full list and when to use each.** Key rules:
+You have powerful plugins. Key rules:
 
 - **Bug or failure?** → `Skill: superpowers:systematic-debugging` BEFORE guessing
 - **About to mark task done?** → `Skill: superpowers:verification-before-completion` FIRST
@@ -334,36 +336,15 @@ You have powerful plugins. **Read `docs/TEAM_PLUGINS.md` for the full list and w
 
 ## Reference Docs
 
-The tools automatically tell you which docs to read:
-- `python -m tools.status` outputs a "Recommended reading" section based on current project state
-- `python -m tools.lint` findings include "See docs/RESEARCH.md Finding #N" or "See ISSUES_AND_FIXES.md Issue #N" where relevant
-
-**When the tools point you to a doc, read it.** Here's what each contains:
-
-| Doc | Contents | Authority |
-|-----|----------|-----------|
-| **`docs/OFFICIAL_DEVELOPER_DOCS.md`** | **Complete official API from teardowngame.com. ALL function signatures, MP architecture, networking internals, mplib, gotchas. THIS IS GROUND TRUTH — overrides all other docs on conflicts.** | **HIGHEST** |
-| `docs/RESEARCH.md` | 43 findings on official API patterns — Shoot(), GetPlayerAimInfo(), QueryShot(), SetToolAmmoPickupAmount(), sync mechanisms, tool animation, kill attribution. Exact function signatures + code from official mods. | High |
-| `docs/BASE_GAME_MP_PATTERNS.md` | **How official Teardown tools/vehicles sync in MP. 12 patterns: server-owns-logic, registry broadcast, shared tables, event-driven deaths, ToolAnimator for all players, PlaySound auto-sync, ClientCall(0) for world events. Actionable improvement table for our mods.** | **HIGHEST** |
-| `docs/V2_SYNC_PATTERNS.md` | Registry sync, RPC (ServerCall/ClientCall), shared table, local-prediction + server-synced-remote pattern, quaternion sync, interpolation tuning. For any mod with custom entities. | High |
-| `docs/MP_DESYNC_PATTERNS.md` | 7 root causes of MP desync/lag: client projectile physics, per-tick RPC, FindShapes spam, server-side effects, raw key input, client QueryShot, host double-processing shared players[p]. Fix patterns for each. **Read before editing any mod.** | High |
-| `docs/MPLIB_INTERNALS.md` | How loot crates, weapon drops, and ammo pickup actually work inside mplib/tools.lua. Essential for understanding why SetToolAmmoPickupAmount matters. | High |
-| `docs/PER_TICK_RPC_FIX_GUIDE.md` | Decision tree + 4 fix patterns for the 69 PER-TICK-RPC lint warnings. **Read before fixing any PER-TICK-RPC finding.** | High |
-| `docs/UMF_TRANSLATION_GUIDE.md` | UMF framework API → v2 equivalents. Registry layer, tool patterns, input, UI, server/client split, 15-point conversion checklist. **Read before converting any UMF-blocked mod.** | High |
-| `docs/TEAM_PLUGINS.md` | All available plugins, agents, and skills with when-to-use decision table. **Every terminal should read this.** | High |
-| `docs/UI_STANDARDS.md` | **Universal UI rules for ALL tools and mods — layout zones, font sizes, menu standards. MUST follow when editing any HUD code.** | **HIGHEST** |
-| `docs/DESYNC_SCAN_RESULTS.md` | Full desync pattern scan results — 16 mods with v1 fallback loops (safe to fix), 4 with shared table bloat (need review). Check before MP optimization work. | High |
-| `docs/AUDIT_REPORT.md` | Generated feature matrix — which mods have/lack each feature. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` | Generated |
-| `docs/WHAT_WORKS.md` | **Proven fixes and patterns. Check BEFORE attempting any fix.** | **HIGHEST** |
-| `docs/WHAT_DOESNT_WORK.md` | **Failed approaches — never repeat these. Check BEFORE attempting any fix.** | **HIGHEST** |
-| `ISSUES_AND_FIXES.md` | 54 documented bugs (#20-#73) with root causes, fixes, and rules. Check before debugging. Append after fixing new bugs. | Project |
-| `MASTER_MOD_LIST.md` | All patched mods by batch with workshop IDs. Update after converting new mods. | Project |
-| `C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md` | Full v2 API (550+ functions). For exact function signatures. | Reference |
-
-### Official Sources (always prefer these over community info)
-- **Modding homepage:** https://www.teardowngame.com/modding/
-- **MP Modding guide:** https://teardowngame.com/modding-mp/index.html
-- **Lua API reference:** https://www.teardowngame.com/modding/api.html
-- **API XML (machine-readable):** https://www.teardowngame.com/modding/api.xml
-- **mplib source:** https://github.com/tuxedolabsorg/mplib
-- **Networking blog post:** https://blog.voxagon.se/2026/03/13/teardown-multiplayer.html
+| Doc | When to read | Contents |
+|-----|-------------|----------|
+| **`docs/BASE_GAME_MP_PATTERNS.md`** | **Every session** | 12 patterns from vanilla code: server-owns-logic, registry broadcast, shared tables, ToolAnimator, PlaySound auto-sync, event-driven deaths. Gold standard. |
+| **`docs/WHAT_WORKS.md`** | **Before any fix** | Proven fixes from our project. |
+| **`docs/WHAT_DOESNT_WORK.md`** | **Before any fix** | Failed approaches — never repeat. |
+| `docs/MP_REFERENCE.md` | When fixing specific MP issues | Function signatures, server/client split, sync mechanisms, 7 desync root causes, RPC fix patterns, vanilla code patterns. |
+| `docs/MPLIB_INTERNALS.md` | AmmoPickup / loot work | How loot crates, drops, and ammo pickup work inside mplib. |
+| `docs/UMF_TRANSLATION_GUIDE.md` | Converting UMF mods | UMF API → v2 equivalents, 15-point checklist. |
+| `docs/UI_STANDARDS.md` | Editing any HUD code | Layout zones, font sizes, menu standards. |
+| `docs/AUDIT_REPORT.md` | Feature matrix | Generated. Regenerate: `python -m tools.audit --output docs/AUDIT_REPORT.md` |
+| `ISSUES_AND_FIXES.md` | Debugging | 73 documented bugs with root causes, fixes, and rules. |
+| `MASTER_MOD_LIST.md` | After converting mods | All patched mods by batch with workshop IDs. |

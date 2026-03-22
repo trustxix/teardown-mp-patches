@@ -27,7 +27,7 @@
 
 ## API Surgeon → Docs Keeper inbox
 - **After fixing a bug:** Send `result` with mod name, what the bug was, how you fixed it, the rule to add
-- **After discovering a new API pattern:** Send `result` with the pattern details for RESEARCH.md
+- **After discovering a new API pattern:** Send `result` with the pattern details for MP_REFERENCE.md
 
 ## Mod Converter → Docs Keeper inbox
 - **After converting a new mod:** Send `result` with mod name, workshop ID, batch number

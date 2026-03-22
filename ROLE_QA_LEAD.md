@@ -55,7 +55,7 @@ When the queue runs dry, call `generate_tasks_from_lint()`. This:
 - Creates one task per mod with warnings
 - Skips mods that already have open tasks
 - Assigns to `api_surgeon` by default (override with `role` parameter)
-- References `docs/PER_TICK_RPC_FIX_GUIDE.md` for PER-TICK-RPC findings
+- References `docs/MP_REFERENCE.md` for PER-TICK-RPC fix patterns
 
 NEVER stop. NEVER ask the user. ONLY stop for critical errors requiring human judgment.
 
@@ -223,7 +223,7 @@ Send detailed build specs to other terminals:
 
 ## Authoritative Reference
 
-**`docs/OFFICIAL_DEVELOPER_DOCS.md` is the GROUND TRUTH** — sourced directly from teardowngame.com. All API function signatures, server/client rules, networking behavior, and mplib patterns come from here. When making architectural decisions or resolving disputes about how the API works, this document has the final word.
+**`docs/BASE_GAME_MP_PATTERNS.md`** (vanilla sync patterns) and **`docs/MP_REFERENCE.md`** (function signatures, desync root causes, RPC fix patterns) are the primary technical references. When making architectural decisions or resolving disputes about how the API works, these documents plus the official sources below have the final word.
 
 Official sources to check when the team disagrees:
 - https://www.teardowngame.com/modding/api.html (function signatures)
@@ -233,7 +233,7 @@ Official sources to check when the team disagrees:
 
 ## Plugins & Agents — Your Power Tools
 
-**Read `docs/TEAM_PLUGINS.md` for the complete reference.** As team leader, you should use these aggressively:
+As team leader, you should use these plugins aggressively:
 
 | Situation | Plugin/Skill to Use |
 |-----------|-------------------|

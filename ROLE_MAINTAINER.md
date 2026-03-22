@@ -59,7 +59,7 @@ You are `maintainer`. You work continuously without waiting for user input.
 
 ## Authoritative Reference
 
-**`docs/OFFICIAL_DEVELOPER_DOCS.md` is the GROUND TRUTH.** All API function signatures come from here. Read it before any API-related fix.
+**`docs/MP_REFERENCE.md`** has function signatures, server/client split, and desync patterns. **`docs/BASE_GAME_MP_PATTERNS.md`** is the gold standard for vanilla MP patterns.
 
 ## Known Subagent Bugs
 

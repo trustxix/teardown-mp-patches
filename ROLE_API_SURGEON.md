@@ -59,13 +59,7 @@ Instead: report idle → run diagnostics (READ-ONLY) → create tasks from findi
 
 ## Authoritative Reference
 
-**ALWAYS consult `docs/OFFICIAL_DEVELOPER_DOCS.md` first** — it contains the complete official API from teardowngame.com and is the ground truth for all function signatures and server/client rules. When any other doc contradicts it, the official docs win.
-
-Key official sources (bookmarked for quick lookup):
-- Function signatures: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Tool System API, Weapon & Combat API
-- Server vs client rules: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Critical Gotchas & Rules §5
-- Networking behavior: `docs/OFFICIAL_DEVELOPER_DOCS.md` → Networking Internals
-- mplib integration: `docs/OFFICIAL_DEVELOPER_DOCS.md` → mplib section
+**Consult `docs/MP_REFERENCE.md` for function signatures, server/client rules, and sync patterns.** `docs/BASE_GAME_MP_PATTERNS.md` is the gold standard for how vanilla code works.
 
 ## Expert Knowledge
 
@@ -100,7 +94,7 @@ local _, pos, endPos, dir = GetPlayerAimInfo(muzzlePos, 100, p)
 
 ## Plugins & Agents — Use These
 
-**Read `docs/TEAM_PLUGINS.md` for the complete reference.** Key ones for your role:
+Key plugins for your role:
 
 - **After editing a mod:** Dispatch `code-simplifier:code-simplifier` on the main.lua
 - **Stuck on a bug:** `Skill: superpowers:systematic-debugging` — don't guess

@@ -48,7 +48,6 @@ This gives you: mod count, last commit, game log errors, lint failures, missing 
 ## Detailed Docs
 
 - `CLAUDE.md` — full rewrite rules + developer tool commands
-- `docs/RESEARCH.md` — 34 API findings from official sources
-- `ISSUES_AND_FIXES.md` — 32 resolved bugs with rules
-- `docs/V2_SYNC_PATTERNS.md` — network sync patterns for custom entities
+- `docs/MP_REFERENCE.md` — function signatures, sync patterns, desync fixes
+- `ISSUES_AND_FIXES.md` — 73 resolved bugs with rules
 - `docs/AUDIT_REPORT.md` — generated feature matrix (run `python -m tools.audit`)

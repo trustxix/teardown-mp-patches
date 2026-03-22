@@ -2,6 +2,7 @@
 -- https://github.com/trustxix/trust-realism
 -- Include in weapon mods: #include "lib/ballistics.lua"
 -- @lint-ok-file HANDLE-GT-ZERO
+-- @lint-ok-file MISSING-VERSION2
 --
 -- Features:
 --   - Configurable per-weapon damage profiles
@@ -69,6 +70,84 @@ DEFAULT_RICOCHET_MATERIALS = {
 }
 
 -- ============================================================
+-- Barrel presets (convenience -- use with barrelLength/choke)
+-- ============================================================
+BARREL_PRESETS = {
+	sawed_off   = { length = 0.25, choke = 0 },    -- widest spread, shortest range
+	tactical    = { length = 0.45, choke = 0.3 },   -- moderate spread, medium range
+	standard    = { length = 0.5,  choke = 0.5 },   -- balanced
+	hunting     = { length = 0.7,  choke = 0.8 },   -- tight pattern, long range
+	competition = { length = 0.75, choke = 1.0 },   -- tightest pattern, longest range
+	rifle       = { length = 0.6,  choke = 0.9 },   -- rifle barrel (nearly no spread)
+	pistol      = { length = 0.12, choke = 0 },     -- short, no choke
+	smg         = { length = 0.25, choke = 0.2 },   -- compact, slight choke
+}
+
+--- Helper: apply a barrel preset to a config table
+function ApplyBarrelPreset(cfg, presetName)
+	local preset = BARREL_PRESETS[presetName]
+	if preset then
+		cfg.barrelLength = preset.length
+		cfg.choke = preset.choke
+	end
+	return cfg
+end
+
+-- ============================================================
+-- Ammo subtype registry
+-- ============================================================
+-- Ammo subtypes are variants of a caliber with different properties.
+-- The caliber is the base, the ammo type modifies specific fields.
+--
+-- Usage:
+--   RegisterAmmoType("12gauge", "slug", { pellets = 1, damage = 80, spread = 0.01, penScale = 2.0 })
+--   local gun = CreateBallisticsProfile({ caliber = "12gauge", ammoType = "slug", toolId = "my-gun" })
+--
+-- Runtime switching (for weapons that support multiple ammo types):
+--   profile:SetAmmoType("slug")  -- re-applies caliber base + new ammo overrides
+
+AMMO_TYPE_REGISTRY = {}
+
+function RegisterAmmoType(caliber, name, overrides)
+	if not AMMO_TYPE_REGISTRY[caliber] then
+		AMMO_TYPE_REGISTRY[caliber] = {}
+	end
+	AMMO_TYPE_REGISTRY[caliber][name] = overrides
+end
+
+function GetAmmoType(caliber, name)
+	return AMMO_TYPE_REGISTRY[caliber] and AMMO_TYPE_REGISTRY[caliber][name]
+end
+
+-- Built-in 12gauge ammo subtypes
+RegisterAmmoType("12gauge", "buckshot", {})  -- default, no overrides needed
+
+RegisterAmmoType("12gauge", "slug", {
+	pellets = 1, damage = 80, spread = 0.01,
+	penScale = 2.0, pushScale = 0.6,
+	maxPenetrations = 3, penRetain = 0.55,
+	damageVariance = 0.03,
+	holeScale = 1.5,
+	muzzleFlashSize = 0.7, muzzleSmokeSize = 3.0,
+})
+
+RegisterAmmoType("12gauge", "birdshot", {
+	pellets = 40, damage = 5, spread = 0.12,
+	range = 25, fullRange = 4, halfRange = 12, minFalloff = 0.05,
+	penScale = 0, pushScale = 0.05,
+	maxPenetrations = 1, maxRicochets = 0,
+	damageVariance = 0.2,
+	holeScale = 0.3,
+})
+
+RegisterAmmoType("12gauge", "ap", {
+	pellets = 8, damage = 35, spread = 0.05,
+	penScale = 2.5, pushScale = 0.1,
+	maxPenetrations = 3, penRetain = 0.5,
+	materials = { metal = { 0.7, 15 }, heavymetal = { 0.5, 8 }, hardmetal = { 0.3, 4 } },
+})
+
+-- ============================================================
 -- Caliber registry -- define ammo types once, reuse everywhere
 -- ============================================================
 -- A caliber defines the ballistic properties of ammunition.
@@ -114,7 +193,8 @@ RegisterCaliber("12gauge", {
 	maxRicochets = 1,
 	ricochetRetain = 0.25,
 	ricochetScatter = 0.08,
-	soundVolume = 0.8,    -- loud boom
+	soundVolume = 0.8,
+	ammo = { magazineSize = 8, reserveDefault = 32, reloadTime = 1.5 },
 	materials   = {
 		glass     = { 1.8,  40 },
 		wood      = { 1.2,  18 },
@@ -139,8 +219,9 @@ RegisterCaliber("9mm", {
 	penRetain   = 0.3,    -- 30% energy retained
 	damageVariance = 0.08, -- +/-8% (factory ammo, fairly consistent)
 	maxRicochets = 1,     -- one bounce
-	ricochetRetain = 0.3,  -- 30% retained (jacketed round, cleaner bounce than buckshot)
+	ricochetRetain = 0.3,
 	ricochetScatter = 0.04,
+	ammo = { magazineSize = 15, reserveDefault = 60, reloadTime = 1.2 },
 })
 
 RegisterCaliber("5.56nato", {
@@ -159,7 +240,8 @@ RegisterCaliber("5.56nato", {
 	damageVariance = 0.05, -- +/-5% (military spec, tight tolerance)
 	maxRicochets = 2,     -- two bounces (high velocity, maintains trajectory)
 	ricochetRetain = 0.35,
-	ricochetScatter = 0.03, -- tight scatter (pointed bullet, predictable deflection)
+	ricochetScatter = 0.03,
+	ammo = { magazineSize = 30, reserveDefault = 120, reloadTime = 2.0 },
 	materials   = {
 		wood      = { 1.2,  40 },
 		masonry   = { 0.7,  20 },
@@ -183,8 +265,9 @@ RegisterCaliber("7.62nato", {
 	penRetain   = 0.5,    -- 50% retained -- keeps most energy
 	damageVariance = 0.05, -- +/-5% (military spec)
 	maxRicochets = 2,
-	ricochetRetain = 0.4,  -- heavy round keeps more energy on bounce
+	ricochetRetain = 0.4,
 	ricochetScatter = 0.03,
+	ammo = { magazineSize = 20, reserveDefault = 80, reloadTime = 2.2 },
 	materials   = {
 		wood      = { 1.3,  50 },
 		masonry   = { 0.8,  30 },
@@ -208,8 +291,9 @@ RegisterCaliber("50bmg", {
 	penRetain   = 0.6,    -- 60% retained -- massive energy reserve
 	damageVariance = 0.03, -- +/-3% (match-grade precision)
 	maxRicochets = 2,
-	ricochetRetain = 0.45, -- massive round, lots of energy on bounce
-	ricochetScatter = 0.02, -- very predictable deflection
+	ricochetRetain = 0.45,
+	ricochetScatter = 0.02,
+	ammo = { magazineSize = 5, reserveDefault = 20, reloadTime = 3.0 },
 	materials   = {
 		wood      = { 1.5,  80 },
 		masonry   = { 1.0,  50 },
@@ -241,13 +325,24 @@ BallisticsProfile = {}
 
 function CreateBallisticsProfile(cfg)
 	-- If a caliber is specified, use it as the base and overlay cfg on top
-	if cfg.caliber then
-		local base = CALIBER_REGISTRY[cfg.caliber]
+	local caliberName = cfg.caliber
+	if caliberName then
+		local base = CALIBER_REGISTRY[caliberName]
 		if base then
 			local merged = {}
 			for k, v in pairs(base) do merged[k] = v end
+			-- Apply ammo subtype overrides (between caliber base and per-weapon overrides)
+			if cfg.ammoType and cfg.ammoType ~= "" then
+				local ammoOverrides = GetAmmoType(caliberName, cfg.ammoType)
+				if ammoOverrides then
+					for k, v in pairs(ammoOverrides) do merged[k] = v end
+				end
+			end
+			-- Per-weapon overrides take final priority
 			for k, v in pairs(cfg) do merged[k] = v end
-			merged.caliber = nil  -- don't store the lookup key
+			merged.caliber = nil
+			merged.ammoType = cfg.ammoType  -- preserve for runtime switching
+			merged._caliberName = caliberName -- preserve for runtime switching
 			cfg = merged
 		end
 	end
@@ -297,6 +392,12 @@ function CreateBallisticsProfile(cfg)
 		-- Spread (0 = laser, 0.07 = shotgun, 0.15 = wide scatter)
 		spread       = cfg.spread or 0,
 
+		-- Barrel & choke (optional -- if set, overrides spread/range/fullRange)
+		-- barrelLength in meters: 0.25 = sawed-off, 0.5 = tactical, 0.7 = hunting
+		-- choke 0-1: 0 = cylinder (no choke, wide), 1 = full choke (tight pattern)
+		barrelLength = cfg.barrelLength or nil,
+		choke        = cfg.choke or nil,
+
 		-- Hole size vs penetration (decoupled)
 		holeScale    = cfg.holeScale or 1.0,     -- Shoot() damage multiplier (controls crater size)
 		penScale     = cfg.penScale or 0,        -- extra MakeHole hard penetration (0 = no extra, >0 = punch deeper)
@@ -330,9 +431,34 @@ function CreateBallisticsProfile(cfg)
 		_impactHandles = {},                      -- loaded impact handles
 		_soundsReady = false,                     -- true after InitSounds() called
 
+		-- Visual effects
+		muzzleFlash  = cfg.muzzleFlash ~= false,  -- enable muzzle flash (default true)
+		muzzleFlashSize = cfg.muzzleFlashSize or 0.5, -- fire particle size
+		muzzleSmokeSize = cfg.muzzleSmokeSize or 2.5, -- smoke particle size
+		muzzleLightIntensity = cfg.muzzleLightIntensity or 0.5, -- PointLight intensity at muzzle
+		muzzleLightDuration = cfg.muzzleLightDuration or 0.05,  -- how long muzzle light lasts (seconds)
+		impactParticles = cfg.impactParticles ~= false, -- enable impact particles (default true)
+		impactParticleSize = cfg.impactParticleSize or 0.3, -- impact smoke size
+
+		-- Per-material impact effects (what spawns when a pellet hits)
+		materialEffects = cfg.materialEffects or nil, -- { metal = "spark", wood = "splinter", ... }
+
 		-- Identity
 		toolId       = cfg.toolId or "unknown",  -- kill feed attribution
 	}
+	-- Barrel & choke derivation: physical properties override manual spread/range
+	if profile.barrelLength and profile.choke then
+		local bl = profile.barrelLength
+		local ch = profile.choke
+		-- Longer barrel = tighter spread, more range, more full-power zone
+		-- More choke = tighter spread, slightly more full-power zone
+		-- Base spread of 0.12 is a cylinder-bore sawed-off (worst case)
+		profile.spread = 0.12 * (1.0 - ch * 0.7) / (bl * 2.0)
+		profile.range = profile.range * bl * 1.5
+		profile.fullRange = profile.fullRange * (1.0 + ch * 0.5) * (bl / 0.5)
+		profile.halfRange = profile.halfRange * (1.0 + ch * 0.3) * (bl / 0.5)
+	end
+
 	setmetatable(profile, { __index = BallisticsProfile })
 	return profile
 end
@@ -377,6 +503,7 @@ function BallisticsProfile:InitSounds()
 	end
 
 	self._soundsReady = true
+	_BALLISTICS_ACTIVE_PROFILE = self
 end
 
 --- Play the fire sound at a position. Called automatically by Fire/FireFromTool.
@@ -398,6 +525,80 @@ function BallisticsProfile:PlayImpactSound(matName, hitPos)
 end
 
 -- ============================================================
+-- Visual effects system
+-- ============================================================
+-- Effects are client-only (SpawnParticle, PointLight). The server triggers them
+-- via ClientCall(0, ...) so all clients see the same effects at the same positions.
+-- This follows base game MP pattern: ClientCall(0) for world-visible events.
+
+-- Default material -> particle type mapping
+DEFAULT_MATERIAL_EFFECTS = {
+	metal       = { particle = "smoke",     size = 0.15, color = {1, 0.8, 0.3} },  -- sparky
+	heavymetal  = { particle = "smoke",     size = 0.15, color = {1, 0.8, 0.3} },
+	hardmetal   = { particle = "smoke",     size = 0.1,  color = {1, 0.7, 0.2} },
+	wood        = { particle = "smoke",     size = 0.2,  color = {0.8, 0.7, 0.5} }, -- dusty
+	glass       = { particle = "smoke",     size = 0.25, color = {1, 1, 1} },        -- white dust
+	masonry     = { particle = "smoke",     size = 0.3,  color = {0.7, 0.65, 0.6} }, -- brick dust
+	rock        = { particle = "smoke",     size = 0.25, color = {0.6, 0.6, 0.6} },  -- grey dust
+	hardmasonry = { particle = "smoke",     size = 0.25, color = {0.65, 0.6, 0.55} },
+	plaster     = { particle = "smoke",     size = 0.35, color = {0.9, 0.9, 0.85} }, -- white cloud
+	dirt        = { particle = "smoke",     size = 0.3,  color = {0.5, 0.4, 0.3} },  -- brown dust
+	foliage     = { particle = "smoke",     size = 0.15, color = {0.4, 0.6, 0.3} },  -- green bits
+	plastic     = { particle = "smoke",     size = 0.15, color = {0.8, 0.8, 0.8} },
+}
+
+--- Spawn muzzle flash effect. Called by Fire() via ClientCall(0).
+-- CLIENT-SIDE ONLY -- this function is called by the client handler.
+function BallisticsProfile:SpawnMuzzleFlash(pos)
+	if not self.muzzleFlash then return end
+	SpawnParticle("fire", pos, Vec(0, 1.0 + math.random() * 0.5, 0), self.muzzleFlashSize, 0.15)
+	SpawnParticle("darksmoke", pos, Vec(0, 0.8 + math.random() * 0.3, 0), self.muzzleSmokeSize * 0.3, 2.0)
+end
+
+--- Spawn impact effect for a material at a position.
+-- CLIENT-SIDE ONLY -- called by the client handler.
+function BallisticsProfile:SpawnImpactEffect(matName, hitPos)
+	if not self.impactParticles then return end
+
+	-- Check for custom material effects first, then defaults
+	local fx = (self.materialEffects and self.materialEffects[matName])
+		or DEFAULT_MATERIAL_EFFECTS[matName]
+
+	if fx then
+		local vel = Vec(0, 0.5 + math.random() * 0.5, 0)
+		SpawnParticle(fx.particle, hitPos, vel, fx.size * self.impactParticleSize / 0.3, 1.0)
+	else
+		-- Fallback: generic smoke puff
+		SpawnParticle("smoke", hitPos, Vec(0, 0.5, 0), self.impactParticleSize, 1.0)
+	end
+end
+
+--- Client-side handler for ballistics effects. Mod must register this:
+--   function client.ballisticsEffect(effectType, x, y, z, matName)
+--       _ballisticsEffectHandler(effectType, x, y, z, matName)
+--   end
+-- Or use RegisterBallisticsEffectHandler() for automatic setup.
+function _ballisticsEffectHandler(effectType, x, y, z, matName)
+	local pos = Vec(x, y, z)
+	-- Find the active profile (stored globally by InitSounds)
+	local profile = _BALLISTICS_ACTIVE_PROFILE
+	if not profile then return end
+
+	if effectType == "muzzle" then
+		profile:SpawnMuzzleFlash(pos)
+		if profile.muzzleLightIntensity > 0 then
+			PointLight(pos, 1, 0.8, 0.5, profile.muzzleLightIntensity)
+		end
+	elseif effectType == "impact" then
+		profile:SpawnImpactEffect(matName or "", pos)
+	end
+end
+
+--- Register the active profile for client-side effect handling.
+-- Call in InitSounds() automatically.
+_BALLISTICS_ACTIVE_PROFILE = nil
+
+-- ============================================================
 -- Server context guard
 -- ============================================================
 -- All firing functions MUST run on the server. If called from client context,
@@ -407,6 +608,108 @@ end
 -- Detection: try calling a server-only function (SetToolAmmo with dummy args).
 -- On client, it silently fails or errors. We use a simpler approach: track
 -- which context we're in via a flag set by the mod's server/client callbacks.
+
+-- ============================================================
+-- Ammo / magazine system
+-- ============================================================
+-- Server-authoritative: server owns magazine + reserve state per player.
+-- Syncs to clients via shared.ballisticsAmmo[player] for HUD display.
+-- No double-processing risk: all ammo state is server-only.
+
+--- Initialize ammo state for a player. Call in server.tick PlayersAdded.
+function BallisticsProfile:InitAmmo(p)
+	if not self.ammo then return end
+	shared.ballisticsAmmo = shared.ballisticsAmmo or {}
+	shared.ballisticsAmmo[p] = {
+		magazine = self.ammo.magazineSize or 8,
+		reserve = self.ammo.reserveDefault or 32,
+		reloading = false,
+		reloadTimer = 0,
+	}
+end
+
+--- Clean up ammo state for a player. Call in server.tick PlayersRemoved.
+function BallisticsProfile:CleanupAmmo(p)
+	if shared.ballisticsAmmo then
+		shared.ballisticsAmmo[p] = nil
+	end
+end
+
+--- Check if the weapon can fire (has ammo, not reloading). SERVER only.
+function BallisticsProfile:CanFire(p)
+	if not self.ammo then return true end
+	local state = shared.ballisticsAmmo and shared.ballisticsAmmo[p]
+	if not state then return true end
+	return state.magazine > 0 and not state.reloading
+end
+
+--- Consume one round from the magazine. Call after firing. SERVER only.
+-- Returns true if consumed, false if empty. Auto-triggers reload if empty.
+function BallisticsProfile:ConsumeAmmo(p)
+	if not self.ammo then return true end
+	local state = shared.ballisticsAmmo and shared.ballisticsAmmo[p]
+	if not state then return true end
+	if state.magazine <= 0 then return false end
+
+	state.magazine = state.magazine - 1
+
+	-- Auto-reload when empty
+	if state.magazine <= 0 and state.reserve > 0 then
+		state.reloading = true
+		state.reloadTimer = self.ammo.reloadTime or 1.5
+	end
+	return true
+end
+
+--- Start a manual reload (R key). SERVER only.
+-- Conservative reload: only transfers shells needed, not full magazine.
+function BallisticsProfile:StartReload(p)
+	if not self.ammo then return end
+	local state = shared.ballisticsAmmo and shared.ballisticsAmmo[p]
+	if not state then return end
+	if state.reloading then return end
+	local magSize = self.ammo.magazineSize or 8
+	if state.magazine >= magSize then return end
+	if state.reserve <= 0 then return end
+	state.reloading = true
+	state.reloadTimer = self.ammo.reloadTime or 1.5
+end
+
+--- Tick the reload timer. Call in server.tickPlayer every frame. SERVER only.
+function BallisticsProfile:TickAmmo(p, dt)
+	if not self.ammo then return end
+	local state = shared.ballisticsAmmo and shared.ballisticsAmmo[p]
+	if not state then return end
+
+	if state.reloading then
+		state.reloadTimer = state.reloadTimer - dt
+		if state.reloadTimer <= 0 then
+			local magSize = self.ammo.magazineSize or 8
+			local needed = magSize - state.magazine
+			local available = math.min(needed, state.reserve)
+			state.magazine = state.magazine + available
+			state.reserve = state.reserve - available
+			state.reloading = false
+			state.reloadTimer = 0
+		end
+	end
+end
+
+--- Get ammo display text for HUD. Reads from shared (works on client).
+function BallisticsProfile:GetAmmoDisplay(p)
+	if not self.ammo then return "" end
+	local state = shared.ballisticsAmmo and shared.ballisticsAmmo[p]
+	if not state then return "" end
+	if state.reloading then return "RELOADING..." end
+	if state.magazine <= 0 and state.reserve <= 0 then return "EMPTY" end
+	return state.magazine .. " | " .. state.reserve
+end
+
+--- Get raw ammo state (for custom HUD). Reads from shared.
+function BallisticsProfile:GetAmmoState(p)
+	if not self.ammo then return nil end
+	return shared.ballisticsAmmo and shared.ballisticsAmmo[p]
+end
 
 _BALLISTICS_SERVER_CONTEXT = false
 
@@ -433,6 +736,28 @@ end
 -- ============================================================
 -- Ballistics math
 -- ============================================================
+
+--- Switch ammo type at runtime. Rebuilds the profile from caliber base + new ammo overrides.
+-- Call on SERVER only. Preserves per-weapon overrides and sound handles.
+function BallisticsProfile:SetAmmoType(ammoName)
+	local caliberName = self._caliberName
+	if not caliberName then return end
+
+	local base = CALIBER_REGISTRY[caliberName]
+	if not base then return end
+
+	-- Rebuild: caliber base -> ammo overrides -> keep identity/sounds
+	local ammoOverrides = GetAmmoType(caliberName, ammoName) or {}
+	local keepFields = { toolId = self.toolId, sounds = self.sounds, impactSounds = self.impactSounds,
+		_soundHandles = self._soundHandles, _impactHandles = self._impactHandles,
+		_soundsReady = self._soundsReady, _caliberName = caliberName,
+		barrelLength = self.barrelLength, choke = self.choke }
+
+	for k, v in pairs(base) do self[k] = v end
+	for k, v in pairs(ammoOverrides) do self[k] = v end
+	for k, v in pairs(keepFields) do self[k] = v end
+	self.ammoType = ammoName
+end
 
 --- Get damage multiplier for hitting a specific material at a given distance.
 -- Each material has its own effective range -- beyond that range, damage drops
@@ -550,10 +875,15 @@ function BallisticsProfile:FireProjectile(muzzlePos, dir, p, _energy, _depth, _t
 	-- Shoot() with holeScale controls visible crater size
 	Shoot(muzzlePos, dir, self.bulletType, finalDamage * self.holeScale, self.range, p, self.toolId)
 
-	-- Impact sound (only on initial hits and first pass-through, not every recursion)
-	if hit and depth <= 1 and self._soundsReady and hitMatName ~= "" then
+	-- Impact sound + particles (only on initial hits and first pass-through, not every recursion)
+	if hit and depth <= 1 and hitMatName ~= "" then
 		local hitPos = VecAdd(muzzlePos, VecScale(dir, dist))
-		self:PlayImpactSound(hitMatName, hitPos)
+		if self._soundsReady then
+			self:PlayImpactSound(hitMatName, hitPos)
+		end
+		if self.impactParticles then
+			ClientCall(0, "client.ballisticsEffect", "impact", hitPos[1], hitPos[2], hitPos[3], hitMatName)
+		end
 	end
 
 	-- Physics push correction
@@ -640,6 +970,11 @@ function BallisticsProfile:Fire(muzzlePos, baseDir, p)
 		self:PlayFireSound(muzzlePos)
 	end
 
+	-- Muzzle flash: ClientCall(0) tells all clients to spawn particles at muzzle
+	if self.muzzleFlash then
+		ClientCall(0, "client.ballisticsEffect", "muzzle", muzzlePos[1], muzzlePos[2], muzzlePos[3], "")
+	end
+
 	for i = 1, self.pellets do
 		local dir = self:ApplySpread(baseDir)
 		self:FireProjectile(muzzlePos, dir, p)
@@ -655,4 +990,107 @@ function BallisticsProfile:FireFromTool(toolBody, muzzleOffset, p)
 	local muzzlePos = TransformToParentPoint(toolTrans, muzzleOffset)
 	local aimHit, aimStart, aimEnd, aimDir = GetPlayerAimInfo(muzzlePos, self.range, p)
 	self:Fire(muzzlePos, aimDir, p)
+end
+
+-- ============================================================
+-- Non-weapon tool profiles
+-- ============================================================
+-- Extend the framework to non-weapon tools: hooks, beams, launchers, utilities.
+-- Each type has configurable properties and shared cooldown/state management.
+-- All state is server-authoritative via shared.toolState[player].
+
+ToolProfile = {}
+
+function CreateToolProfile(cfg)
+	local profile = {
+		type         = cfg.type or "utility",     -- "hook", "beam", "launcher", "utility"
+		range        = cfg.range or 50,
+		cooldown     = cfg.cooldown or 0,         -- seconds between uses
+		toolId       = cfg.toolId or "unknown",
+
+		-- Hook-specific
+		travelSpeed  = cfg.travelSpeed or 100,    -- hook projectile speed
+		pullForce    = cfg.pullForce or 120,       -- pull strength
+		attachTo     = cfg.attachTo or "both",     -- "static", "dynamic", "both"
+
+		-- Beam-specific
+		damagePerSecond = cfg.damagePerSecond or 0, -- continuous damage (0 = non-damaging beam)
+		effectColor  = cfg.effectColor or {1, 1, 1}, -- beam color
+		beamWidth    = cfg.beamWidth or 0.05,
+
+		-- Launcher-specific
+		projectileSpeed = cfg.projectileSpeed or 50,
+		gravity      = cfg.gravity or 10,
+		fuseTime     = cfg.fuseTime or 3.0,
+		blastRadius  = cfg.blastRadius or 5,
+		blastDamage  = cfg.blastDamage or 1.0,
+
+		-- Sound
+		sounds       = cfg.sounds or nil,
+		soundVolume  = cfg.soundVolume or 0.5,
+		_soundHandles = {},
+		_soundsReady = false,
+	}
+	setmetatable(profile, { __index = ToolProfile })
+	return profile
+end
+
+--- Initialize tool state for a player. Call in server.tick PlayersAdded.
+function ToolProfile:InitState(p)
+	shared.toolState = shared.toolState or {}
+	shared.toolState[p] = shared.toolState[p] or {}
+	shared.toolState[p][self.toolId] = {
+		cooldownTimer = 0,
+		active = false,
+	}
+end
+
+--- Clean up tool state for a player. Call in server.tick PlayersRemoved.
+function ToolProfile:CleanupState(p)
+	if shared.toolState and shared.toolState[p] then
+		shared.toolState[p][self.toolId] = nil
+	end
+end
+
+--- Check if the tool is ready (off cooldown). Works on both server and client (reads shared).
+function ToolProfile:IsReady(p)
+	local state = shared.toolState and shared.toolState[p] and shared.toolState[p][self.toolId]
+	if not state then return true end
+	return state.cooldownTimer <= 0 and not state.active
+end
+
+--- Start the cooldown timer. SERVER only.
+function ToolProfile:StartCooldown(p)
+	local state = shared.toolState and shared.toolState[p] and shared.toolState[p][self.toolId]
+	if state then
+		state.cooldownTimer = self.cooldown
+	end
+end
+
+--- Tick the cooldown timer. Call in server.tickPlayer. SERVER only.
+function ToolProfile:TickCooldown(p, dt)
+	local state = shared.toolState and shared.toolState[p] and shared.toolState[p][self.toolId]
+	if state and state.cooldownTimer > 0 then
+		state.cooldownTimer = state.cooldownTimer - dt
+	end
+end
+
+--- Get remaining cooldown for HUD. Works on client (reads shared).
+function ToolProfile:GetCooldownRemaining(p)
+	local state = shared.toolState and shared.toolState[p] and shared.toolState[p][self.toolId]
+	if not state then return 0 end
+	return math.max(0, state.cooldownTimer)
+end
+
+--- Initialize sounds for the tool. Call in BOTH server.init and client.init.
+function ToolProfile:InitSounds()
+	if self._soundsReady then return end
+	if self.sounds then
+		for key, path in pairs(self.sounds) do
+			if path and path ~= "" then
+				self._soundHandles[key] = LoadSound(path)
+			end
+		end
+	end
+	self._soundsReady = true
 end

@@ -1,0 +1,21 @@
+TEST REPORT: Hook_Shotgun
+======================================================
+Generated: 2026-03-22 05:12:57
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 5/10 assets missing
+    - Asset NOT found: snd/impact_metal.ogg
+    - Asset NOT found: snd/impact_wood.ogg
+    - Asset NOT found: snd/impact_glass.ogg
+    - Asset NOT found: snd/impact_stone.ogg
+    - Asset NOT found: snd/impact_soft.ogg
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      PASS — Complete chain: server handles usetool with MakeHole() + Shoot()
+  Effect chain:      PASS
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

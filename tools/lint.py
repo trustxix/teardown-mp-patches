@@ -246,7 +246,15 @@ _MOUSEDX_RE = re.compile(r'"mousedx"|"mousedy"')
 
 
 def check_mousedx(source: str) -> list[dict]:
-    """Catch "mousedx" and "mousedy" key names - use "camerax"/"cameray" instead."""
+    """Catch "mousedx" and "mousedy" key names - use "camerax"/"cameray" instead.
+
+    EXCEPTION: mousedx/mousedy are VALID in mods that use SetCameraTransform()
+    to override the camera. camerax/cameray return 0 in that context.
+    """
+    # If the mod uses SetCameraTransform, mousedx/mousedy are correct
+    if "SetCameraTransform" in source:
+        return []
+
     findings = []
     for lineno, raw_line in enumerate(source.splitlines(), 1):
         stripped = _strip_comment(raw_line)
@@ -257,7 +265,8 @@ def check_mousedx(source: str) -> list[dict]:
             findings.append(_finding(
                 "MOUSEDX",
                 lineno,
-                f'"{key}" does not work in v2; use "{replacement}" instead',
+                f'"{key}" does not work in v2; use "{replacement}" instead '
+                f'(exception: mousedx/mousedy ARE valid if mod uses SetCameraTransform)',
             ))
     return findings
 
@@ -2048,6 +2057,191 @@ def check_makehole_instead_of_shoot(source: str) -> list[dict]:
     return findings
 
 
+# ---------------------------------------------------------------------------
+# Check: File-scope local in v2 scripts (Issue #75)
+# ---------------------------------------------------------------------------
+
+_LOCAL_AT_FILE_SCOPE_RE = re.compile(r"^local\s+\w+\s*=")
+
+def check_file_scope_local(source: str) -> list[dict]:
+    """Catch 'local x = ...' at file scope in v2 scripts.
+
+    The v2 preprocessor splits server/client into separate chunks.
+    File-scope locals become upvalues in one chunk, invisible to the other.
+    """
+    if "#version 2" not in source:
+        return []
+    findings = []
+    depth = 0
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line).strip()
+        if not stripped:
+            continue
+        # Skip preprocessor directives
+        if stripped.startswith("#"):
+            continue
+        opens = _count_opens(stripped)
+        ends = _count_ends(stripped)
+        if depth == 0 and _LOCAL_AT_FILE_SCOPE_RE.match(stripped):
+            findings.append(_finding(
+                "FILE-SCOPE-LOCAL",
+                lineno,
+                "local variable at file scope in v2 script -- invisible across server/client chunks. Use global instead",
+            ))
+        depth += opens - ends
+        if depth < 0:
+            depth = 0
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check: Large shared table init (sync bomb)
+# ---------------------------------------------------------------------------
+
+_SHARED_INIT_LOOP_RE = re.compile(
+    r"for\s+\w+\s*=\s*1\s*,\s*(\d+)\s+do"
+)
+
+def check_shared_table_bomb(source: str) -> list[dict]:
+    """Catch large shared.* table initialization (>50 elements).
+
+    shared.* syncs entire table to all clients every frame.
+    500 elements = ~3500 values/frame = extreme lag.
+    """
+    findings = []
+    lines = source.splitlines()
+    for lineno, raw_line in enumerate(lines, 1):
+        stripped = _strip_comment(raw_line)
+        m = _SHARED_INIT_LOOP_RE.search(stripped)
+        if m:
+            count = int(m.group(1))
+            if count > 50:
+                # Check if shared.* is referenced within next 5 lines
+                context = "\n".join(lines[lineno:lineno+5])
+                if "shared." in context or "shared[" in context:
+                    findings.append(_finding(
+                        "SHARED-TABLE-BOMB",
+                        lineno,
+                        f"Initializing {count}-element shared table -- synced to all clients every frame. "
+                        f"Use server-local table + ClientCall for events instead",
+                    ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check: camerax/cameray with SetCameraTransform (Issue #76)
+# ---------------------------------------------------------------------------
+
+def check_camerax_with_setcamera(source: str) -> list[dict]:
+    """Catch camerax/cameray in mods that use SetCameraTransform.
+
+    camerax/cameray return 0 when script controls camera.
+    Use mousedx/mousedy for custom cameras.
+    """
+    has_setcamera = "SetCameraTransform" in source
+    if not has_setcamera:
+        return []
+    findings = []
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        if '"camerax"' in stripped or '"cameray"' in stripped:
+            findings.append(_finding(
+                "CAMERAX-WITH-SETCAMERA",
+                lineno,
+                "camerax/cameray returns 0 when SetCameraTransform is active. Use mousedx/mousedy instead",
+                severity="warn",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check: PlayersAdded/Removed without player.lua include (Issue #77)
+# ---------------------------------------------------------------------------
+
+def check_players_added_no_include(source: str) -> list[dict]:
+    """Catch PlayersAdded()/PlayersRemoved()/Players() without player.lua include.
+
+    These functions are defined in script/include/player.lua.
+    Without the include, calling them crashes server.tick silently.
+    Use GetAddedPlayers()/GetRemovedPlayers()/GetAllPlayers() instead.
+    """
+    has_include = 'include/player.lua' in source or 'include\\player.lua' in source
+    if has_include:
+        return []
+    findings = []
+    iterator_re = re.compile(r"\b(PlayersAdded|PlayersRemoved|Players)\s*\(\s*\)")
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        m = iterator_re.search(stripped)
+        if m:
+            func = m.group(1)
+            alt = {"PlayersAdded": "GetAddedPlayers", "PlayersRemoved": "GetRemovedPlayers", "Players": "GetAllPlayers"}
+            findings.append(_finding(
+                "PLAYERS-NO-INCLUDE",
+                lineno,
+                f"{func}() requires #include \"script/include/player.lua\". "
+                f"Use {alt[func]}() (engine built-in) or add the include",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check: Host-only hardcode (GetLocalPlayer()==1)
+# ---------------------------------------------------------------------------
+
+_HOST_HARDCODE_RE = re.compile(
+    r"GetLocalPlayer\s*\(\s*\)\s*==\s*1\b"
+)
+
+def check_host_only_hardcode(source: str) -> list[dict]:
+    """Catch GetLocalPlayer()==1 which restricts functionality to host only."""
+    findings = []
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        if _HOST_HARDCODE_RE.search(stripped):
+            findings.append(_finding(
+                "HOST-ONLY-HARDCODE",
+                lineno,
+                "GetLocalPlayer()==1 restricts to host only. Remove ==1 to allow all players",
+                severity="warn",
+            ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Check: Variable key with player param (Issue #73 expanded)
+# ---------------------------------------------------------------------------
+
+_VARIABLE_KEY_PLAYER_RE = re.compile(
+    r"\b(InputPressed|InputReleased|InputDown)\s*\(\s*([a-zA-Z_]\w*(?:\.\w+)*(?:\[.*?\])?)\s*,"
+)
+
+def check_variable_key_player(source: str) -> list[dict]:
+    """Catch InputPressed(variable, p) where first arg is not a string literal.
+
+    Variable key names bypass RAW-KEY-PLAYER detection. If the variable
+    holds a raw key (like "r" or "space"), it silently fails for non-host.
+    """
+    findings = []
+    for lineno, raw_line in enumerate(source.splitlines(), 1):
+        stripped = _strip_comment(raw_line)
+        for m in _VARIABLE_KEY_PLAYER_RE.finditer(stripped):
+            func_name = m.group(1)
+            key_expr = m.group(2)
+            # Skip if it's a string literal (already caught by RAW-KEY-PLAYER)
+            if stripped[m.start(2)-1:m.start(2)] == '"':
+                continue
+            findings.append(_finding(
+                "VARIABLE-KEY-PLAYER",
+                lineno,
+                f"{func_name}({key_expr}, p) -- variable key with player param bypasses lint. "
+                f"If this is a raw key, it silently fails for non-host. "
+                f"Move to client with IsPlayerLocal(p) + ServerCall",
+                severity="warn",
+            ))
+    return findings
+
+
 # ===========================================================================
 # Aggregation
 # ===========================================================================
@@ -2064,6 +2258,9 @@ TIER1_CHECKS = [
     check_set_player_health_order,
     check_missing_version2,
     check_queryshot_player_guard,
+    check_file_scope_local,
+    check_shared_table_bomb,
+    check_players_added_no_include,
 ]
 
 TIER2_CHECKS = [
@@ -2093,6 +2290,9 @@ TIER2_CHECKS = [
     check_missing_players_removed,
     check_double_process_timer,
     check_makehole_instead_of_shoot,
+    check_camerax_with_setcamera,
+    check_host_only_hardcode,
+    check_variable_key_player,
 ]
 
 

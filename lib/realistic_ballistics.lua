@@ -416,6 +416,9 @@ function CreateBallisticsProfile(cfg)
 		-- Per-pellet variance (0 = uniform, 0.15 = +/-15% randomized damage)
 		damageVariance = cfg.damageVariance or 0,
 
+		-- Ammo system (nil = infinite ammo, table = magazine system)
+		ammo         = cfg.ammo or nil,
+
 		-- Ricochet
 		ricochetAngle   = cfg.ricochetAngle or 45,    -- max incidence angle in degrees for ricochet (0=never, 90=always)
 		ricochetRetain  = cfg.ricochetRetain or 0.3,   -- energy retained after bounce (exponential per bounce)
@@ -1007,6 +1010,23 @@ function BallisticsProfile:FireFromTool(toolBody, muzzleOffset, p)
 	if assertServer("FireFromTool") then return end
 	local toolTrans = GetBodyTransform(toolBody)
 	local muzzlePos = TransformToParentPoint(toolTrans, muzzleOffset)
+	local eyePos = GetPlayerEyeTransform(p).pos
+
+	-- Muzzle obstruction check: if the muzzle is inside or behind geometry,
+	-- fire from the eye position instead. This prevents shots going through
+	-- walls when the barrel clips into a surface.
+	local toMuzzle = VecSub(muzzlePos, eyePos)
+	local muzzleDist = VecLength(toMuzzle)
+	if muzzleDist > 0.01 then
+		local muzzleDir = VecNormalize(toMuzzle)
+		local hit, dist = QueryRaycast(eyePos, muzzleDir, muzzleDist)
+		if hit then
+			-- Something between eye and muzzle -- muzzle is clipping
+			-- Fall back to eye position for the shot origin
+			muzzlePos = eyePos
+		end
+	end
+
 	local aimHit, aimStart, aimEnd, aimDir = GetPlayerAimInfo(muzzlePos, self.range, p)
 	self:Fire(muzzlePos, aimDir, p)
 end
@@ -1103,3 +1123,395 @@ end
 
 -- ToolProfile shares InitSounds with BallisticsProfile
 ToolProfile.InitSounds = BallisticsProfile.InitSounds
+
+-- ============================================================
+-- Options menu system (host-only, O key)
+-- ============================================================
+-- Standardized options panel for any weapon/tool. Host-only: reads/writes
+-- savegame keys, syncs to shared for client display. Follows UI_STANDARDS.md.
+--
+-- Usage:
+--   local opts = CreateOptionsMenu("my-tool", {
+--       { key = "pullPower",  label = "Pull Power",  type = "slider", min = 10, max = 500, default = 120 },
+--       { key = "pullTime",   label = "Pull Time",   type = "slider", min = 0.5, max = 5, default = 1.5, step = 0.1 },
+--       { key = "linkSpeed",  label = "Link Speed to Power", type = "toggle", default = false },
+--   })
+--
+--   -- In server.init:  opts:Init()
+--   -- In client.draw:  opts:Draw(p)
+--   -- Read values:     opts:Get("pullPower")
+--   -- Sync to server:  opts:ServerSync(p) in ServerCall handler
+
+_OPTIONS_MENUS = {}
+
+function CreateOptionsMenu(toolId, fields)
+	local menu = {
+		toolId = toolId,
+		fields = fields or {},
+		open = false,
+		_prefix = "savegame.mod." .. toolId .. ".",
+	}
+	setmetatable(menu, { __index = OptionsMenu })
+	_OPTIONS_MENUS[toolId] = menu
+	return menu
+end
+
+OptionsMenu = {}
+
+--- Initialize options from savegame (set defaults if keys don't exist).
+-- Call in server.init.
+function OptionsMenu:Init()
+	for _, f in ipairs(self.fields) do
+		local key = self._prefix .. f.key
+		if not HasKey(key) then
+			if f.type == "slider" then
+				SetFloat(key, f.default or 0)
+			elseif f.type == "toggle" then
+				SetBool(key, f.default or false)
+			end
+		end
+	end
+end
+
+--- Get an option value. Reads directly from savegame registry (works in any context).
+function OptionsMenu:Get(key)
+	local fullKey = self._prefix .. key
+	for _, f in ipairs(self.fields) do
+		if f.key == key then
+			if f.type == "slider" then
+				if HasKey(fullKey) then return GetFloat(fullKey) end
+				return f.default or 0
+			elseif f.type == "toggle" then
+				if HasKey(fullKey) then return GetBool(fullKey) end
+				return f.default or false
+			end
+		end
+	end
+	return nil
+end
+
+--- Set an option value. Writes to savegame registry. HOST only.
+function OptionsMenu:Set(key, value)
+	local fullKey = self._prefix .. key
+	for _, f in ipairs(self.fields) do
+		if f.key == key then
+			if f.type == "slider" then
+				SetFloat(fullKey, value)
+			elseif f.type == "toggle" then
+				SetBool(fullKey, value)
+			end
+			return
+		end
+	end
+end
+
+--- Toggle the menu open/closed. Call from client when O is pressed.
+function OptionsMenu:Toggle()
+	self.open = not self.open
+	-- Write to registry so server context can read it reliably
+	SetBool("game.mod.menuopen." .. self.toolId, self.open)
+end
+
+--- Check if menu is open.
+function OptionsMenu:IsOpen()
+	return self.open
+end
+
+--- Draw the options panel. Call in client.draw. Host-only interactive.
+-- All elements positioned relative to panel bounds -- nothing bleeds outside.
+-- Scroll support when too many fields to fit.
+--- Check if ANY options menu is currently open. Use this to gate gameplay input.
+-- Call once at the top of client.tickPlayer: if IsAnyMenuOpen() then return end
+-- This is automatic — no per-mod code needed beyond that one check.
+function IsAnyMenuOpen()
+	for toolId, menu in pairs(_OPTIONS_MENUS) do
+		if menu.open then return true end
+		-- Also check registry (reliable across server/client contexts)
+		if GetBool("game.mod.menuopen." .. toolId) then return true end
+	end
+	return _MASTER_PANEL_OPEN
+end
+
+function OptionsMenu:Draw(p)
+	if not self.open then return end
+
+	-- Layout constants (all relative to panel)
+	local PW = 380          -- panel width
+	local PAD = 20          -- padding inside panel
+	local ROW_H = 40        -- height per field row
+	local TITLE_H = 50      -- title area height
+	local BUTTON_H = 45     -- bottom buttons area
+	local LABEL_W = 140     -- label text width
+	local SLIDER_W = 120    -- slider bar width
+	local VALUE_W = 50      -- value text width
+	local INNER_W = PW - PAD * 2  -- usable width inside panel
+
+	local fieldCount = #self.fields
+	local maxVisible = math.floor((UiHeight() * 0.7 - TITLE_H - BUTTON_H) / ROW_H)
+	local needsScroll = fieldCount > maxVisible
+	local visibleCount = needsScroll and maxVisible or fieldCount
+	local contentH = TITLE_H + visibleCount * ROW_H + BUTTON_H
+
+	-- Scroll state
+	if not self._scroll then self._scroll = 0 end
+	if needsScroll then
+		local wheel = InputValue("mousewheel")
+		if wheel ~= 0 then
+			self._scroll = math.max(0, math.min(self._scroll - wheel, fieldCount - visibleCount))
+		end
+	end
+
+	UiMakeInteractive()
+	UiPush()
+	UiTranslate(UiCenter() - PW / 2, UiMiddle() - contentH / 2)
+	UiAlign("top left")
+
+	-- Background
+	UiColor(0, 0, 0, 0.9)
+	UiImageBox("ui/common/box-solid-6.png", PW, contentH, 6, 6)
+
+	-- Title
+	UiPush()
+	UiTranslate(PW / 2, TITLE_H / 2)
+	UiAlign("center middle")
+	UiColor(1, 1, 1)
+	UiFont("bold.ttf", 18)
+	UiText(self.toolId)
+	UiPop()
+
+	-- Fields
+	UiTranslate(PAD, TITLE_H)
+	UiFont("regular.ttf", 14)
+
+	local startIdx = math.floor(self._scroll) + 1
+	local endIdx = math.min(startIdx + visibleCount - 1, fieldCount)
+
+	for idx = startIdx, endIdx do
+		local f = self.fields[idx]
+		local val = self:Get(f.key)
+		local y = (idx - startIdx) * ROW_H
+
+		if f.type == "slider" then
+			-- Label (left)
+			UiPush()
+			UiTranslate(0, y + ROW_H / 2)
+			UiAlign("left middle")
+			UiColor(1, 1, 1, 0.9)
+			UiText(f.label)
+			UiPop()
+
+			-- Slider bar + dot (center)
+			local sliderX = LABEL_W + 5
+			local sliderY = y + ROW_H / 2
+			local range = f.max - f.min
+			if range <= 0 then range = 1 end
+			local step = f.step or 1
+
+			UiPush()
+			UiTranslate(sliderX, sliderY)
+			UiAlign("left middle")
+
+			-- Background bar
+			UiColor(0.3, 0.3, 0.3)
+			UiRect(SLIDER_W, 3)
+
+			-- Interactive slider
+			local curNorm = math.max(0, math.min((val - f.min) / range, 1))
+			local sliderResult = UiSlider("ui/common/dot.png", "x", curNorm * SLIDER_W, 0, SLIDER_W)
+			local newNorm = sliderResult / SLIDER_W
+			local newVal = math.floor((newNorm * range + f.min) / step + 0.5) * step
+			newVal = math.max(f.min, math.min(f.max, newVal))
+
+			-- Filled bar up to slider position
+			UiColor(0.2, 0.6, 1)
+			UiRect(newNorm * SLIDER_W, 3)
+
+			-- Always write the slider value (even if "same" — prevents snap-back)
+			if IsPlayerHost() then
+				self:Set(f.key, newVal)
+			end
+			UiPop()
+
+			-- Value text (right of slider, inside panel)
+			UiPush()
+			UiTranslate(sliderX + SLIDER_W + 8, sliderY)
+			UiAlign("left middle")
+			UiColor(0.7, 0.6, 0.1)
+			if step < 1 then
+				UiText(string.format("%.1f", newVal))
+			else
+				UiText(math.floor(newVal))
+			end
+			UiPop()
+
+		elseif f.type == "toggle" then
+			UiPush()
+			UiTranslate(0, y + ROW_H / 2)
+			UiAlign("left middle")
+			UiColor(1, 1, 1, 0.9)
+			UiText(f.label)
+			UiPop()
+
+			UiPush()
+			UiTranslate(LABEL_W + 5, y + ROW_H / 2 - 12)
+			UiAlign("left top")
+			UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
+			if val then
+				UiColor(0.2, 0.65, 0.2)
+				if UiTextButton("ON", 50, 24) and IsPlayerHost() then
+					self:Set(f.key, false)
+				end
+			else
+				UiColor(0.5, 0.5, 0.5)
+				if UiTextButton("OFF", 50, 24) and IsPlayerHost() then
+					self:Set(f.key, true)
+				end
+			end
+			UiPop()
+		end
+	end
+
+	-- Scroll indicator
+	if needsScroll then
+		UiPush()
+		UiTranslate(INNER_W - 5, 0)
+		UiColor(1, 1, 1, 0.3)
+		local scrollBarH = visibleCount * ROW_H
+		local thumbH = scrollBarH * (visibleCount / fieldCount)
+		local thumbY = (self._scroll / (fieldCount - visibleCount)) * (scrollBarH - thumbH)
+		UiRect(3, scrollBarH)
+		UiColor(1, 1, 1, 0.6)
+		UiTranslate(0, thumbY)
+		UiRect(3, thumbH)
+		UiPop()
+	end
+
+	-- Bottom buttons
+	UiTranslate(0, visibleCount * ROW_H + 10)
+	UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
+
+	UiPush()
+	UiTranslate(INNER_W / 2 - 90, 0)
+	UiColor(0.5, 0.8, 1)
+	if UiTextButton("Default", 80, 26) and IsPlayerHost() then
+		for _, ff in ipairs(self.fields) do
+			self:Set(ff.key, ff.default)
+		end
+	end
+	UiPop()
+
+	UiPush()
+	UiTranslate(INNER_W / 2 + 10, 0)
+	UiColor(1, 0.4, 0.4)
+	if UiTextButton("Close", 80, 26) then
+		self.open = false
+		SetBool("game.mod.menuopen." .. self.toolId, false)
+	end
+	UiPop()
+
+	UiPop()
+
+	if InputPressed("esc") then
+		self.open = false
+		SetBool("game.mod.menuopen." .. self.toolId, false)
+	end
+end
+
+-- ============================================================
+-- Master tool panel (dynamic discovery)
+-- ============================================================
+-- Scans all registered options menus and shows shortcuts to active tools only.
+-- Checks if each tool is actually enabled in the game before displaying.
+-- Any mod can open this panel -- it replaces the hardcoded All_In_One_Utilities approach.
+
+_MASTER_PANEL_OPEN = false
+
+function ToggleMasterPanel()
+	_MASTER_PANEL_OPEN = not _MASTER_PANEL_OPEN
+	-- Close any open individual menus when opening master panel
+	if _MASTER_PANEL_OPEN then
+		for _, menu in pairs(_OPTIONS_MENUS) do
+			menu.open = false
+		end
+	end
+end
+
+function IsMasterPanelOpen()
+	return _MASTER_PANEL_OPEN
+end
+
+--- Get list of tools that are currently active in the game and have options.
+function GetActiveToolsWithOptions()
+	local active = {}
+	for toolId, menu in pairs(_OPTIONS_MENUS) do
+		-- Check if tool is enabled via registry key
+		local enabledKey = "game.tool." .. toolId .. ".enabled"
+		local isActive = HasKey(enabledKey) and GetBool(enabledKey)
+		if isActive then
+			active[#active + 1] = { toolId = toolId, menu = menu }
+		end
+	end
+	-- Sort alphabetically for consistent display
+	table.sort(active, function(a, b) return a.toolId < b.toolId end)
+	return active
+end
+
+--- Draw the master tool options panel. Call in client.draw.
+-- Shows buttons for each active tool -- clicking opens that tool's options.
+function DrawMasterPanel(p)
+	if not _MASTER_PANEL_OPEN then return end
+
+	local tools = GetActiveToolsWithOptions()
+	local panelHeight = 80 + #tools * 40 + 20
+
+	if #tools == 0 then
+		panelHeight = 120
+	end
+
+	UiMakeInteractive()
+	UiPush()
+	UiTranslate(UiCenter() - 180, UiMiddle() - panelHeight / 2)
+	UiAlign("top left")
+	UiColor(0, 0, 0, 0.9)
+	UiImageBox("ui/common/box-solid-6.png", 360, panelHeight, 6, 6)
+
+	-- Title
+	UiTranslate(180, 30)
+	UiAlign("center middle")
+	UiColor(1, 1, 1)
+	UiFont("bold.ttf", 20)
+	UiText("Tool Options")
+
+	UiTranslate(-150, 20)
+	UiAlign("left middle")
+	UiFont("regular.ttf", 16)
+	UiButtonImageBox("ui/common/box-outline-6.png", 6, 6)
+
+	if #tools == 0 then
+		UiTranslate(0, 30)
+		UiColor(0.6, 0.6, 0.6)
+		UiText("No tools with options active")
+	else
+		for _, entry in ipairs(tools) do
+			UiTranslate(0, 35)
+			UiColor(0.3, 0.7, 1)
+			if UiTextButton(entry.toolId, 300, 28) then
+				_MASTER_PANEL_OPEN = false
+				entry.menu.open = true
+			end
+		end
+	end
+
+	-- Close button
+	UiTranslate(0, 45)
+	UiColor(1, 0.4, 0.4)
+	if UiTextButton("Close", 80, 28) then
+		_MASTER_PANEL_OPEN = false
+	end
+
+	UiPop()
+
+	if InputPressed("esc") then
+		_MASTER_PANEL_OPEN = false
+	end
+end

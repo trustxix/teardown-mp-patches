@@ -1,7 +1,7 @@
-"""PreToolUse guard for Edit/Write — blocks dangerous operations.
+"""PreToolUse guard for Edit/Write -- blocks dangerous operations.
 
 Checks (in order):
-1. Wrong directory: editing in patches repo mods/ instead of Documents/Teardown/mods/
+1. Wrong directory: editing in patches repo mods/ instead of game install mods dir
 2. Asset protection: editing .vox/.xml/.png/.ogg/.jpg files in mod directories
 3. Game running: editing mod files while teardown.exe is running
 """
@@ -28,13 +28,13 @@ def main():
     if "teardown-mp-patches/mods/" in fp:
         print("BLOCKED: Wrong directory!", file=sys.stderr)
         print("  You're editing the patches REPO, not the live mods folder.", file=sys.stderr)
-        print("  Edit in: C:/Users/trust/Documents/Teardown/mods/", file=sys.stderr)
+        print("  Edit in: C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/", file=sys.stderr)
         print("  NOT in:  C:/Users/trust/teardown-mp-patches/mods/", file=sys.stderr)
         sys.exit(1)
 
     # --- Check 2: Asset file protection ---
     mod_dirs = [
-        "documents/teardown/mods/",
+        "steam/steamapps/common/teardown/mods/",
         "teardown-mp-patches/mods/",
     ]
     is_in_mod_dir = any(d in fp for d in mod_dirs)

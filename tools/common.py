@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-# Where the game actually loads mods from
-LIVE_MODS_DIR = Path.home() / "Documents" / "Teardown" / "mods"
+# Where the game actually loads mods from (game install dir for MP visibility)
+LIVE_MODS_DIR = Path("C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods")
 
 # Teardown log file
 LOG_PATH = Path.home() / "AppData" / "Local" / "Teardown" / "log.txt"

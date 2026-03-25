@@ -6,7 +6,7 @@ All resolved bugs and the rules derived from them. Consult before making changes
 
 1. NEVER use `goto` or `::label::` (Lua 5.1 only)
 2. NEVER use raw key names with player parameter - use ServerCall pattern
-3. ALWAYS use `camerax`/`cameray` for camera input (not mousedx/mousedy)
+3. Camera input depends on context: normal gameplay camera = `camerax`/`cameray`; custom camera via SetCameraTransform = `mousedx`/`mousedy` (camerax returns 0 when script-controlled)
 4. ALWAYS use `GetPlayerEyeTransform(p)` for camera position
 5. Every mod with keybinds must show them on-screen
 6. Always include group number in RegisterTool
@@ -1306,3 +1306,131 @@ end
 **RULE: After lint reports 0 findings, manually check for `InputPressed/InputDown/InputReleased` calls where the first argument is a variable (not a string literal). These bypass RAW-KEY-PLAYER detection. Consider adding lint support for this pattern.**
 
 **Date identified:** 2026-03-21
+
+---
+
+## Project Reset Note (2026-03-23)
+
+Path changed from Documents/Teardown/mods/ to C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/ (game install dir). 102 mods reduced to 49 after workshop cleanup. All tools updated.
+
+---
+
+## Issue #74: VecCopy doesn't exist in Teardown Lua
+
+**Symptom:** Projectiles fail to spawn silently.
+**Root cause:** `VecCopy(vec)` is not a Teardown API function. Using it causes nil assignment. `Vec(x, y, z)` takes 3 numbers, not another Vec.
+**Fix:** Use direct assignment (ServerCall/ClientCall params are already copies) or `Vec(v[1], v[2], v[3])` when explicit copy needed.
+**Rule:** Never assume Lua helper functions exist. Check Teardown API docs first.
+**Date:** 2026-03-23
+
+## Issue #75: local at file scope invisible across v2 chunks
+
+**Symptom:** Server functions can't access file-scope local variables. Variables are nil.
+**Root cause:** v2 preprocessor compiles server.* and client.* into separate Lua chunks. local at file scope becomes an upvalue in one chunk only.
+**Fix:** Use globals for file-scope state in v2 scripts. local inside functions is fine.
+**Rule:** NEVER use local at file scope in #version 2 scripts.
+**Date:** 2026-03-23
+
+## Issue #76: camerax/cameray returns 0 when SetCameraTransform active
+
+**Symptom:** Custom camera (AC-130 fly cam, FPV drone, lightsabers) stops responding to mouse.
+**Root cause:** Engine suppresses camerax/cameray when script controls camera via SetCameraTransform. mousedx/mousedy give raw delta that always works.
+**Fix:** Keep mousedx/mousedy for mods with SetCameraTransform. Only use camerax/cameray for normal gameplay camera.
+**Rule:** Check for SetCameraTransform before changing mouse input code.
+**Date:** 2026-03-23
+
+## Issue #77: PlayersAdded() requires player.lua include
+
+**Symptom:** server.tick crashes silently. All subsequent tick processing stops.
+**Root cause:** PlayersAdded()/PlayersRemoved()/Players() are defined in script/include/player.lua. Without the include, calling them errors. AC-130 had no include but we added PlayersAdded().
+**Fix:** Use GetAddedPlayers()/GetRemovedPlayers()/GetAllPlayers() (engine built-ins, no include needed) OR add the include.
+**Rule:** Check for #include "script/include/player.lua" before using iterator functions.
+**Date:** 2026-03-23
+
+## Issue #78: File integrity check -- all players need identical mod files
+
+**Symptom:** Friends get "Connection Lost. Mod files differ from host" when joining.
+**Root cause:** Teardown compares mod file hashes between host and clients. Patched files differ from original workshop versions.
+**Fix:** Publish patched mods to Workshop so all players get identical files via Steam, or distribute via ModSync.
+**Rule:** Every patched mod must be distributed to all players. Workshop publishing is the most reliable method.
+**Date:** 2026-03-23
+
+## Issue #79: AC-130 500-element shared table sync bomb
+
+**Symptom:** Extreme lag when AC-130 is used in MP. Game becomes unplayable for all players.
+**Root cause:** shared.projectiles had 500 entries synced to ALL clients every frame (~3500 values/frame). LoadSound() called per-hit instead of cached.
+**Fix:** Reduced pool from 500 to 30 (94% reduction). Cached snd_explosion/snd_splash/snd_fire in server.init(). Original projectile logic preserved unchanged.
+**Rule:** Keep shared.* tables small. Cache LoadSound in init, never call per-hit. When fixing performance, apply surgical changes to working code -- never rewrite.
+**Date:** 2026-03-23
+
+## Issue #80: v2 preprocessor breaks closures across server/client function definitions
+
+**Symptom:** Framework callbacks (server.init, server.tick, etc.) defined INSIDE a function call (like `DEF.Tool()`) silently fail. Functions appear defined but local variables from the enclosing scope are nil at runtime.
+**Root cause:** The v2 preprocessor extracts `function server.*()` and `function client.*()` into separate Lua chunks regardless of nesting depth. Local variables in the enclosing function become upvalues tied to one chunk, invisible to the other.
+**Fix:** Define all server/client callbacks at the TOP LEVEL of the file. Store state in global tables (like `DEF._tools`). Never use closures across server/client boundaries.
+**Rule:** NEVER define `function server.*()` or `function client.*()` inside another function. They must be at file scope. Reference globals only.
+**Date:** 2026-03-25
+
+## Issue #81: PlayersAdded/PlayersRemoved/Players iterators consumed after one pass
+
+**Symptom:** In a multi-tool framework, only the first registered tool gets PlayersAdded events.
+**Root cause:** These return Lua iterators. Once iterated, they're exhausted. Second call in same tick returns nothing.
+**Fix:** Collect results into a table once at the top of tick, then iterate the table for each tool.
+**Rule:** NEVER call PlayersAdded/PlayersRemoved/Players more than once per tick. Collect into table first if multiple consumers need results.
+**Date:** 2026-03-25
+
+## Issue #82: goto/::label:: is Lua 5.2+ — Teardown uses Lua 5.1
+
+**Symptom:** Syntax error or compile failure.
+**Root cause:** Teardown's Lua is 5.1. No goto support.
+**Fix:** Use if/end guards or function extraction.
+**Rule:** NEVER use goto or ::label::. Use if/end.
+**Date:** 2026-03-25
+
+## Issue #83: SpawnParticle/PointLight/SetShapeEmissiveScale called on server
+
+**Symptom:** No visual effect. Silent failure.
+**Root cause:** Client-only rendering functions. Server has no renderer. Exception: PlaySound on server DOES auto-sync.
+**Fix:** Move visual calls to client.tick. Sync via registry or ClientCall if triggered by server events.
+**Rule:** SpawnParticle, PointLight, DrawLine, DrawSprite, SetShapeEmissiveScale = CLIENT-ONLY. PlaySound = server OK.
+**Date:** 2026-03-25
+
+## Issue #84: Server-owned timer not synced to client for visual feedback
+
+**Symptom:** Recoil/cooldown animation never shows. Timer always 0 on client.
+**Root cause:** DEF uses separate state tables (_serverPlayers/_clientPlayers) to prevent double-processing. Server timer value doesn't reach client data.
+**Fix:** Use registry broadcast: `tool:SyncToClient("timer", value, p)` on server, `tool:ReadSync("timer", p, 0)` on client.
+**Rule:** Separate state tables prevent double-processing but also prevent sharing. Explicitly sync any server value the client needs for visuals.
+**Date:** 2026-03-25
+
+## Issue #85: LoadLoop() at file scope — client-only function in shared context
+
+**Symptom:** Crash or nil handle when server processes file-scope LoadLoop call.
+**Root cause:** LoadLoop is client-only. File-scope code runs in shared context.
+**Fix:** Load via `tool:ClientInit(function() snd = LoadLoop("path") end)`.
+**Rule:** LoadLoop = client-only. Use ClientInit hook, never file scope. LoadSound works in both contexts.
+**Date:** 2026-03-25
+
+## Issue #86: Projectile distance check uses absolute position, not travel distance
+
+**Symptom:** Projectiles die early when player is far from world origin.
+**Root cause:** `VecLength(proj.pos) > 500` checks distance from (0,0,0), not from muzzle.
+**Fix:** Store `origin` per projectile. Check `VecLength(VecSub(pos, origin)) > maxDist`.
+**Rule:** Distance checks must use travel distance from spawn, not absolute world position.
+**Date:** 2026-03-25
+
+## Issue #87: Inactive projectiles accumulate — memory leak
+
+**Symptom:** Projectile table grows. pairs() iteration slows over time.
+**Root cause:** `proj.active = false` leaves entry in table. pairs() still iterates it.
+**Fix:** Set `data.projectiles[idx] = nil`. Lua GC handles the rest.
+**Rule:** Remove table entries with nil assignment, not flag fields. pairs() skips nil keys.
+**Date:** 2026-03-25
+
+## Issue #88: GetPlayerCanUseTool(p) — phantom API
+
+**Symptom:** Unknown. Function may not exist.
+**Root cause:** Vanilla mods (minigun, lasergun) never use it. Engine gates usetool internally.
+**Fix:** Removed from DEF. Use InputPressed("usetool", p) alone.
+**Rule:** Do not call unverified APIs. If vanilla mods don't use it, verify before adding.
+**Date:** 2026-03-25

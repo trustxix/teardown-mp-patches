@@ -1,8 +1,13 @@
 {
+  "permissions": {
+    "deny": [
+      "Edit(**/Documents/Teardown/mods/**)",
+      "Write(**/Documents/Teardown/mods/**)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -13,22 +18,11 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "cd C:/Users/trust/teardown-mp-patches && python .comms/check_file_lock.py 2>/dev/null"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd C:/Users/trust/teardown-mp-patches && python .comms/check_all_inboxes.py 2>/dev/null"
+            "command": "node -e \"var i;try{i=JSON.parse(require('fs').readFileSync(0,'utf8'))}catch(e){process.exit(0)}var p=(i.tool_input||{}).file_path||'';if(/Documents[\\\\\\/]Teardown[\\\\\\/]mods/i.test(p)){process.stderr.write('BLOCKED: Do NOT edit in Documents/Teardown/mods/ — use C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/');process.exit(2)}\""
           }
         ]
       }

@@ -25,7 +25,7 @@ def build_release_body(meta: dict) -> str:
 
 ### Installation
 1. Download the zip file below
-2. Extract to your `Documents/Teardown/mods/` folder
+2. Extract to your game install mods folder (`Steam/steamapps/common/Teardown/mods/`)
 3. Enable the mod in-game
 """
 

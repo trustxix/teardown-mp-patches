@@ -8,7 +8,7 @@ Copies lib/realistic_ballistics.lua to a mod's lib/ballistics.lua with:
 Usage:
     python -m tools.deploy_framework --mod "Hook_Shotgun"
     python -m tools.deploy_framework --all          # deploy to all mods that have lib/ballistics.lua
-    python -m tools.deploy_framework --fix-lua       # fix ALL .lua files in Documents/Teardown/mods/
+    python -m tools.deploy_framework --fix-lua       # fix ALL .lua files in game install mods dir
 """
 import os
 import sys
@@ -16,7 +16,7 @@ import click
 from pathlib import Path
 
 FRAMEWORK_SRC = Path(__file__).parent.parent / "lib" / "realistic_ballistics.lua"
-MODS_DIR = Path(r"C:\Users\trust\Documents\Teardown\mods")
+MODS_DIR = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Teardown\mods")
 
 
 def sanitize_lua(data: bytes) -> bytes:
@@ -104,7 +104,7 @@ def fix_lua_file(path: Path) -> dict:
 @click.command()
 @click.option("--mod", help="Deploy to a specific mod")
 @click.option("--all", "deploy_all", is_flag=True, help="Deploy to all mods that have lib/ballistics.lua")
-@click.option("--fix-lua", "fix_all", is_flag=True, help="Fix CRLF/non-ASCII in ALL .lua files under Documents/Teardown/mods/")
+@click.option("--fix-lua", "fix_all", is_flag=True, help="Fix CRLF/non-ASCII in ALL .lua files under game install mods dir")
 def main(mod, deploy_all, fix_all):
     if not FRAMEWORK_SRC.exists():
         click.echo(f"Framework source not found: {FRAMEWORK_SRC}")

@@ -1,14 +1,14 @@
-"""Activate all local mods in every Teardown modlist.
+"""Activate all mods in every Teardown modlist.
 
 Features:
-- Scans Documents/Teardown/mods/ and activates all local mods
+- Scans game install mods dir and activates all mods
 - Updates ALL modlists (Default, Host, and any future custom ones from index.xml)
 - Registers new mods in master mods.xml
 - Cleans stale entries for mods whose folders were deleted
 - Keeps max 3 backups, rotates oldest
 - Skips if Teardown is running (avoids XML corruption)
-- Silent mode (--silent) for Steam pre-launch — no window, no prompts
-- Safe to run repeatedly — never duplicates, never removes existing entries
+- Silent mode (--silent) for Steam pre-launch -- no window, no prompts
+- Safe to run repeatedly -- never duplicates, never removes existing entries
 """
 import os
 import re
@@ -17,7 +17,7 @@ import shutil
 import subprocess
 from datetime import datetime
 
-MODS_DIR = r"C:\Users\trust\Documents\Teardown\mods"
+MODS_DIR = r"C:\Program Files (x86)\Steam\steamapps\common\Teardown\mods"
 APPDATA = r"C:\Users\trust\AppData\Local\Teardown"
 MODLISTS_DIR = os.path.join(APPDATA, "modlists")
 MODS_XML = os.path.join(APPDATA, "mods.xml")

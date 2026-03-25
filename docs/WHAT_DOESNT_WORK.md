@@ -158,3 +158,11 @@ end
 **Lesson:** Always verify lint assumptions against the base game source code. A reasonable-sounding rule can create real bugs if the underlying assumption is wrong.
 
 ---
+
+## Don't: Replace mousedx/mousedy with camerax/cameray for script-controlled cameras
+**What we tried:** Replaced `InputValue("mousedx")` / `InputValue("mousedy")` with `InputValue("camerax")` / `InputValue("cameray")` in AC-130 fly cam, FPV Drone, Light Katana, Light Saber.
+**What happened:** Camera stopped responding to mouse movement entirely. Player sees only clouds/sky.
+**Root cause:** When a mod calls `SetCameraTransform()` to override the camera, the engine suppresses `camerax`/`cameray` (returns 0) because it considers the camera script-controlled. `mousedx`/`mousedy` give raw mouse delta that always works regardless of camera state.
+**Lesson:** `mousedx`/`mousedy` ARE valid in v2 for custom camera control. Only use `camerax`/`cameray` when the engine controls the camera (normal gameplay). If the mod uses `SetCameraTransform`, keep `mousedx`/`mousedy`.
+
+---

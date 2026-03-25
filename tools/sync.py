@@ -1,7 +1,7 @@
-"""Mod sync tool — keeps local mods in sync with Steam Workshop subscriptions.
+"""Mod sync tool -- keeps local mods in sync with Steam Workshop subscriptions.
 
 Source of truth: Steam Workshop folder (what the user is subscribed to).
-Target: Documents/Teardown/mods/ (where the game loads mods from).
+Target: Game install mods dir (required for MP lobby visibility).
 
 Usage:
     python -m tools.sync              # dry-run: show what would change
@@ -15,8 +15,8 @@ import shutil
 import sys
 
 WORKSHOP_DIR = "C:/Program Files (x86)/Steam/steamapps/workshop/content/1167630"
-LOCAL_MODS_DIR = "C:/Users/trust/Documents/Teardown/mods"
-REMOVED_DIR = "C:/Users/trust/Documents/Teardown/mods_REMOVED"
+LOCAL_MODS_DIR = "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods"
+REMOVED_DIR = "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods_REMOVED"
 # Files that must NEVER be copied (cause engine crashes)
 SKIP_FILES = {"preview.jpg", "preview.png", "preview.jpeg"}
 

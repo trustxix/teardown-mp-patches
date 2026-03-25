@@ -37,9 +37,11 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     lines.append("TEARDOWN MP PATCHER -- Status")
     lines.append("=" * 50)
 
-    # Mod count
+    # Mod count (filter built-in game mods by checking for id.txt)
     mods = discover_mods(mods_dir)
-    lines.append(f"Mods installed:   {len(mods)}")
+    custom_mods = [m for m in mods if (m / "id.txt").exists()]
+    builtin_mods = [m for m in mods if not (m / "id.txt").exists()]
+    lines.append(f"Mods installed:   {len(custom_mods)} custom ({len(builtin_mods)} built-in filtered)")
 
     # Git
     if skip_git:
@@ -268,7 +270,7 @@ def build_status_report(mods_dir: Path | None = None, skip_git: bool = False, sk
     # If there are game log errors, they may need the API reference
     try:
         if log_result and log_result.get("mods"):
-            docs_to_read.append("  C:/Users/trust/Documents/Teardown/TEARDOWN_V2_API_REFERENCE.md - API signatures")
+            docs_to_read.append("  docs/MP_REFERENCE.md - API signatures and sync patterns")
     except NameError:
         pass
 

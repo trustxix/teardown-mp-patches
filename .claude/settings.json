@@ -22,7 +22,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"var i;try{i=JSON.parse(require('fs').readFileSync(0,'utf8'))}catch(e){process.exit(0)}var p=(i.tool_input||{}).file_path||'';if(/Documents[\\\\\\/]Teardown[\\\\\\/]mods/i.test(p)){process.stderr.write('BLOCKED: Do NOT edit in Documents/Teardown/mods/ — use C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/');process.exit(2)}\""
+            "command": "node -e \"var i;try{i=JSON.parse(require('fs').readFileSync(0,'utf8'))}catch(e){process.exit(0)}var p=(i.tool_input||{}).file_path||'';if(/Documents[\\\\\\/]Teardown[\\\\\\/]mods/i.test(p)){process.stderr.write('BLOCKED: Do NOT edit in Documents/Teardown/mods/ — use game install dir');process.exit(2)}if(/Teardown[\\\\\\/]mods[\\\\\\/]/i.test(p)){try{var r=require('child_process').execSync('tasklist /FI \\\"IMAGENAME eq teardown.exe\\\" /NH',{encoding:'utf8',stdio:'pipe',timeout:3000});if(r.indexOf('teardown.exe')>=0){process.stderr.write('WARNING: Teardown is running. Changes may not take effect until restart.')}}catch(e){}}\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/teardown-autosync.js\""
           }
         ]
       }

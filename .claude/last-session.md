@@ -58,3 +58,21 @@
 - LoadLoop() is client-only — must use ClientInit hook (Issue #85)
 - VDF file paths must NOT be escaped — only title/description need vdf_escape (would have broken all Workshop uploads)
 - Workshop visibility "1" = friends-only, "0" = public (was publishing as friends-only)
+
+---
+
+# Session: 2026-03-25 (Part 2)
+
+## What Was Done
+- Built teardown-autosync.js hook — mirrors mod edits to sandbox via robocopy /MIR on every Write/Edit/Bash
+- Built sync_installs.py with robocopy backend, per-mod change detection, --check verify mode
+- Built sync.bat for bulk sync, update.bat for Workshop updates
+- Initial full sync: 49 mods, 1.8GB, 6792 files to sandbox — verified identical
+- Added game-running warning to PreToolUse guard
+- Added /test-mp command for MP testing workflow
+- Removed polling watcher (wasteful) — autosync hook is event-driven, zero overhead when idle
+
+## Gotchas Discovered
+- subprocess.run on Windows spawns visible cmd windows — use STARTUPINFO with SW_HIDE
+- robocopy /MIR exit codes 0-7 are success, 8+ are errors — node throws on any non-zero
+- Polling watchers are wasteful — event-driven hooks are better when Claude Code is the primary editor

@@ -261,6 +261,7 @@ DEF auto-handles: tool registration, PlayersAdded/Removed loops, per-player stat
 | `docs/ECOSYSTEM.md` | All Teardown tools, scripts, and locations across the system |
 | `docs/KNOWN_LIMITATIONS.md` | Engine limits, preprocessor quirks, tool gaps, v1→v2 API map, pending work |
 | `docs/LINT_RULES.md` | All 45 lint rules + 6 deepcheck validators + API database reference |
+| `docs/KEYBIND_STANDARDS.md` | Standardized keybind assignments — reserved keys, mod key map |
 | `docs/MP_TESTING_GUIDE.md` | Structured MP testing workflow, priority order, per-mod procedures |
 | `README.md` | Project overview, batch history, deferred mods list |
 | `QUICKSTART.md` | Full developer onboarding, workflow order, top 10 rules |

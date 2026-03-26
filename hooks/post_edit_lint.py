@@ -1,6 +1,6 @@
 """PostToolUse hook for Edit/Write -- auto-runs lint after Lua edits.
 
-After any .lua file in the game install mods dir is edited, automatically
+After any .lua file in the working mods dir is edited, automatically
 runs `python -m tools.lint --mod "ModName"` and prints results.
 """
 import sys
@@ -9,7 +9,7 @@ import subprocess
 import os
 
 PROJECT_DIR = "C:/Users/trust/teardown-mp-patches"
-MODS_DIR = "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/"
+MODS_DIR = "D:/The Vault/Modding/Games/Teardown/"
 
 def main():
     try:

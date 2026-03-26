@@ -104,10 +104,13 @@ python -m tools.test --mod "ModName"
 
 | Directory | Purpose | Edit? |
 |-----------|---------|-------|
-| `C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/` | **Game install. MP-visible. ALL edits here.** | **YES** |
-| `C:/Program Files (x86)/Steam/steamapps/workshop/content/1167630/` | Workshop originals. Read-only. | NEVER |
-| `C:/Users/trust/Documents/Teardown/mods/` | Local mods (SP only). NOT visible in MP. | NO |
+| `D:/The Vault/Modding/Games/Teardown/` | **Working directory. ALL edits here.** | **YES** |
+| `C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/` | Game install. Managed by Steam Workshop. | NEVER |
+| `C:/Steam2/steamapps/common/Teardown/mods/` | Sandboxed install. Managed by Steam Workshop. | NEVER |
+| `C:/Program Files (x86)/Steam/steamapps/workshop/content/1167630/` | Workshop cache. Read-only. | NEVER |
 | `C:/Users/trust/teardown-mp-patches/mods/` | Patches repo source data. | NEVER |
+
+**Workflow:** Edit in working dir → `update.bat` → restart both clients → test in MP.
 
 ## V2 Rewrite Rules (MANDATORY)
 

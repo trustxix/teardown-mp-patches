@@ -2,8 +2,10 @@
 
 from pathlib import Path
 
-# Where the game actually loads mods from (game install dir for MP visibility)
-LIVE_MODS_DIR = Path("C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods")
+# Working directory for mod editing — this is the single source of truth.
+# Mods are edited here, then published to Workshop via update.bat.
+# Both game installations get mods via Workshop subscription (no local sync).
+LIVE_MODS_DIR = Path("D:/The Vault/Modding/Games/Teardown")
 
 # Teardown log file
 LOG_PATH = Path.home() / "AppData" / "Local" / "Teardown" / "log.txt"

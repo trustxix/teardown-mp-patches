@@ -26,26 +26,29 @@ def main():
     fp = file_path.replace("\\", "/").lower()
 
     # --- Check 1: Wrong directory ---
+    # Only edit mods in the working directory D:/The Vault/Modding/Games/Teardown/
+    # Block edits to patches repo mods/ and game install mods/
     if "teardown-mp-patches/mods/" in fp:
         print("BLOCKED: Wrong directory!", file=sys.stderr)
-        print("  You're editing the patches REPO, not the live mods folder.", file=sys.stderr)
-        print("  Edit in: C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/", file=sys.stderr)
-        print("  NOT in:  C:/Users/trust/teardown-mp-patches/mods/", file=sys.stderr)
+        print("  You're editing the patches REPO, not the working mods folder.", file=sys.stderr)
+        print("  Edit in: D:/The Vault/Modding/Games/Teardown/", file=sys.stderr)
+        sys.exit(1)
+
+    if "steam/steamapps/common/teardown/mods/" in fp:
+        print("BLOCKED: Do not edit game install mods directly!", file=sys.stderr)
+        print("  Edit in: D:/The Vault/Modding/Games/Teardown/", file=sys.stderr)
+        print("  Then publish to Workshop with update.bat.", file=sys.stderr)
         sys.exit(1)
 
     # --- Check 2: Built-in mod protection ---
-    if "steam/steamapps/common/teardown/mods/" in fp:
-        # Extract mod folder name
-        idx = fp.find("teardown/mods/") + len("teardown/mods/")
+    # The working directory should only contain custom mods (with id.txt).
+    # This is a safety check in case a built-in mod somehow ends up there.
+    if "the vault/modding/games/teardown/" in fp:
+        idx = fp.find("games/teardown/") + len("games/teardown/")
         rest = fp[idx:]
         mod_folder = rest.split("/")[0] if "/" in rest else rest
         if mod_folder:
-            id_path = os.path.join(
-                "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods",
-                mod_folder, "id.txt"
-            )
-            # Case-insensitive check: find actual folder
-            mods_root = "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods"
+            mods_root = "D:/The Vault/Modding/Games/Teardown"
             actual_match = None
             try:
                 for d in os.listdir(mods_root):

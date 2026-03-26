@@ -1,0 +1,18 @@
+TEST REPORT: Bunker_Buster_MP
+======================================================
+Generated: 2026-03-26 12:07:29
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 8 assets found
+  ID cross-ref:      WARN — 1 warnings
+    - No SetToolAmmo found for "bunkerbustermissile" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      PASS
+  HUD validation:    WARN
+    - client.draw() has no GetPlayerTool guard — HUD may show for all tools
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

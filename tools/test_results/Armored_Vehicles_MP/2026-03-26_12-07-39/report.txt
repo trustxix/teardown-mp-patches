@@ -1,0 +1,17 @@
+TEST REPORT: Armored_Vehicles_MP
+======================================================
+Generated: 2026-03-26 12:07:39
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      FAIL
+    - SpawnParticle() called in damage function server.tick — effects must be on client (other players won't see/hear them)
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

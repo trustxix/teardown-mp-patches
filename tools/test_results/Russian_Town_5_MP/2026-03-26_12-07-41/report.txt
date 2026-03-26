@@ -1,0 +1,29 @@
+TEST REPORT: Russian_Town_5_MP
+======================================================
+Generated: 2026-03-26 12:07:41
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 12/17 assets missing
+    - Asset NOT found: katyusha.ogg
+    - Asset NOT found: fortunate_son.ogg
+    - Asset NOT found: soviet_anthem.ogg
+    - Asset NOT found: robot/head-loop.ogg
+    - Asset NOT found: robot/turn-loop.ogg
+    - Asset NOT found: robot/walk-loop.ogg
+    - Asset NOT found: robot/roll-loop.ogg
+    - Asset NOT found: robot/charge-loop.ogg
+    - Asset NOT found: robot/alert.ogg
+    - Asset NOT found: robot/hunt.ogg
+    - Asset NOT found: robot/idle.ogg
+    - Asset NOT found: robot/disable0.ogg
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      WARN
+    - Entity script: bare function handles usetool + damage (runs on both sides, damage is server-only)
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

@@ -76,3 +76,48 @@
 - subprocess.run on Windows spawns visible cmd windows — use STARTUPINFO with SW_HIDE
 - robocopy /MIR exit codes 0-7 are success, 8+ are errors — node throws on any non-zero
 - Polling watchers are wasteful — event-driven hooks are better when Claude Code is the primary editor
+
+---
+
+# Session: 2026-03-26
+
+## What Was Done
+
+### Documentation Consolidation (entire session)
+Consolidated ALL Teardown knowledge from 13 scattered filesystem locations, 22 memory files, 82 git commits, and 14 existing project docs into 4 new documents + updates.
+
+**New docs:**
+- `docs/TESTING_SETUP.md` — Sandboxie dual-Steam, mod sync, modlists, crash logs
+- `docs/ECOSYSTEM.md` — 13 dirs, 25+ tools, 4 hooks, pipeline, trust-realism, game config
+- `docs/KNOWN_LIMITATIONS.md` — Engine limits, preprocessor, camera, v1→v2, desync RC1-7, interpolation, UMF, pending work
+- `docs/LINT_RULES.md` — All 45 lint rules, 6 deepcheck validators, API database
+
+**Drift elimination:**
+- Fixed QUICKSTART.md: options.lua handling + mod path (contradicted 3 other files)
+- Converted 19 memory files from stale duplicates to canonical-source pointers
+
+**Trust Realism sync:**
+- `lib/realistic_ballistics.lua` → `~/trust-realism/src/ballistics.lua` (patcher is source of truth)
+
+**10 commits, all pushed** (65a1c642..77e70a59 on patcher, 7d35b60 on trust-realism)
+
+## Incomplete Work
+- `docs/V2_SYNC_PATTERNS.md` — flagged as needed, not created
+- 14 v1 mods still need DEF conversion
+- Charge_Shotgun + Predator_Missile_MP need in-game MP testing
+- ~75 workshop subs pending install
+- AIO integration with Trust Realism (5-phase plan)
+- Outdated TEARDOWN_V2_API_REFERENCE.md in Documents needs regenerating
+
+## Next Steps
+1. Create `docs/V2_SYNC_PATTERNS.md` (the one missing doc)
+2. Resume mod conversion (DEF-based v1→v2)
+3. Test Charge_Shotgun + fix Predator_Missile_MP in-game
+4. Install pending workshop mods (watch 150 ceiling)
+
+## Gotchas Discovered
+- QUICKSTART.md had two wrong facts (options.lua + mod dir) — now fixed
+- Memory files are a drift vector — 19 contained stale knowledge, all converted to pointers
+- trust-realism was 13 lines behind patcher (shared.toolOptions superseded by registry reads)
+- 25+ tools in tools/ but only 6 were in CLAUDE.md — full inventory now in ECOSYSTEM.md
+- Global autosync hook wasn't documented anywhere — now in ECOSYSTEM.md

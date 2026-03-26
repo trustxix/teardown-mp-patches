@@ -1,0 +1,18 @@
+TEST REPORT: Light_Saber
+======================================================
+Generated: 2026-03-26 12:07:30
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 34 assets found
+  ID cross-ref:      FAIL — 1 mismatches
+    - SetToolEnabled uses "LSaber2" but RegisterTool uses "FlameKat"
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    PASS
+  ServerCall params: FAIL — 1 issues
+    - ServerCall("server.lightBurst") passes 6 args but function expects 7 params (pos, dir, r, g, b, intensity, type)
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

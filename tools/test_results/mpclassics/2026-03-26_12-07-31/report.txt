@@ -1,0 +1,18 @@
+TEST REPORT: mpclassics
+======================================================
+Generated: 2026-03-26 12:07:31
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 10 assets found
+  ID cross-ref:      FAIL — 1 mismatches
+    - SetToolEnabled uses "flag1" but RegisterTool uses "flag2"
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - client.draw() has no GetPlayerTool guard — HUD may show for all tools
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

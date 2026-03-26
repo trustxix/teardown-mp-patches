@@ -1,0 +1,17 @@
+TEST REPORT: Predator_Missile_MP
+======================================================
+Generated: 2026-03-26 12:07:31
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 16 assets found
+  ID cross-ref:      WARN — 1 warnings
+    - No SetToolAmmo found for "predator_tool" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    PASS
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

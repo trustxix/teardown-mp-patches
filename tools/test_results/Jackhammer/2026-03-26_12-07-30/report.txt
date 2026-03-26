@@ -1,0 +1,21 @@
+TEST REPORT: Jackhammer
+======================================================
+Generated: 2026-03-26 12:07:30
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 3 assets found
+  ID cross-ref:      WARN — 4 warnings
+    - No SetToolEnabled found for "jackhammer" — tool may not appear for joining players
+    - No SetToolAmmo found for "jackhammer" — tool may not appear in toolbar
+    - No SetToolEnabled found for "jackhammer" — tool may not appear for joining players
+    - No SetToolAmmo found for "jackhammer" — tool may not appear in toolbar
+  Firing chain:      PASS — Complete chain: server handles usetool with ApplyPlayerDamage() + MakeHole()
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - No client.draw() found — tool mod has no HUD
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

@@ -1,0 +1,19 @@
+TEST REPORT: Multiple_Grenade_Launcher
+======================================================
+Generated: 2026-03-26 12:07:40
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 7 assets found
+  ID cross-ref:      WARN — 2 warnings
+    - No SetToolEnabled found for "Launcher" — tool may not appear for joining players
+    - No SetToolAmmo found for "Launcher" — tool may not appear in toolbar
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - client.draw() has no GetPlayerTool guard — HUD may show for all tools
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

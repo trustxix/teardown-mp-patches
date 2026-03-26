@@ -31,9 +31,9 @@ This gives you: mod count, last commit, game log errors, lint failures, missing 
 5. NEVER raw keys with player param — use ServerCall pattern
 6. `SetToolEnabled("id", true, p)` — string, bool, player order
 7. Server: damage/physics/state. Client: audio/visual/UI.
-8. `options.lua` stays UNCHANGED — special menu callbacks
+8. `options.lua` MUST have `#version 2` + v2 callbacks — but keep special options menu callbacks intact (Issue #71)
 9. Always check `log.txt` after testing (`python -m tools.logparse`)
-10. All edits in `Documents/Teardown/mods/` — never the patches repo
+10. All edits in game install dir (`C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/`) — never Documents/ or the patches repo
 
 ## Developer Tools
 

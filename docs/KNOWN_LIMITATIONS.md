@@ -188,8 +188,6 @@ Simply renaming callbacks (`init()` -> `server.init()`) and moving code blocks p
 
 options.lua MUST be converted to `#version 2` with its own v2 callbacks (Issue #71, all 9 converted 2026-03-20). However, it uses the Teardown options menu system, NOT standard game callbacks — keep the special options callbacks (`init()` + `draw()`) intact alongside the v2 header.
 
-**Note:** QUICKSTART.md rule #8 says "options.lua stays UNCHANGED" — this is **OUTDATED**. Issue #71 proved conversion is required for MP.
-
 ---
 
 ## UMF Mods

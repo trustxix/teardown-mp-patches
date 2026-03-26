@@ -2,8 +2,9 @@
 
 Checks (in order):
 1. Wrong directory: editing in patches repo mods/ instead of game install mods dir
-2. Asset protection: editing .vox/.xml/.png/.ogg/.jpg files in mod directories
-3. Game running: editing mod files while teardown.exe is running
+2. Built-in mod protection: blocks edits to mods without id.txt (Steam depot files)
+3. Asset protection: editing .vox/.xml/.png/.ogg/.jpg files in mod directories
+4. Game running: editing mod files while teardown.exe is running
 """
 import sys
 import json
@@ -32,7 +33,38 @@ def main():
         print("  NOT in:  C:/Users/trust/teardown-mp-patches/mods/", file=sys.stderr)
         sys.exit(1)
 
-    # --- Check 2: Asset file protection ---
+    # --- Check 2: Built-in mod protection ---
+    if "steam/steamapps/common/teardown/mods/" in fp:
+        # Extract mod folder name
+        idx = fp.find("teardown/mods/") + len("teardown/mods/")
+        rest = fp[idx:]
+        mod_folder = rest.split("/")[0] if "/" in rest else rest
+        if mod_folder:
+            id_path = os.path.join(
+                "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods",
+                mod_folder, "id.txt"
+            )
+            # Case-insensitive check: find actual folder
+            mods_root = "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods"
+            actual_match = None
+            try:
+                for d in os.listdir(mods_root):
+                    if d.lower() == mod_folder.lower():
+                        actual_match = d
+                        break
+            except OSError:
+                pass
+            if actual_match:
+                real_id = os.path.join(mods_root, actual_match, "id.txt")
+                if not os.path.exists(real_id):
+                    print("BLOCKED: Built-in mod — do NOT modify!", file=sys.stderr)
+                    print(f"  Mod: {actual_match}", file=sys.stderr)
+                    print("  Built-in mods are Steam depot files. Modifying them causes", file=sys.stderr)
+                    print("  MP file mismatch disconnects. Steam verify will undo changes.", file=sys.stderr)
+                    print("  Only modify workshop mods (those with id.txt).", file=sys.stderr)
+                    sys.exit(1)
+
+    # --- Check 3: Asset file protection ---
     mod_dirs = [
         "steam/steamapps/common/teardown/mods/",
         "teardown-mp-patches/mods/",

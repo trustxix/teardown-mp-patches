@@ -172,6 +172,7 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 
 ## Important Rules
 
+- **NEVER modify built-in mods.** 40 mods without `id.txt` are Steam depot files. Modifying them causes MP file mismatch disconnects. Steam verify will undo all changes. Only modify the 49 custom workshop mods (those with `id.txt`).
 - **Do NOT copy preview images** into mod folders — crashes engine (buffer overflow).
 - **Do NOT modify asset files** (.vox, .xml prefab, .png, .ogg) — only edit .lua and info.txt.
 - **Active mod ceiling:** Warn at ~150 mods. Engine crashes at ~178 (shadow volume overflow).

@@ -130,6 +130,35 @@ CameraRot = QuatRotateQuat(CameraRot, QuatEuler(-my * sens, -mx * sens, 0))
 
 ---
 
+## Desync Root Causes (from docs/MP_REFERENCE.md)
+
+Seven classified root causes for MP desync, discovered through 73+ issues:
+
+| RC | Cause | Fix |
+|----|-------|-----|
+| RC1 | Client-side projectile physics for remote players | Gate with `IsPlayerLocal(p)`, remotes read server-synced position |
+| RC2 | Per-tick ServerCall/ClientCall | Use registry broadcast (`SetFloat(key, val, true)`) or `shared.*` |
+| RC3 | FindShapes/QueryAabb per tick | Throttle to 4Hz or less |
+| RC4 | Server-side SpawnParticle/PointLight | Move to `client.*` functions |
+| RC5 | Raw key input in server code | Client detects + ServerCall for server action |
+| RC6 | Client-side QueryShot for damage | Server owns all hit detection |
+| RC7 | Host double-processing shared `players[p]` | Separate server/client fields, or gate with `IsPlayerLocal(p)` |
+
+### Interpolation Tuning for Remote Players
+
+When syncing remote player positions via registry, use `VecLerp`/`QuatSlerp` with these factors:
+
+| Factor | Feel | Use When |
+|--------|------|----------|
+| 0.1 | Smooth, laggy | Slow-moving objects (turrets, platforms) |
+| 0.3 | Balanced (default) | Most weapon/tool sync |
+| 0.5 | Snappy, slightly jittery | Fast combat (melee, projectiles) |
+| 1.0 | Raw (no interpolation) | Only for debug |
+
+See `docs/MP_REFERENCE.md` for the full PER-TICK-RPC decision tree and 10 vanilla code patterns.
+
+---
+
 ## V1 to V2 Conversion
 
 ### Template Approach Does NOT Work
@@ -157,7 +186,9 @@ Simply renaming callbacks (`init()` -> `server.init()`) and moving code blocks p
 
 ### options.lua
 
-Leave special Teardown options callbacks (`init()` + `draw()`) intact. options.lua needs `#version 2` and its own v2 callbacks but does NOT use `server.init()`/`client.init()` — it uses the Teardown options menu system.
+options.lua MUST be converted to `#version 2` with its own v2 callbacks (Issue #71, all 9 converted 2026-03-20). However, it uses the Teardown options menu system, NOT standard game callbacks — keep the special options callbacks (`init()` + `draw()`) intact alongside the v2 header.
+
+**Note:** QUICKSTART.md rule #8 says "options.lua stays UNCHANGED" — this is **OUTDATED**. Issue #71 proved conversion is required for MP.
 
 ---
 
@@ -168,6 +199,10 @@ UMF (Universal Mod Framework) mods share ~10K lines of framework code (umf.lua, 
 **Example:** Shards Summoner was estimated at 456 unique lines but actually had 2,677 lines of real logic in tool.lua/ui.lua.
 
 When estimating UMF mod complexity, read the actual tool.lua/ui.lua/utility.lua files. Count real unique logic, not total minus known framework files.
+
+**UMF bypass proven viable:** 14 mods successfully converted without the 10K+ line UMF framework by extracting standalone v2 logic (e.g., Omni_Gun: 370 lines standalone, Enchanter: 1071 lines). See `docs/UMF_TRANSLATION_GUIDE.md` for the bypass strategy and complexity matrix.
+
+**Deferred mods (too complex for bypass):** GLARE (LnL framework), Robot_Vehicles (20K+ lines UMF), Ascended Sword Master (14 stances, 4.5K lines), Shards Summoner, AI Trainer, Blight Gun, Tameable Dragon (all UMF-dependent). Full list in `MASTER_MOD_LIST.md`.
 
 ---
 

@@ -32,6 +32,12 @@ These fire automatically when working in Claude Code — no manual invocation ne
 
 PostToolUse hook. After any Write/Edit/Bash that touches the game install mods directory, automatically syncs the changed mod to `C:\Steam2\` via robocopy. Keeps both installs identical without manual `sync_installs.py` calls.
 
+### Project Settings (`.claude/settings.json`)
+
+The patcher project has its own Claude Code settings that wire up the project hooks:
+- **PreToolUse** on Edit/Write: runs `pre_edit_guard.py` (blocks wrong dir, assets, game running)
+- **PostToolUse** on Edit/Write: runs `post_edit_lint.py` (auto-lint after Lua edits)
+
 ### Project Hooks (`hooks/`)
 
 | Hook | Trigger | Action |
@@ -91,6 +97,8 @@ Publish_Teardown_Mods.py (push to Steam Workshop via SteamCMD)
 | `sync.bat` | Wrapper for sync_installs.py. |
 | `Delete_Workshop_Duplicates.bat` | Cleans duplicate Workshop items. |
 | `Delete_Workshop_Web.py` / `.bat` | Removes Workshop items via web API. |
+| `publish_log_*.txt` | Timestamped publish logs. Latest: 2026-03-25 (5 mods updated, 44 skipped). |
+| `publish_results_*.json` | JSON results with per-mod status and Workshop IDs. |
 
 ### Team Launchers (`~/Desktop/Teardown Team/`)
 
@@ -114,8 +122,12 @@ Publish_Teardown_Mods.py (push to Steam Workshop via SteamCMD)
 | Path | What It Contains |
 |------|-----------------|
 | `crash/` | Crash dumps from 2026-03-19, 2026-03-20, 2026-03-22 (teardown.exe + .pdb). |
-| `config_backup_20260322/` | Saved modlists and config snapshots. |
-| `log.txt` | Current game log. Parse with `python -m tools.logparse`. |
+| `config_backup_20260322/` | Saved modlists and config snapshots (mods.xml, savegame.xml, nested backups). |
+| `log.txt` | Current game log (195MB). Parse with `python -m tools.logparse`. |
+| `mods.xml` | Active mod config (1844 entries — steam-*, builtin-*, local-*, dlc-*). |
+| `modlists/2.xml` | Curated "Host" modlist — 33 mods for MP hosting. |
+| `options.xml` | Game settings (6KB). |
+| `savegame.xml` | Current save (1.6MB). |
 
 ### Design Docs (`~/docs/superpowers/`)
 
@@ -123,6 +135,14 @@ Publish_Teardown_Mods.py (push to Steam Workshop via SteamCMD)
 |------|-----------------|
 | `plans/2026-03-16-teardown-mp-patcher.md` | Original project plan (100+ line checklist, phase breakdown). |
 | `specs/2026-03-16-teardown-mp-mod-patcher-design.md` | Original design spec (416 lines, 6-phase pipeline, tech stack). |
+
+### Game Launcher & Automation (Project Root)
+
+| File | What It Does |
+|------|-------------|
+| `launch_teardown.vbs` | Silent pre-launch: runs `activate_all_local_mods.py --silent`, then launches Teardown with Steam args. |
+| `watchdog.ps1` | PowerShell team terminal health monitor — checks heartbeats every 30s, auto-restarts dead terminals (max 3 restarts), killswitch via `.comms/STOP`. |
+| `activate_all_local_mods.py` | Scans game install mods dir, registers missing mods in all modlists + mods.xml, cleans stale entries, keeps 3 timestamped backups, skips if Teardown running. |
 
 ### SteamCMD (`C:\steamcmd\`)
 

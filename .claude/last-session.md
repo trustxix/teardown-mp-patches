@@ -193,3 +193,64 @@ Consolidated ALL Teardown knowledge from 13 scattered filesystem locations, 22 m
 - Steam Guard code needed once, then cached (even after re-enabling authenticator)
 - Workshop updates not instant — must restart Steam to force sync
 - Blank test sheet = untested, NOT working
+
+---
+
+# Session: 2026-03-26 (Part 3 — Testing + Fixes)
+
+## What Was Done
+
+### MP Testing (Session 2)
+- User tested tools in real MP with dual Steam
+- 2 mods confirmed working perfectly (Jackhammer, Tripmine)
+- 2 working with minor issues (Thruster_Tool, VectorRazor)
+- 20 mods "not in toolbar" — RegisterTool changes from earlier weren't published to Workshop yet
+- ARM weapons: reload with R broken (operator precedence), no animation watching other player
+- Light_Katana: massive model (raw vox instead of XML prefab with scale=0.1)
+- FPV_Drone: too many issues, deferred
+
+### Fixes Applied
+- ARM_AK47/Glock/M4A4: fixed reload operator precedence
+- Light_Katana_MP: changed prefab to Katana.xml (has scale=0.1)
+- VectorRazor: added PlayersAdded loop for client tool enable
+- Thruster_Tool: power capped at ±300
+- ODM_Gear: added RegisterTool + server.init + PlayersAdded (was completely v1)
+- Keybind standards doc created (docs/KEYBIND_STANDARDS.md)
+- Interactive HTML test sheet with checkboxes, copy/paste, auto-save
+
+### Publishing Issues
+- SteamCMD batched uploads hang on large mods (>1MB content folders)
+- Reverted to one-at-a-time uploads
+- 20 mods with RegisterTool changes STILL NOT PUBLISHED to Workshop
+- Publish script changed back to sequential mode
+
+## Incomplete Work (CRITICAL)
+- **20 mods not published to Workshop** — RegisterTool changes exist in working dir but never uploaded
+  AC130, Asteroid_Strike, Black_Hole, Bunker_Buster, C4, Charge_Shotgun (DEF),
+  CnC_Weather_Machine, Desert_Eagle, Exploding_Star, Fire_Fighter, High_Tech_Drone,
+  Hook_Shotgun, Laser_Cutter, Light_Saber, Molotov_Cocktail, Multiple_Grenade_Launcher,
+  ODM_Gear, Predator_Missile, Rods_from_Gods
+- **ARM animation sync** — no animation/effects visible when watching other player use ARM weapons
+- **FPV_Drone_Tool** — too many issues, needs dedicated investigation
+- **Light_Katana terrain damage** — player damage works but no terrain/building damage
+- **Light_Katana Q dash** — does nothing
+- Maps, vehicles, utilities not yet tested
+- Publish script needs reliability improvement (batched hangs, sequential is slow)
+
+## Next Steps
+1. **Run update.bat** to publish the 20+ mods with RegisterTool changes (sequential mode now)
+2. Re-test the 20 mods that were missing from toolbar
+3. Fix ARM animation sync issue (custom animation framework not syncing to other players)
+4. Investigate FPV_Drone issues
+5. Test maps, vehicles, utilities
+6. Fix Light_Katana terrain damage + Q dash
+
+## Gotchas Discovered
+- SteamCMD batched uploads hang on large content folders — must use sequential
+- Publish script only detects changes vs Workshop cache — if you add RegisterTool AFTER a publish, must run update.bat again
+- RegisterTool 4th param is toolbar group (1-6), NOT model scale
+- XML prefabs can have scale attributes — raw .vox files don't. Katana.vox is 10x too large without Katana.xml's scale=0.1
+- Lua operator precedence: `A and B or C and D` evaluates as `(A and B) or (C and D)` — must parenthesize
+- SetToolEnabled(ID, true) without player param only enables for host
+- Charge_Shotgun uses DEF framework (RegisterTool handled internally by def.lua)
+- ODM_Gear had bare init() function despite #version 2 — silently broken in MP

@@ -140,3 +140,35 @@ python "C:/Users/trust/Desktop/Teardown Workshop/sync_installs.py" --check
 ```
 
 See `docs/TESTING_SETUP.md` for full dual-Steam setup.
+
+---
+
+## Trust Realism Framework
+
+Standalone repo at `C:/Users/trust/trust-realism/` (GitHub: `trustxix/trust-realism`).
+
+| Path | Contents |
+|------|----------|
+| `src/ballistics.lua` | Core library (1504 lines) |
+| `docs/BALLISTICS.md` | Full API reference |
+| `examples/hook_shotgun_profile.lua` | Example weapon profile |
+| `README.md` | Overview, quick start, firing pipeline, roadmap (v1.0-v6.0) |
+
+**Sync requirement:** The patcher's `lib/realistic_ballistics.lua` (1517 lines) and the standalone `src/ballistics.lua` (1504 lines) must be kept identical. They are currently **out of sync**. When updating one, update both.
+
+**Roadmap:** v1.0 Ballistics (current) → v2.0 Effects → v3.0 Audio → v4.0 Ammo → v5.0 Physics → v6.0 Non-weapon tools.
+
+---
+
+## Project History (82 commits)
+
+The project evolved through distinct phases visible in git history:
+
+1. **Initial rewrite** — v2 rewrites for 10 tool mods, AI rewriter with proper v2 reference
+2. **Subagent bug fixes** — Critical bugs in subagent-written mods (led to no-subagents rule)
+3. **Tool development** — Lint (45 rules), deepcheck, audit, logparse, status, batch auto-fixer
+4. **Team infrastructure** — 4-terminal autonomous team system with 5 MCP servers, dashboards, watchdog
+5. **Deepcheck era** — 0 FAIL across 112+ mods, entity script conversions, workshop sync
+6. **Trust Realism** — Realistic ballistics framework, Hook_Shotgun overhaul, USE-SHOOT resolution
+7. **DEF framework** — Desync Exterminator Framework v1.2, project cleanup
+8. **Ecosystem docs** — Testing setup, ecosystem map, known limitations (current session)

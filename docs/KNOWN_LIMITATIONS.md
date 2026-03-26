@@ -206,3 +206,55 @@ All_In_One_Utilities needs refactoring to use Trust Realism's dynamic tool disco
 5. AIO becomes thin wrapper — ESC menu button + delegation to framework
 
 Separate project from current patcher work. Requires careful testing.
+
+---
+
+## Engine Quirks (from WHAT_DOESNT_WORK.md)
+
+These are engine-level limitations with no mod-side fix:
+
+### Custom Characters Don't Work in MP
+
+Only 6 built-in Lagom family characters work. `characters.txt` modding is SP-only — the MP character picker ignores it. Engine limitation, waiting on Tuxedo Labs.
+
+### XML Prefab Tools Can't Be Switched Programmatically
+
+`SetPlayerTool()` and `SetString("game.player.tool")` can't load XML-prefab-registered tools. Tool body is invisible. Affected: ARM M4A4, ARM AK-47, ARM Glock, Light Saber [GP]. Workaround: filter from Tool Menu, use toolbar keys (1-6).
+
+### No API to Disable Grab
+
+`SetBool("game.player.cangrab", false)` has no effect. `ReleasePlayerGrab(p)` per-tick causes hand flash. RMB grab conflicts with ADS on gun mods. No fix exists.
+
+### PauseMenuButton Must Be in tick(), Not draw()
+
+`PauseMenuButton()` registers buttons during the tick phase. Calling it in `draw()` / `client.draw()` does nothing.
+
+### ListKeys Returns Different Case Than RegisterTool
+
+`ListKeys('game.tool')` may return IDs in different case. Always use case-insensitive comparison (`tool_id:lower():find()`).
+
+---
+
+## Weapon Float Bug (RESOLVED, Critical Knowledge)
+
+After firing, weapon models floated out of hands in zero gravity. Affected 21+ mods. Root cause: timer-based position offsets in `SetToolTransform` and `SetShapeLocalTransform` caused physics collisions in v2's split server/client physics. Fix: remove ALL timer-based position offsets, use static positions only. The `~= 0` check (vs v1's `> 0`) let timers go negative, pushing tools behind the player indefinitely.
+
+What didn't work: ReleasePlayerGrab, SetBool cangrab, merging SetToolTransform calls, changing smooth parameter, removing server GetToolBody, emptying server.tickPlayer.
+
+---
+
+## Trust Realism Sync Status
+
+The ballistics library in the patcher (`lib/realistic_ballistics.lua`, 1517 lines) and the standalone repo (`~/trust-realism/src/ballistics.lua`, 1504 lines) are **out of sync** (13 line difference). These must be kept identical — see `docs/ECOSYSTEM.md` for repo locations.
+
+---
+
+## First MP Playtest Results (2026-03-22, Historical)
+
+The first real MP session revealed that 100% static analysis pass rate meant nothing:
+- Near-universal tool desync across modded tools
+- AC-130 caused extreme lag (per-tick computation)
+- Documents/ mods invisible to host in MP lobby
+- "102 mods patched, 0 FAIL" was misleading — tools measure code patterns, not actual MP behavior
+
+This led to the fundamental rule: **tools passing is necessary but NOT sufficient. Only in-game MP testing is final.**

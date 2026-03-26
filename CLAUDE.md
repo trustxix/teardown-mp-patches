@@ -252,3 +252,4 @@ DEF auto-handles: tool registration, PlayersAdded/Removed loops, per-player stat
 | `MASTER_MOD_LIST.md` | After converting mods |
 | `docs/TESTING_SETUP.md` | Dual Steam / Sandboxie local MP testing |
 | `docs/ECOSYSTEM.md` | All Teardown tools, scripts, and locations across the system |
+| `docs/KNOWN_LIMITATIONS.md` | Engine limits, preprocessor quirks, tool gaps, v1→v2 API map, pending work |

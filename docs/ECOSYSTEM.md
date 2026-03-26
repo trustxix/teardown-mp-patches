@@ -18,6 +18,7 @@ All Teardown-related tools, scripts, and locations across the system. The MP pat
 | `C:/Users/trust/Desktop/Teardown Team/` | Agent team launchers (Claude Code orchestration). |
 | `C:/Users/trust/Desktop/Teardown Workshop/` | Workshop publishing and install sync scripts. |
 | `C:/Users/trust/Desktop/Teardown-ModSync/` | Compiled sync executables + logs. |
+| `C:/Users/trust/trust-realism/` | Trust Realism framework standalone repo (GitHub: trustxix/trust-realism). Keep in sync with `lib/ballistics.lua`. |
 | `C:/Users/trust/AppData/Local/Teardown/` | Game config, crash logs, GUID. |
 | `C:/Users/trust/SandboxieSteamProject/` | Sandboxie dual-Steam setup (see `docs/TESTING_SETUP.md`). |
 

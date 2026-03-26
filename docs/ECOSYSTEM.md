@@ -154,7 +154,7 @@ Standalone repo at `C:/Users/trust/trust-realism/` (GitHub: `trustxix/trust-real
 | `examples/hook_shotgun_profile.lua` | Example weapon profile |
 | `README.md` | Overview, quick start, firing pipeline, roadmap (v1.0-v6.0) |
 
-**Sync requirement:** The patcher's `lib/realistic_ballistics.lua` (1517 lines) and the standalone `src/ballistics.lua` (1504 lines) must be kept identical. They are currently **out of sync**. When updating one, update both.
+**Sync requirement:** The patcher's `lib/realistic_ballistics.lua` is the source of truth. The standalone repo must match. When updating one, update both. Patcher → standalone (not the reverse).
 
 **Roadmap:** v1.0 Ballistics (current) → v2.0 Effects → v3.0 Audio → v4.0 Ammo → v5.0 Physics → v6.0 Non-weapon tools.
 

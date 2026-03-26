@@ -245,7 +245,7 @@ What didn't work: ReleasePlayerGrab, SetBool cangrab, merging SetToolTransform c
 
 ## Trust Realism Sync Status
 
-The ballistics library in the patcher (`lib/realistic_ballistics.lua`, 1517 lines) and the standalone repo (`~/trust-realism/src/ballistics.lua`, 1504 lines) are **out of sync** (13 line difference). These must be kept identical — see `docs/ECOSYSTEM.md` for repo locations.
+The patcher's `lib/realistic_ballistics.lua` is the source of truth (battle-tested in MP). The standalone repo (`~/trust-realism/src/ballistics.lua`) must be kept identical. When updating one, update both. See `docs/ECOSYSTEM.md` for repo locations.
 
 ---
 

@@ -320,6 +320,27 @@ Steam Workshop updates aren't instant for subscribers. Restarting Steam forces i
 
 Blank lines on test sheets mean UNTESTED, not "works." Never assume blank = working.
 
+### Reserved Engine Keybinds (Cannot Be Changed)
+
+These keybinds are hardcoded by the engine. No custom mod may use any of these — if a mod conflicts, the mod keybind MUST be changed.
+
+| Action | Key |
+|--------|-----|
+| Map | TAB |
+| Pause | ESC |
+| Change tool | MOUSE WHEEL or 1-6 |
+| Use tool | LMB |
+| Grab | HOLD RMB |
+| Grab distance | HOLD RMB + MOUSE WHEEL |
+| Throw | HOLD RMB + LMB |
+
+**Implications for mods:**
+- RMB is ALWAYS grab — mods using RMB for ADS/alt-fire will conflict. No API exists to disable grab.
+- Mouse wheel is ALWAYS tool switch — mods using scroll for zoom/power must use `SetBool("game.input.locktool", true)` while active.
+- 1-6 keys are ALWAYS tool slots — mods should not bind gameplay actions to these.
+- TAB, ESC are ALWAYS map/pause — never bind mod actions to these.
+- LMB is "usetool" — this is the ONLY safe primary action key for tools.
+
 ### New Working Directory
 
 All mod editing moved to `D:/The Vault/Modding/Games/Teardown/`. Game install dirs are now read-only (managed by Workshop). Workflow: edit → `update.bat` → restart clients → test.

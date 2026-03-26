@@ -30,19 +30,19 @@ These fire automatically when working in Claude Code — no manual invocation ne
 
 ### Global Hook (`~/.claude/hooks/teardown-autosync.js`)
 
-PostToolUse hook. After any Write/Edit/Bash that touches the game install mods directory, automatically syncs the changed mod to `C:\Steam2\` via robocopy. Keeps both installs identical without manual `sync_installs.py` calls.
+DISABLED — no longer syncing between local installs. Workshop handles distribution.
 
 ### Project Settings (`.claude/settings.json`)
 
 The patcher project has its own Claude Code settings that wire up the project hooks:
-- **PreToolUse** on Edit/Write: runs `pre_edit_guard.py` (blocks wrong dir, assets, game running)
+- **PreToolUse** on Edit/Write: runs `pre_edit_guard.py` (blocks wrong dir, built-in mods, assets, game running)
 - **PostToolUse** on Edit/Write: runs `post_edit_lint.py` (auto-lint after Lua edits)
 
 ### Project Hooks (`hooks/`)
 
 | Hook | Trigger | Action |
 |------|---------|--------|
-| `pre_edit_guard.py` | Before .lua edit | Blocks edits to wrong dir, asset files, or while game running |
+| `pre_edit_guard.py` | Before .lua edit | Blocks: patches repo, game install dirs, built-in mods (no id.txt), asset files |
 | `post_write_fix_lua.py` | After .lua write | CRLF→LF, strip non-ASCII |
 | `post_edit_lint.py` | After .lua edit | Auto-runs lint on the edited mod |
 
@@ -51,16 +51,16 @@ The patcher project has its own Claude Code settings that wire up the project ho
 ## Mod Distribution Pipeline
 
 ```
-Edit mod in game install dir
-        |  (autosync hook fires → copies to Steam2)
+Edit mod in D:/The Vault/Modding/Games/Teardown/
+        |
         v
 tools.lint + tools.test --static (validate)
         |
         v
-sync_installs.py (full mirror if needed, or autosync handles it)
+update.bat (publishes to Workshop + restarts both Steam clients)
         |
         v
-Test in-game with dual Steam instances
+Test in-game with dual Steam instances (Workshop syncs automatically)
         |
         v
 td_mod_publisher.py (zip, hash, upload to GitHub + Dropbox)

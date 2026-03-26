@@ -291,3 +291,35 @@ The first real MP session revealed that 100% static analysis pass rate meant not
 - "102 mods patched, 0 FAIL" was misleading — tools measure code patterns, not actual MP behavior
 
 This led to the fundamental rule: **tools passing is necessary but NOT sufficient. Only in-game MP testing is final.**
+
+---
+
+## Discoveries (2026-03-26)
+
+### v1 SetBool Tool Pattern Doesn't Work in MP
+
+15 mods were using `SetBool("game.tool.X.enabled", true)` instead of `RegisterTool()`. This v1 pattern does NOT register tools in the v2 MP engine — tools are invisible in the toolbar for all players. Fix: add `RegisterTool(id, name, prefab, group)` in `server.init()` + `SetToolEnabled(id, true, p)` + `SetToolAmmo(id, 101, p)` in `PlayersAdded` loop.
+
+### Steam Verify Restores Built-In Mods
+
+Modifying ANY built-in mod (40 mods without `id.txt`) causes MP file mismatch disconnects. Steam's "Verify Integrity" detects modified depot files as "missing" and re-downloads originals. 123 files were restored when we modified entity scripts in built-in mods. **NEVER modify built-in mods.** Three safeguards now enforce this: CLAUDE.md rule, pre_edit_guard hook, discover_mods() filter.
+
+### SteamCMD Batched Uploads
+
+SteamCMD supports chaining multiple `+workshop_build_item` commands in one session. Output: `"Preparing update..." + "Success."` per item. Parsing by splitting on `"Preparing update..."` gives per-item blocks. Eliminates ~5-10 sec startup overhead per mod.
+
+### SteamCMD Session Caching with Steam Guard
+
+After authenticating once with `+set_steam_guard_code CODE`, SteamCMD caches the session token. Subsequent logins skip Steam Guard. Token persists weeks/months.
+
+### Workshop Sync Delay
+
+Steam Workshop updates aren't instant for subscribers. Restarting Steam forces immediate sync. `SteamTestLauncher.exe` handles this — kills all Steam/Teardown, restarts both clients on separate monitors.
+
+### Test Sheet Convention
+
+Blank lines on test sheets mean UNTESTED, not "works." Never assume blank = working.
+
+### New Working Directory
+
+All mod editing moved to `D:/The Vault/Modding/Games/Teardown/`. Game install dirs are now read-only (managed by Workshop). Workflow: edit → `update.bat` → restart clients → test.

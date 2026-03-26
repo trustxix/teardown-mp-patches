@@ -250,3 +250,5 @@ DEF auto-handles: tool registration, PlayersAdded/Removed loops, per-player stat
 | `docs/UI_STANDARDS.md` | Editing HUD code |
 | `ISSUES_AND_FIXES.md` | Debugging (73 issues) |
 | `MASTER_MOD_LIST.md` | After converting mods |
+| `docs/TESTING_SETUP.md` | Dual Steam / Sandboxie local MP testing |
+| `docs/ECOSYSTEM.md` | All Teardown tools, scripts, and locations across the system |

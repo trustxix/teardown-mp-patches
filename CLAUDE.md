@@ -256,5 +256,6 @@ DEF auto-handles: tool registration, PlayersAdded/Removed loops, per-player stat
 | `docs/TESTING_SETUP.md` | Dual Steam / Sandboxie local MP testing |
 | `docs/ECOSYSTEM.md` | All Teardown tools, scripts, and locations across the system |
 | `docs/KNOWN_LIMITATIONS.md` | Engine limits, preprocessor quirks, tool gaps, v1→v2 API map, pending work |
+| `docs/LINT_RULES.md` | All 45 lint rules + 6 deepcheck validators + API database reference |
 | `README.md` | Project overview, batch history, deferred mods list |
 | `QUICKSTART.md` | Full developer onboarding, workflow order, top 10 rules |

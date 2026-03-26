@@ -16,7 +16,7 @@ import click
 from pathlib import Path
 
 FRAMEWORK_SRC = Path(__file__).parent.parent / "lib" / "realistic_ballistics.lua"
-MODS_DIR = Path(r"C:\Program Files (x86)\Steam\steamapps\common\Teardown\mods")
+MODS_DIR = Path(r"D:\The Vault\Modding\Games\Teardown")
 
 
 def sanitize_lua(data: bytes) -> bytes:

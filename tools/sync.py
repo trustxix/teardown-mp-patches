@@ -15,8 +15,8 @@ import shutil
 import sys
 
 WORKSHOP_DIR = "C:/Program Files (x86)/Steam/steamapps/workshop/content/1167630"
-LOCAL_MODS_DIR = "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods"
-REMOVED_DIR = "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods_REMOVED"
+LOCAL_MODS_DIR = "D:/The Vault/Modding/Games/Teardown"
+REMOVED_DIR = "D:/The Vault/Modding/Games/Teardown_REMOVED"
 # Files that must NEVER be copied (cause engine crashes)
 SKIP_FILES = {"preview.jpg", "preview.png", "preview.jpeg"}
 

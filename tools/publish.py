@@ -18,7 +18,7 @@ from pathlib import Path
 from datetime import datetime
 
 STEAMCMD = Path("C:/steamcmd/steamcmd.exe")
-MODS_DIR = Path("C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods")
+MODS_DIR = Path("D:/The Vault/Modding/Games/Teardown")
 VDF_DIR = Path("C:/Users/trust/teardown-mp-patches/workshop_vdf")
 PUBLISHED_LOG = Path("C:/Users/trust/teardown-mp-patches/workshop_published.json")
 TEARDOWN_APP_ID = "1167630"

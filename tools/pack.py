@@ -79,11 +79,9 @@ def build_pack(output_path: str, include_all: bool = False):
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
             f"Mods: {len(mods_to_pack)}\n\n"
             "Installation:\n"
-            "1. Close Teardown\n"
-            "2. Extract this zip so the 'mods' folder merges with:\n"
-            "   C:\\Program Files (x86)\\Steam\\steamapps\\common\\Teardown\\mods\\\n"
-            "3. Launch Teardown\n\n"
-            "All players must have identical mod files for MP to work.\n"
+            "1. Subscribe to these mods on Steam Workshop\n"
+            "2. Launch Teardown — Workshop downloads them automatically\n"
+            "3. All players need the same Workshop subscriptions for MP\n"
         )
         zf.writestr("README.txt", readme)
 

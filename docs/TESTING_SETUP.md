@@ -83,13 +83,21 @@ OpenFilePath=C:\Steam2\*
 
 Both Teardown installs need **byte-identical mod files** for MP. After patching mods on the main install:
 
-```bash
-# From project root — sync patched mods to second install
-# Only sync mods that exist in both locations
-rsync -av --existing "C:/Program Files (x86)/Steam/steamapps/common/Teardown/mods/" "C:/Steam2/steamapps/common/Teardown/mods/"
-```
+Use the dedicated sync script (robocopy-based, more reliable than rsync on Windows):
 
-Or copy individual mods manually after patching.
+```bash
+# Single mod
+python "C:/Users/trust/Desktop/Teardown Workshop/sync_installs.py" --mod "ModName"
+
+# All mods (mirror)
+python "C:/Users/trust/Desktop/Teardown Workshop/sync_installs.py" --mods
+
+# Verify both installs match
+python "C:/Users/trust/Desktop/Teardown Workshop/sync_installs.py" --check
+
+# Workshop content too
+python "C:/Users/trust/Desktop/Teardown Workshop/sync_installs.py" --workshop
+```
 
 ### Test Procedure
 
@@ -106,12 +114,27 @@ Or copy individual mods manually after patching.
    python -m tools.logparse
    ```
 
+### Saved Modlists
+
+Teardown supports saved mod configurations at `C:\Users\trust\AppData\Local\Teardown\modlists\`:
+
+| File | Name | Contents |
+|------|------|----------|
+| `1.xml` | Default | Empty (all mods active) |
+| `2.xml` | Host | 33 mods — curated MP hosting set |
+
+Use modlists to quickly switch between full mod set (solo testing) and curated MP set (hosting friends).
+
 ### Log Locations
 
 | Instance | Log Path |
 |----------|----------|
 | Main | `C:\Users\trust\AppData\Local\Teardown\log.txt` |
 | Sandboxed | Check sandbox file system — may be in sandboxed AppData |
+
+### Crash Logs
+
+Crash dumps are at `C:\Users\trust\AppData\Local\Teardown\crash\` with timestamped directories containing `teardown.exe` and `.pdb` files. Recent crashes (Mar 19-22) were caused by shadow volume overflow with too many active mods — resolved by reducing from 178 to 125.
 
 ## Troubleshooting
 

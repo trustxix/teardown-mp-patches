@@ -182,6 +182,9 @@ When dispatching subagents for ANY Teardown mod work, ALWAYS include:
 - **Tools passing ≠ game works.** Only in-game testing is final.
 - **Every installed mod must have `id.txt`** with Steam Workshop ID.
 - **File integrity check:** All players need byte-identical mod files for MP.
+- **No subagents for mod code.** Subagents must NEVER write mod files. They are read-only for research/investigation. Re-read CLAUDE.md before every code write.
+- **Batch workflow:** Max 2-3 mods per batch. Test between batches. Commit after each for rollback. Never change 30+ mods at once — isolating crashes becomes impossible.
+- **Sync installs after patching:** Run `sync_installs.py --mod "X"` to copy to Steam2 before local MP testing (see `docs/TESTING_SETUP.md`).
 
 ## Realistic Ballistics Framework
 

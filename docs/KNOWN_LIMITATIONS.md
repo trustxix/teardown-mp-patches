@@ -191,6 +191,10 @@ Never change more than 3 mods at once. A previous session changed 30+ mods simul
 
 Run `python -m tools.sync` to check current state.
 
+### Missing Doc: V2_SYNC_PATTERNS.md
+
+Memory references `docs/V2_SYNC_PATTERNS.md` as a sync patterns guide, but this file was never created. The knowledge exists spread across `docs/BASE_GAME_MP_PATTERNS.md` (5 sync mechanisms, 12 patterns from official scripts) and `docs/WHAT_WORKS.md` (per-issue sync fixes). A consolidated sync reference would be valuable.
+
 ### AIO Integration
 
 All_In_One_Utilities needs refactoring to use Trust Realism's dynamic tool discovery instead of its hardcoded tool list. Phases:

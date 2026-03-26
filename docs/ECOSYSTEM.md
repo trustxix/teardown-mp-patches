@@ -24,16 +24,34 @@ All Teardown-related tools, scripts, and locations across the system. The MP pat
 
 ---
 
+## Automatic Hooks
+
+These fire automatically when working in Claude Code — no manual invocation needed.
+
+### Global Hook (`~/.claude/hooks/teardown-autosync.js`)
+
+PostToolUse hook. After any Write/Edit/Bash that touches the game install mods directory, automatically syncs the changed mod to `C:\Steam2\` via robocopy. Keeps both installs identical without manual `sync_installs.py` calls.
+
+### Project Hooks (`hooks/`)
+
+| Hook | Trigger | Action |
+|------|---------|--------|
+| `pre_edit_guard.py` | Before .lua edit | Blocks edits to wrong dir, asset files, or while game running |
+| `post_write_fix_lua.py` | After .lua write | CRLF→LF, strip non-ASCII |
+| `post_edit_lint.py` | After .lua edit | Auto-runs lint on the edited mod |
+
+---
+
 ## Mod Distribution Pipeline
 
 ```
 Edit mod in game install dir
-        |
+        |  (autosync hook fires → copies to Steam2)
         v
 tools.lint + tools.test --static (validate)
         |
         v
-sync_installs.py (copy to Steam2 for local MP test)
+sync_installs.py (full mirror if needed, or autosync handles it)
         |
         v
 Test in-game with dual Steam instances
@@ -103,8 +121,75 @@ Publish_Teardown_Mods.py (push to Steam Workshop via SteamCMD)
 
 | File | What It Contains |
 |------|-----------------|
-| `plans/2026-03-16-teardown-mp-patcher.md` | Original project plan. |
-| `specs/2026-03-16-teardown-mp-mod-patcher-design.md` | Original design spec. |
+| `plans/2026-03-16-teardown-mp-patcher.md` | Original project plan (100+ line checklist, phase breakdown). |
+| `specs/2026-03-16-teardown-mp-mod-patcher-design.md` | Original design spec (416 lines, 6-phase pipeline, tech stack). |
+
+### SteamCMD (`C:\steamcmd\`)
+
+Full SteamCMD installation used by `Publish_Teardown_Mods.py` for Workshop uploads. Requires `STEAM_USER` and `STEAM_PASS` environment variables.
+
+---
+
+## Patcher Tools (Full Inventory)
+
+Beyond the tools documented in CLAUDE.md, the project has specialized tools for advanced workflows:
+
+### Core (Daily Use)
+
+| Tool | Purpose |
+|------|---------|
+| `tools.status` | Session overview — mod count, lint, deep analysis |
+| `tools.lint` | 45-rule Lua scanner (97KB, covers all 88 issues) |
+| `tools.test --static` | Deep semantic analysis (firing chains, asset refs, ID cross-refs) |
+| `tools.logparse` | Parse game log, group errors by mod |
+| `tools.fix` | Deterministic auto-fixes with dry-run |
+| `tools.health` | Combined lint + classify + diff for one mod |
+| `tools.diff` | Show changes vs workshop original |
+| `tools.revert` | Restore mod to workshop original |
+| `tools.audit` | Feature matrix report |
+| `tools.session` | Git status + recently modified mods |
+| `tools.mp_ready` | Go/no-go report for MP testing |
+
+### Code Generation
+
+| Tool | Purpose |
+|------|---------|
+| `tools.gun_v2_generator` | Generate complete v2 weapon mod Lua from config dict (29KB). Applies all 48 v2 rules. |
+| `tools.entity_v2_convert` | Auto-convert entity scripts v1→v2 (callback remapping, stub insertion). |
+| `tools.rewrite_ai` | Claude API-powered v1→v2 rewrite (experimental). |
+| `tools.rewrite_template` | Template-based code generation (deprecated, superseded by DEF). |
+
+### Publishing & Distribution
+
+| Tool | Purpose |
+|------|---------|
+| `tools.publish` | Mass-publish mods to Steam Workshop via SteamCMD. |
+| `tools.delete_workshop` | Delete Workshop items. Destructive. |
+| `tools.sync` | Detect new/removed mods vs workshop. |
+| `tools.pack` | Build zip of patched mods for sharing. |
+| `tools.deploy_framework` | Deploy lib updates to all mods. |
+
+### Testing & Diagnostics
+
+| Tool | Purpose |
+|------|---------|
+| `tools.deepcheck` | Deep semantic analysis (46KB). Multi-function chain tracing. |
+| `tools.injector` | Inject diagnostic wrappers (track Shoot/QueryShot/damage counts). |
+| `tools.gamerunner` | Launch Teardown, inject test code, auto-parse logs (19KB). |
+| `tools.classify` | Classify mods by type/version/MP status. |
+
+### Data
+
+| File | Purpose |
+|------|---------|
+| `tools/api_database.json` | Official Teardown v2 API reference (53KB). Function signatures, server/client context flags. Powers lint validation. |
+
+### Dependencies
+
+```
+click, jinja2, tree-sitter, tree-sitter-lua, anthropic, pytest, pytest-mock
+Optional (gamerunner): mss, pyautogui, PyGetWindow, Pillow
+```
 
 ---
 
@@ -121,6 +206,7 @@ Scripts across the ecosystem reference these paths. If any change, update all sc
 | `C:\Users\trust\Dropbox\teardown-mod-pack` | td_mod_publisher |
 | `C:\steamcmd\steamcmd.exe` | Publish_Teardown_Mods |
 | `C:\Users\trust\teardown-mp-patches\workshop_ids` | Publish_Teardown_Mods |
+| `C:\Users\trust\.claude\hooks\teardown-autosync.js` | Global hook — auto-syncs mods to Steam2 |
 
 ---
 

@@ -1,0 +1,19 @@
+TEST REPORT: Toyota_Supra_MP
+======================================================
+Generated: 2026-03-26 13:05:29
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  FAIL — 3/8 assets missing
+    - Asset NOT found: snd/Door Sounds/OpenedDoorSnd.ogg
+    - Asset NOT found: snd/Door Sounds/HoodOpeningSnd.ogg
+    - Asset NOT found: snd/Door Sounds/HoodClosingSnd.ogg
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: FAIL
+======================================================

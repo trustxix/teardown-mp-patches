@@ -1,0 +1,17 @@
+TEST REPORT: Fire_Fighter_MP
+======================================================
+Generated: 2026-03-26 13:05:28
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  PASS — 3 assets found
+  ID cross-ref:      N/A — no tools registered
+  Firing chain:      N/A — not a weapon mod
+  Effect chain:      N/A
+  HUD validation:    WARN
+    - No client.draw() found — tool mod has no HUD
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

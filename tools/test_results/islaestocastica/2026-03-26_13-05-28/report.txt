@@ -1,0 +1,17 @@
+TEST REPORT: islaestocastica
+======================================================
+Generated: 2026-03-26 13:05:28
+Test type: static
+
+STATIC ANALYSIS
+  Asset validation:  N/A — no asset references
+  ID cross-ref:      PASS — all IDs consistent
+  Firing chain:      WARN
+    - Entity script: bare function handles usetool + damage (runs on both sides, damage is server-only)
+  Effect chain:      N/A
+  HUD validation:    N/A
+  ServerCall params: PASS
+
+------------------------------------------------------
+RESULT: WARN
+======================================================

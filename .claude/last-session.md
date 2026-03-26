@@ -121,3 +121,75 @@ Consolidated ALL Teardown knowledge from 13 scattered filesystem locations, 22 m
 - trust-realism was 13 lines behind patcher (shared.toolOptions superseded by registry reads)
 - 25+ tools in tools/ but only 6 were in CLAUDE.md — full inventory now in ECOSYSTEM.md
 - Global autosync hook wasn't documented anywhere — now in ECOSYSTEM.md
+
+---
+
+# Session: 2026-03-26 (Part 2 — Mod Fixes + Workflow Overhaul)
+
+## What Was Done
+
+### Bulk Lint Fixes (526 FAIL → 0)
+- 461 FILE-SCOPE-LOCAL: stripped `local` from file-scope vars (42 files)
+- 126 V1-ENTITY-SCRIPT: auto-converted to v2 callbacks (entity_v2_convert)
+- ~94 RAW-KEY-PLAYER: removed player param from raw keys
+- ~62 DRAW-NOT-CLIENT: renamed draw() → client.draw()
+- ~47 MISSING-VERSION2: added #version 2 headers
+- 29 MISSING-AMMO-PICKUP: added SetToolAmmoPickupAmount
+- 25 INFO-MISSING-VERSION2: added version = 2 to info.txt
+- 12 MISSING-TOOL-AMMO: added SetToolAmmo in PlayersAdded
+- 4 DOUBLE-PROCESS-TIMER: gated client coolDown with IsPlayerLocal
+- 4 DAMAGE-NO-ATTACKER: added attacker param (Light_Katana, Light_Saber)
+- ~50 lint suppressions with documented reasons (false positives)
+
+### RegisterTool Fix (15 mods invisible in toolbar)
+- Root cause: v1 `SetBool("game.tool.X.enabled", true)` doesn't register tools in v2 MP
+- Added RegisterTool() + SetToolEnabled() + SetToolAmmo() + PlayersAdded loops
+- Also added #include player.lua where needed
+- CnC_Weather_Machine had p→id bug in SetToolAmmo — fixed
+
+### Built-In Mod Protection
+- 123 files restored by Steam verify after we modified built-in mods
+- Added 3 safeguards: CLAUDE.md rule, pre_edit_guard hook, discover_mods() filter
+- All tools now skip 40 built-in mods automatically
+
+### New Working Directory
+- All mods moved to D:/The Vault/Modding/Games/Teardown/ (49 custom mods)
+- Updated ALL tool paths: common.py, publish.py, sync.py, deploy_framework.py, pack.py
+- Updated ALL hooks: pre_edit_guard, post_edit_lint, post_write_fix_lua
+- Disabled autosync hook (no longer needed)
+- Game install dirs are now read-only (managed by Workshop)
+
+### Workshop Publishing Overhaul
+- Publish script reads from new working directory
+- Batched uploads: single SteamCMD session for all mods (was one per mod)
+- Parsing: split on "Preparing update..." for per-item success/fail
+- update.bat: publish → SteamTestLauncher.exe (restarts both Steam clients)
+- SteamTestLauncher.exe: moves main Steam to monitor 1, sandboxed to monitor 3
+- Steam Guard session cached (authenticate once, reuse for weeks)
+- Credentials set via setx env vars + hardcoded in update.bat
+
+### MP Testing Guide
+- Created docs/MP_TESTING_GUIDE.md with 3-tier priority testing
+- Created Desktop/TEST_SHEET.md with HOST/CLIENT lines per mod
+- Convention: blank = UNTESTED (never assume blank = working)
+
+## Incomplete Work
+- MP testing not yet started (all prep work done, test sheet ready)
+- 19 deep analysis FAILs (SERVER-EFFECT in entity scripts — structural)
+- PER-TICK-RPC (25 WARN) — need per-mod registry conversion
+- V2_SYNC_PATTERNS.md still not created
+- Jetskis, Rocket, gm_construct_MP have no #version 2
+
+## Next Steps
+1. User runs update.bat to publish all changes
+2. User fills out TEST_SHEET.md during MP testing
+3. User submits results — I fix broken mods and repeat
+4. After testing pass: address remaining WARN issues
+
+## Gotchas Discovered
+- 15 mods invisible in toolbar: v1 SetBool pattern doesn't register tools in v2 MP
+- Modifying built-in mods causes MP disconnects (Steam depot hash mismatch)
+- SteamCMD can't batch upload with per-item PublishFileID — but "Success." per item works
+- Steam Guard code needed once, then cached (even after re-enabling authenticator)
+- Workshop updates not instant — must restart Steam to force sync
+- Blank test sheet = untested, NOT working
